@@ -1,0 +1,47 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Updating Job Postings</h2>
+  </div>
+  <div class="progress progress-striped active" id="progressouter">
+    <div class="progress-bar" id="progressinner" role="progressbar"  aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
+  </div>
+  <div id="console"><p id="console-text" class="text-center">Initializing Fetcher...</p></div>
+</div>
+<script type="text/javascript">
+  $(document).ready(function(){
+    var interval = setInterval(function(){
+      get_progress()
+    }, 5000);
+
+    function get_progress() {
+      $.ajax({
+        type: "GET",
+        accepts: "application/json",
+        url: "/jobs/fetch_now/progress",
+        success: function(data){
+          var response = JSON.parse(data)
+          if (response.state == 'running') {
+            console.log("state is running")
+            $("#progressinner").css("width", response.progress + '%');
+            $("#console-text").html(response.message + ": " + response.processed + "/" + response.total_jobs)
+          } else if (response.state == 'completed') {
+            console.log("state is completed")
+            $("#progressouter").removeClass('progress-stripped active').addClass('progress-bar-success')
+            $("#console-text").html('Sucessfully completed.')
+            console.log("clearing interval")
+            clearInterval(interval)
+          } else {
+            console.log("state is unknown")
+            $("#progressouter").removeClass('progress-stripped active').addClass('progress-bar-danger')
+            $("#console-text").html('Something went wrong.')
+            console.log("clearing interval")
+            clearInterval(interval)
+          }
+        },
+        error: function(e){
+          alert("Error occurred");
+        }
+      });
+    }
+  });
+</script>

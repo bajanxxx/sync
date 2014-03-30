@@ -1,0 +1,10 @@
+source 'https://rubygems.org'
+
+gem 'sinatra', require: 'sinatra/base'
+gem 'sinatra-contrib'
+gem 'mongo'
+gem 'bson_ext'
+gem 'json'
+gem 'parallel'
+gem 'uuid'
+gem 'thin'

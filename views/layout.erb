@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Cloudwick</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- Bootstrap -->
+		<link href="/css/bootstrap.min.css" rel="stylesheet">
+		<link href="/css/bootstrap-responsive.min.css" rel="stylesheet">
+
+		<style>
+	    body {
+	    	padding-top: 60px; /* When using the navbar-top-fixed */
+				padding-left: 50px;
+				padding-right: 50px;
+				padding-bottom: 50px;
+	    }
+
+	    .center {
+		     float: none;
+		     margin-left: auto;
+		     margin-right: auto;
+	    }
+
+	    .centercontents {
+	    	text-align: center !important;
+	    }
+
+	    .alignrightcontents {
+	    	text-align: right !important;
+	    }
+		</style>
+		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+		<!--[if lt IE 9]>
+		  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+		  <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+		<![endif]-->
+		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+		<script src="/js/jquery-1.9.1.min.js"></script>
+		<!-- Include all compiled plugins (below), or include individual files as needed -->
+		<script src="/js/bootstrap.min.js"></script>
+	</head>
+	<body>
+	  <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+	    <div class="container-fluid">
+	      <a class="navbar-brand" href="/">Cloudwick Job Portal</a>
+	      <div class="collapse navbar-collapse">
+	        <ul class="nav navbar-nav">
+	          <li><a href="/jobs">Jobs</a></li>
+	          <li><a href="/consultants">Consultants</a></li>
+	        </ul>
+					<ul class="nav navbar-nav pull-right">
+						<form class="navbar-form navbar-left" role="search">
+  						<div class="form-group">
+    						<input type="text" class="form-control" placeholder="Search">
+  						</div>
+  						<button type="submit" class="btn btn-default">Submit</button>
+						</form>
+						<% if @username %>
+						<li><p class="navbar-text"><%= @username %> | <a href='/logout' class="navbar-link">logout</a></li>
+						<% else %>
+						<li><a href="/login" class="navbar-link">signin</a></li>
+						<% end %>
+					</ul>
+		    </div><!-- /.container -->
+	  	</div><!-- /.navbar-inner -->
+		</div><!-- /.navbar -->
+
+		<%= yield %>
+  </body>
+</html>
