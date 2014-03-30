@@ -8,7 +8,7 @@ require_relative '../models/fetcher'
 class ProcessDicePostings
   attr_accessor :id, :processed, :processed_data
 
-  def initialize(search_string, age, page_search, database)
+  def initialize(search_string, age, page_search, database, fetcher_instance)
     @base_url           = "http://service.dice.com/api/rest/jobsearch/v1/simple.json"
     @search_string      = search_string
     @page_search_string = page_search
@@ -17,7 +17,7 @@ class ProcessDicePostings
     @mutex              = Mutex.new
     @processed          = 0
     @job_postings       = JobPostingsDAO.new(database)
-    # @fetcher_stats      = FetcherDAO.new(database)
+    @fetcher_stats      = fetcher_instance
   end
 
   # Process a http request using net/http, also follow redirect's one level deep
@@ -71,6 +71,7 @@ class ProcessDicePostings
         pull_email(res),
         pull_phone(res) || 'N/A'
       )
+      @fetcher_stats.update_fetched_jobs(1)
     end
   end
 

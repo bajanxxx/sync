@@ -140,60 +140,82 @@ class JobPortal < Sinatra::Base
   end
 
   get '/jobs' do
+    # db.postings.find({"date_posted": "2014-03-30"})
+    # db.postings.distinct('date_posted')
+    @jobs = []
+    dates = @job_postings.get_dates(10)
+    dates.each do |date|
+      @jobs << {
+        :date  => DateTime.strptime(date, '%Y-%m-%d').strftime('%A, %b %d'),
+        :count => @job_postings.get_postings_count_for_date(date)
+      }
+      # DateTime.strptime('2014-03-30', '%Y-%m-%d')
+    end
+    # @jobs = [
+    #   {:date => 'Sunday, 30', :count => 10},
+    #   {:date => 'Saturday, 29', :count => 15},
+    #   {:date => 'Friday, 28', :count => 25},
+    # ]
     erb :jobs
   end
 
   get '/jobs/fetch_now' do
-    @fetcher.create_job_session
-    traverse_depth = 1
-    @job_processor = ProcessDicePostings.new('hadoop', 1, ['CON_CORP'], @database)
-    total_postings_max = @job_processor.total_postings
-    total_postings_req = traverse_depth * 50 # user asked for this many postings to process
-    total_iterations_required = if total_postings_req > total_postings_max
-                                  total_postings_max
-                                else
-                                  total_postings_req
-                                end
-    percentage_for_url_processing = 5
-    percentage_per_iteration = ( 90.to_f / total_iterations_required )
-    @jobs_to_process = []
-    child_pid = Process.fork do
-      p 'Gathering URLs to process'
-      @fetcher.update_fetcher_message('Gathering URLs to process')
-      begin
-        traverse_depth.times do |page|
-          p "Processing urls for page: #{page + 1}"
-          @job_processor.get_urls(page).each do |job_posting|
-            @jobs_to_process << job_posting
+    # get if there any previous jobs running
+    existing_fetcher = @fetcher.get_fetcher_latest_stat
+    if existing_fetcher[:job_status] == 'completed'
+      p "Initalizing a new fetcher"
+      @fetcher.create_job_session
+      traverse_depth = 1
+      @job_processor = ProcessDicePostings.new('hadoop', 1, ['CON_CORP'], @database, @fetcher)
+      total_postings_max = @job_processor.total_postings
+      total_postings_req = traverse_depth * 50 # user asked for this many postings to process
+      total_iterations_required = if total_postings_req > total_postings_max
+                                    total_postings_max
+                                  else
+                                    total_postings_req
+                                  end
+      percentage_for_url_processing = 5
+      percentage_per_iteration = ( 90.to_f / total_iterations_required )
+      @jobs_to_process = []
+      child_pid = Process.fork do
+        p 'Gathering URLs to process'
+        @fetcher.update_fetcher_message('Gathering URLs to process')
+        begin
+          traverse_depth.times do |page|
+            p "Processing urls for page: #{page + 1}"
+            @job_processor.get_urls(page).each do |job_posting|
+              @jobs_to_process << job_posting
+            end
           end
+        rescue Exception => ex
+          @fetcher.update_fetcher_message(ex)
+          @fetcher.update_fetcher_state('failed')
+          return
         end
-      rescue Exception => ex
-        @fetcher.update_fetcher_message(ex)
-        @fetcher.update_fetcher_state('failed')
-        return
-      end
-      @fetcher.update_total_jobs_to_process(@jobs_to_process.length)
-      @fetcher.update_progress(percentage_for_url_processing)
-      @fetcher.update_fetcher_message('Processing URLs')
-      p 'Processing URLs'
-      begin
-        @jobs_to_process.each do |job|
-          p "Processing job posting: #{job}"
-          @job_processor.process_job_postings(job)
-          @fetcher.update_progress(percentage_per_iteration)
-          @fetcher.update_jobs_processed(1)
+        @fetcher.update_total_jobs_to_process(@jobs_to_process.length)
+        @fetcher.update_progress(percentage_for_url_processing)
+        @fetcher.update_fetcher_message('Processing URLs')
+        p 'Processing URLs'
+        begin
+          @jobs_to_process.each do |job|
+            # p "Processing job posting: #{job}"
+            @job_processor.process_job_postings(job)
+            @fetcher.update_progress(percentage_per_iteration)
+            @fetcher.update_jobs_processed(1)
+          end
+        rescue Excetion => ex
+          @fetcher.update_fetcher_message(ex)
+          @fetcher.update_fetcher_state('failed')
+          return
         end
-      rescue Excetion => ex
-        @fetcher.update_fetcher_message(ex)
-        @fetcher.update_fetcher_state('failed')
-        return
+        @fetcher.update_fetcher_message('completed with no errors')
+        @fetcher.update_fetcher_state('completed')
+        Process.exit
       end
-      @fetcher.update_fetcher_message('completed with no errors')
-      @fetcher.update_fetcher_state('completed')
-      Process.exit
+      Process.detach child_pid
+    else
+      p "Tapping to the existing fetcher"
     end
-    Process.detach child_pid
-
     erb :fetch_now
   end
 

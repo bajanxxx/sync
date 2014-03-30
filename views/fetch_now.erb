@@ -9,6 +9,7 @@
 </div>
 <script type="text/javascript">
   $(document).ready(function(){
+    get_progress()
     var interval = setInterval(function(){
       get_progress()
     }, 5000);
@@ -26,12 +27,15 @@
             $("#console-text").html(response.message + ": " + response.processed + "/" + response.total_jobs)
           } else if (response.state == 'completed') {
             console.log("state is completed")
+            $("#progressinner").css("width", '100%');
             $("#progressouter").removeClass('progress-stripped active').addClass('progress-bar-success')
+            // $('#progressouter').load(document.URL +  '#progressouter');
             $("#console-text").html('Sucessfully completed.')
             console.log("clearing interval")
             clearInterval(interval)
           } else {
             console.log("state is unknown")
+            $("#progressinner").css("width", '100%');
             $("#progressouter").removeClass('progress-stripped active').addClass('progress-bar-danger')
             $("#console-text").html('Something went wrong.')
             console.log("clearing interval")

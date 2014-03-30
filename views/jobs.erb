@@ -11,16 +11,12 @@
       <p class="pull-right"><a href="/jobs/fetch_now" class="btn btn-primary btn-md" role="button">Update Now &raquo;</a></p>
     </h2>
   </div>
-<!--   <div class="row"> -->
-<!--     <div class="col-sm-10"> -->
-      <ul class="list-group">
-        <li class="list-group-item"><span class="badge">21</span><span class="badge">hadoop</span>Friday, 28</li>
-        <li class="list-group-item"><span class="badge">21</span><span class="badge">cassandra</span>Friday, 28</li>
-        <li class="list-group-item"><span class="badge">16</span>Thurday, 27</li>
-        <li class="list-group-item"><span class="badge">18</span>Wednasday, 26</li>
-        <li class="list-group-item"><span class="badge">9</span>Tuesday, 25</li>
-        <li class="list-group-item"><span class="badge">17</span>Monday, 24</li>
-      </ul>
-<!--     </div> -->
-<!--   </div> -->
+  <!-- <div class="row col-sm-10"> -->
+  <ul class="list-group">
+    <% @jobs.each do |job| %>
+    <li class="list-group-item"><span class="badge"><%= job[:count] %></span><%= job[:date] %></li>
+    <!-- <li class="list-group-item"><span class="badge">21</span><span class="badge">cassandra</span>Friday, 28</li> -->
+    <% end %>
+  </ul>
+  <!-- </div> -->
 </div>

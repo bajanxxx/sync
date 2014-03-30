@@ -40,6 +40,10 @@ class FetcherDAO
     @fetcher_stats.update({_id: get_latest_id}, {:$inc => {:total_jobs_to_process => jobs}})
   end
 
+  def update_fetched_jobs(jobs = 0)
+    @fetcher_stats.update({_id: get_latest_id}, {:$inc => {:jobs_fetched => jobs}})
+  end
+
   def update_fetcher_state(state = 'running')
     @fetcher_stats.update({_id: get_latest_id}, {:$set => {:job_status => state}})
   end

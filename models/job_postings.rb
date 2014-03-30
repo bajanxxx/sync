@@ -26,6 +26,16 @@ class JobPostingsDAO
     postings
   end
 
+  # Query the avaialble dates for job postings and sort them
+  def get_dates(limit = 10)
+    dates = @job_postings.distinct(:date_posted)
+    dates.sort_by{|d| Date.parse(d)}.reverse![0..limit]
+  end
+
+  def get_postings_count_for_date(date)
+    @job_postings.find({:date_posted => date}).count
+  end
+
   def add_posting(url, date_posted, title, company, location, skills, emails, phone_nums)
     posting = {
       :_id         => url,
