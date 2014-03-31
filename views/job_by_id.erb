@@ -1,0 +1,30 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Job Posting: <%= job.title %></h2>
+  </div>
+  <div class="jumbotron">
+    <h4>Job Details</h4>
+    <table class="table table-hover">
+      <tr>
+        <th>Job Headers</th>
+        <th>Content</th>
+      </tr>
+      <% %w(date_posted title company location skills emails phone_nums).each do |method_name| %>
+      <tr>
+        <td><%= method_name %></td>
+        <% method_data = job.send(method_name) %>
+        <td><%= method_data.is_a?(Array) ? method_data.join(',') : method_data %></td>
+      </tr>
+      <% end %>
+    </table>
+    <p>
+      <a class="btn btn-primary btn-md" role="button" id="gobackinternal">Go Back</a>
+      <a class="btn btn-primary btn-md" role="button" href="<%= job.url %>">Goto Source</a>
+    </p>
+  </div>
+</div>
+<script type="text/javascript">
+$('#gobackinternal').click(function() {
+   history.go(-1);
+});
+</script>

@@ -1,0 +1,12 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Job Postings: for <%= date %></h2>
+  </div>
+  <p>Job listings found: <%= jobs.count %></p>
+  <ul class="list-group">
+    <% jobs.each do |job| %>
+    <!--     <li class="list-group-item"><span class="badge"><%= job[:count] %></span><%= job[:date] %></li> -->
+    <li class="list-group-item"><span class="badge"><%= job.title %></span><a href="/job/<%= job._id %>"><%= job.url %></a></li>
+    <% end %>
+  </ul>
+</div>

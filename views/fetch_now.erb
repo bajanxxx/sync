@@ -12,13 +12,13 @@
     get_progress()
     var interval = setInterval(function(){
       get_progress()
-    }, 5000);
+    }, 1000);
 
     function get_progress() {
       $.ajax({
         type: "GET",
         accepts: "application/json",
-        url: "/jobs/fetch_now/progress",
+        url: "/fetcher/fetch_now/progress",
         success: function(data){
           var response = JSON.parse(data)
           if (response.state == 'running') {

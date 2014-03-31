@@ -15,7 +15,8 @@ class JobPostingsDAO
     postings = Array.new
     cursor.each do |posting|
       postings << {
-        :url => posting['_id'],
+        :_id  => posting['_id'],
+        :url  => posting['url'],
         :date_posted => posting['date_posted'],
         :title => posting['title'],
         :company => posting['company'],
@@ -36,9 +37,13 @@ class JobPostingsDAO
     @job_postings.find({:date_posted => date}).count
   end
 
+  def get_postings_for_date(date)
+    @job_postings.find({:date_posted => date})
+  end
+
   def add_posting(url, date_posted, title, company, location, skills, emails, phone_nums)
     posting = {
-      :_id         => url,
+      :url         => url,
       :date_posted => date_posted,
       :title       => title,
       :company     => company,

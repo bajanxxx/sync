@@ -1,20 +1,13 @@
 <div class="container theme-showcase" role="main">
-<!--   <div class="jumbotron">
-    <div class="row">
-      <h2>Job Postings</h2>
-
-    </div>
-  </div> -->
-
   <div class="page-header">
     <h2>Job Postings
-      <p class="pull-right"><a href="/jobs/fetch_now" class="btn btn-primary btn-md" role="button">Update Now &raquo;</a></p>
+      <p class="pull-right"><a href="/fetcher/fetch_now" class="btn btn-primary btn-md" role="button">Update Now &raquo;</a></p>
     </h2>
   </div>
   <!-- <div class="row col-sm-10"> -->
   <ul class="list-group">
-    <% @jobs.each do |job| %>
-    <li class="list-group-item"><span class="badge"><%= job[:count] %></span><%= job[:date] %></li>
+    <% jobs.each do |job| %>
+    <li class="list-group-item"><span class="badge"><%= job[:count] %></span><a href="/jobs/<%= job[:date_url] %>"><%= job[:date] %></a></li>
     <!-- <li class="list-group-item"><span class="badge">21</span><span class="badge">cassandra</span>Friday, 28</li> -->
     <% end %>
   </ul>

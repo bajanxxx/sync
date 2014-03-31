@@ -1,156 +1,13 @@
-#!/usr/bin/env ruby
-
-# Author:: Ashrith Mekala (<ashrith@cloudwick.com>)
-# Description:: Program to pull dice postings and put them to a specified
-#   google spreadsheet
-# Version: 0.1
-#
-# Copyright 2014, Cloudwick Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-require 'rubygems' if RUBY_VERSION < "1.9"
 require 'net/http'
 require 'open-uri'
 require 'pp'
 require 'pathname'
 require 'optparse'
 require 'ostruct'
-begin
-  require 'json'
-  require 'parallel'
-  require 'google_drive'
-rescue
-  puts <<-EOS
-  Following ruby libraries are required: 'json', 'parallel', 'google_drive'
-  Install then using: `gem install json parallel google_drive --no-ri --no-rdoc`
-  EOS
-end
+require 'mongoid'
+require 'parallel'
 
-class GoogleSpreadSheet
-  def initialize(un, pwd)
-    @session   = get_session(un, pwd)
-    @ws_exists = false
-  end
-
-  def get_session(username, password)
-    GoogleDrive.login(username, password)
-  end
-
-  def get_spreadsheet(title)
-    @session.spreadsheet_by_title(title)
-  end
-
-  def create_spreadsheet(name)
-    @session.create_spreadsheet(name)
-  end
-
-  def create_worksheet(ws_name, spreadsheet, max_rows, max_cols)
-    if spreadsheet.worksheet_by_title(ws_name)
-      puts "Worksheet #{ws_name} already exists"
-      @ws_exists = true
-    else
-      puts "Creating worksheet named: #{ws_name} in spreadsheet: #{spreadsheet.title}"
-      spreadsheet.add_worksheet(ws_name, max_rows, max_cols)
-    end
-    return spreadsheet.worksheet_by_title(ws_name)
-  end
-
-  # data = { "url" => { :title => '', :company => '', :location => '', :date => '' }, ... }
-  def write_to_worksheet(worksheet, data)
-    ws_rows = nil
-    row_position = 1
-    url_position = 4
-    if @ws_exists
-      # change the row position for new writes
-      row_position  = worksheet.num_rows + 1
-      ws_rows       = worksheet.rows
-      existing_urls = ws_rows.map { |r| r[url_position] }
-      new_urls      = data.keys
-      post_urls     = new_urls - existing_urls
-      # Modify data hash to include only new urls
-      data.select! { |url| post_urls.include?(url) }
-      if data.empty?
-        puts "Hurray! no new data found to add"
-      else
-        puts "new data being added: #{data.inspect}, from row starting at #{row_position}"
-      end
-    end
-    unless data.empty?
-      # write out data fresh
-      data.each do |url, cols|
-        worksheet[row_position, 1] = cols[:date]
-        worksheet[row_position, 2] = cols[:title]
-        worksheet[row_position, 3] = cols[:company]
-        worksheet[row_position, 4] = cols[:location]
-        worksheet[row_position, 5] = cols[:skills]
-        worksheet[row_position, 6] = cols[:email]
-        worksheet[row_position, 7] = url
-        row_position += 1
-      end
-      worksheet.synchronize
-    end
-  end
-
-  def upload_from_file_csv(path, name)
-    @session.upload_from_file(path, name, :content_type => 'text/csv')
-  end
-end
-
-class Encryptor
-  begin
-    require 'io/console' # > 1.9.3
-  rescue LoadError
-  end
-  require 'openssl'
-  require 'fileutils'
-  require 'base64'
-
-  CIPHER = 'aes-256-cbc' # AES256
-
-  def self.hash(plaintext)
-    OpenSSL::Digest::SHA512.new(plaintext).digest
-  end
-
-  if STDIN.respond_to?(:noecho)
-    def self.read_password(prompt = 'Password: ')
-      printf prompt
-      STDIN.noecho(&:gets).chomp
-    end
-  else
-    def self.read_password(prompt = 'Password: ')
-      `read -s -p "#{prompt}" password; echo $password`.chomp
-    end
-  end
-
-  # Encrypts or decrypts the data with the password hash as key
-  # NOTE: encryption exceptions do not get caught!
-  def self.encrypt(data, pwhash)
-    c = OpenSSL::Cipher.new CIPHER
-    c.encrypt
-    c.key = self.hash(pwhash)
-    encrypted = c.update(data) << c.final
-    Base64.encode64(encrypted).encode('utf-8')
-  end
-
-  def self.decrypt(encoded, pwhash)
-    c = OpenSSL::Cipher.new CIPHER
-    c.decrypt
-    c.key = self.hash(pwhash)
-    decoded = Base64.decode64(encoded.encode('ascii-8bit'))
-    c.update(decoded) << c.final
-  end
-end
+require_relative 'models/job'
 
 class ProcessPostings
   def initialize(base_url, search_string, age, pages_to_traverse, page_search)
@@ -193,9 +50,10 @@ class ProcessPostings
             :title => rs['jobTitle'],
             :company => rs['company'],
             :location => rs['location'],
-            :date => rs['date'],
-            :skills => pull_skills(response_internal) || nil,
-            :email  => pull_email(response_internal) || nil
+            :date_posted => rs['date'],
+            :skills => pull_skills(response_internal),
+            :email  => pull_emails(response_internal),
+            :phone_nums => pull_phones(response_internal)
           }
         }
       end
@@ -220,26 +78,31 @@ class ProcessPostings
   def pull_skills(response)
     skills = response.body.scan(Regexp.new('^\s+<dt.*>Skills:<\/dt>\s+<dd.*>(.*)<\/dd>')).first
     if skills.is_a?(Array)
-      return skills.join(',').gsub('&nbsp;', '')
+      return skills.map {|e| e.gsub('&nbsp;', '')}
     else
-      'N/A'
+      []
     end
   end
 
-  def pull_email(response)
+  def pull_emails(response)
     emails = response.body.scan(Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')).uniq - ['email@domain.com']
     if emails.is_a?(Array)
-      return emails.join(',')
+      return emails
     else
-      'N/A'
+      []
     end
   end
 
-  def pull_phone(response)
+  def pull_phones(response)
     # TEN_DIGITS = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/
     # SEVEN_DIGITS = /^(?:\(?([0-9]{3})\)?[-. ]?)?([0-9]{3})[-. ]?([0-9]{4})$/
     # LEADING_1 = /^(?:\+?1[-. ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/
-    phns = response.body.scan(Regexp.new('/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/'))
+    phns = response.body.scan(Regexp.new('/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/')).uniq
+    if phns.is_a?(Array)
+      return phns
+    else
+      []
+    end
   end
 
   def run
@@ -266,7 +129,7 @@ if __FILE__ == $0
   options.age_of_postings = 1
   options.traverse_depth  = 1
   options.page_search_string = []
-  req_options = %w(search_string spreadsheet_name google_username google_password password_hash)
+  req_options = %w(search_string)
 
   optparse = OptionParser.new do |opts|
     opts.banner = "Usage: #{$PROGRAM_NAME} [options]"
@@ -287,26 +150,6 @@ if __FILE__ == $0
       options.page_search_string << r
     end
 
-    opts.on('-n', '--spreadsheet-name NAME', 'Name of the spreadsheet to use in google drive') do |s|
-      options.spreadsheet_name = s
-    end
-
-    opts.on('-u', '--username USERNAME', 'Username of the google account who to access the drive as') do |u|
-      options.google_username = u
-    end
-
-    opts.on('-p', '--password ENCRYPTED', 'Encrypted password of the google account who to access the drive as, to encrypt use `--encrypt`') do |p|
-      options.google_password = p
-    end
-
-    opts.on('-e', '--encrypt', 'Wether to encrypt the password') do |e|
-      options.encrypt = true
-    end
-
-    opts.on('-h', '--hash PASSWORD_HASH', 'If the password is encrypted then provide salt hash') do |e|
-      options.password_hash = e
-    end
-
     opts.on('--help', 'Show this message') do
       puts opts
       exit
@@ -315,21 +158,8 @@ if __FILE__ == $0
 
   begin
     optparse.parse!
-    if options.encrypt
-      pwd_to_encrypt = Encryptor.read_password("Enter your google drive password to encrypt: ")
-      puts
-      printf "Enter the password salt: "
-      pwd_salt = gets.chomp
-      puts
-      # encrypt the password and print out encrypted password
-      encrypted_password = Encryptor.encrypt(pwd_to_encrypt, pwd_salt)
-      puts "Encypted password: #{encrypted_password}"
-      puts "Salt: #{pwd_salt}"
-      exit 0
-    else
-      req_options.each do |req|
-        raise OptionParser::MissingArgument, req if options.send(req).nil?
-      end
+    req_options.each do |req|
+      raise OptionParser::MissingArgument, req if options.send(req).nil?
     end
   rescue OptionParser::InvalidOption, OptionParser::MissingArgument
     puts $!.to_s
@@ -337,13 +167,7 @@ if __FILE__ == $0
     exit
   end
 
-  pwd_decrypted = Encryptor.decrypt(options.google_password, options.password_hash)
-  google = GoogleSpreadSheet.new(options.google_username, pwd_decrypted)
-  spreadsheet = google.get_spreadsheet(options.spreadsheet_name)
-  unless spreadsheet
-    puts "Failed to fetch specified spreadsheet, make sure #{options.google_username} has access to the spreadsheet specified"
-    exit 1
-  end
+  Mongoid.load!("./mongoid.yml", :development)
 
   data = ProcessPostings.new(
     "http://service.dice.com/api/rest/jobsearch/v1/simple.json",
@@ -353,6 +177,16 @@ if __FILE__ == $0
     options.page_search_string
   ).run
 
-  worksheet = google.create_worksheet(Date.today.strftime('%A, %b %d'), spreadsheet, data.length, 10)
-  google.write_to_worksheet(worksheet, data)
+  data.each do |url, job_posting|
+    Job.find_or_create_by(url: url) do |doc|
+      doc.url         = url
+      doc.date_posted = job_posting[:date_posted]
+      doc.title       = job_posting[:title]
+      doc.company     = job_posting[:company]
+      doc.location    = job_posting[:location]
+      doc.skills      = job_posting[:skills]
+      doc.emails      = job_posting[:emails]
+      doc.phone_nums  = job_posting[:phone_nums]
+    end
+  end
 end

@@ -2,13 +2,13 @@ require 'net/http'
 require 'open-uri'
 require 'json'
 require 'parallel'
-require_relative '../models/job_postings'
+require_relative '../models/job'
 require_relative '../models/fetcher'
 
 class ProcessDicePostings
   attr_accessor :id, :processed, :processed_data
 
-  def initialize(search_string, age, page_search, database, fetcher_instance)
+  def initialize(search_string, age, page_search)
     @base_url           = "http://service.dice.com/api/rest/jobsearch/v1/simple.json"
     @search_string      = search_string
     @page_search_string = page_search
@@ -16,8 +16,6 @@ class ProcessDicePostings
     @processed_data     = Hash.new
     @mutex              = Mutex.new
     @processed          = 0
-    @job_postings       = JobPostingsDAO.new(database)
-    @fetcher_stats      = fetcher_instance
   end
 
   # Process a http request using net/http, also follow redirect's one level deep
@@ -61,17 +59,19 @@ class ProcessDicePostings
   def process_job_postings(job_posting)
     res = process_request(job_posting['detailUrl'])
     if keep_posting?(res)
-      @job_postings.add_posting(
-        job_posting['detailUrl'],
-        job_posting['date'],
-        job_posting['jobTitle'],
-        job_posting['company'],
-        job_posting['location'],
-        pull_skills(res),
-        pull_email(res),
-        pull_phone(res) || 'N/A'
-      )
-      @fetcher_stats.update_fetched_jobs(1)
+      # Only create a document if the url does not exist
+      p 'Inserting parsed posting to mongo'
+      Job.find_or_create_by(url: job_posting['detailUrl']) do |doc|
+        doc.url         = job_posting['detailUrl']
+        doc.date_posted = job_posting['date']
+        doc.title       = job_posting['jobTitle']
+        doc.company     = job_posting['company']
+        doc.location    = job_posting['location']
+        doc.skills      = pull_skills(res)
+        doc.emails      = pull_email(res)
+        doc.phone_nums  = pull_phone(res)
+      end
+      Fetcher.last.inc(:jobs_fetched, 1)
     end
   end
 
@@ -132,18 +132,18 @@ class ProcessDicePostings
   def pull_skills(response)
     skills = response.body.scan(Regexp.new('^\s+<dt.*>Skills:<\/dt>\s+<dd.*>(.*)<\/dd>')).first
     if skills.is_a?(Array)
-      return skills.join(',').gsub('&nbsp;', '')
+      return skills.map {|e| e.gsub('&nbsp;', '')}
     else
-      'N/A'
+      []
     end
   end
 
   def pull_email(response)
     emails = response.body.scan(Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')).uniq - ['email@domain.com']
     if emails.is_a?(Array)
-      return emails.join(',')
+      return emails
     else
-      'N/A'
+      []
     end
   end
 
@@ -153,9 +153,9 @@ class ProcessDicePostings
     # LEADING_1 = /^(?:\+?1[-. ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/
     phns = response.body.scan(Regexp.new('/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/')).uniq
     if phns.is_a?(Array)
-      return phns.join(',')
+      return phns
     else
-      'N/A'
+      []
     end
   end
 
