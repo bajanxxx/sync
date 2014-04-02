@@ -59,25 +59,53 @@
   </div>
   <table class="table table-hover">
     <tr>
-      <th>id</th>
+      <th>Email</th>
       <th>First Name</th>
       <th>Last Name</th>
       <th>Team</th>
-      <th>Jobs Applications</th>
+      <th>Jobs Tracking</th>
+      <th></th>
     </tr>
     <% consultants.each_with_index do |consultant, count| %>
-      <tr>
+      <tr id="consultant<%= count+1 %>">
         <td><a href="/consultant/view/<%= consultant.email %>"><%= consultant.email %></a></td>
         <td><%= consultant.first_name %></td>
         <td><%= consultant.last_name %></td>
         <td><%= consultant.team %></td>
         <td><%= consultant.applications.count %></td>
+        <td><a id="deletebutton<%= count+1 %>"></a></td>
       </tr>
     <% end %>
   </table>
 </div>
 
 <script type="text/javascript">
+// On load
+$(document).ready(function(){
+  <% consultants.each_with_index do |consultant, count| %>
+  $('#consultant<%= count+1 %>').hover(
+    function(){ // mouseenter
+    $('#deletebutton<%= count+1 %>').html('x');
+    },
+    function(){ // mouseleave
+    $('#deletebutton<%= count+1 %>').empty();
+  });
+
+  $('#deletebutton<%= count+1 %>').click(function(){
+    $.ajax({
+      type: "POST",
+      url: "/consultant/delete/<%= consultant.email %>",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred");
+      }
+    });
+  });
+  <% end %>
+});
+// Add new consultant
 $(AddNewConsultant).click(function () {
   jQuery.validator.setDefaults({
     debug: true,

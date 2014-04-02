@@ -190,19 +190,24 @@ class JobPortal < Sinatra::Base
     success    = true
     message    = "Successfully added #{email} to team(#{team})"
 
-    begin
-      consultant = Consultant.find_by(email: email)
-    rescue Mongoid::Errors::DocumentNotFound
-      success = true
-      Consultant.create(
-        first_name: first_name,
-        last_name: last_name,
-        email: email,
-        team: team
-      )
-    else
+    if first_name.empty? || last_name.empty? || email.empty?
       success = false
-      message = "User already exists with email address: #{email}"
+      message = "fields cannot be empty"
+    else
+      begin
+        consultant = Consultant.find_by(email: email)
+      rescue Mongoid::Errors::DocumentNotFound
+        success = true
+        Consultant.create(
+          first_name: first_name,
+          last_name: last_name,
+          email: email,
+          team: team
+        )
+      else
+        success = false
+        message = "User already exists with email address: #{email}"
+      end
     end
 
     { success: success, msg: message }.to_json
@@ -259,6 +264,13 @@ class JobPortal < Sinatra::Base
     job.update_attribute(:read, true) # also mark the job as read
     flash[:info] = "Post marked as sent to consultant & read(#{job.title})"
     redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
+  end
+
+  post '/consultant/delete/:email' do |email|
+    Consultant.find_by(email: email).delete
+    Application.delete_all(consultant_id: email)
+    flash[:info] = "Deleted user('#{email}') and assigned posts"
+    redirect "/consultants"
   end
 
   # Update consultant detail
