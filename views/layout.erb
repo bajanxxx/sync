@@ -6,14 +6,37 @@
 		<!-- Bootstrap -->
 		<link href="/css/bootstrap.min.css" rel="stylesheet">
 		<link href="/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<!-- x-editable -->
+		<link href="/css/bootstrap-editable.css" rel="stylesheet"/>
+		<!-- <link href="/css/badge_formatting.css" rel="stylesheet"> -->
+		<!-- Booststrap validator -->
+		<link href="/css/bootstrapValidator.css" rel="stylesheet"/>
 
 		<style>
+			html {
+				position: relative;
+				min-height: 100%;
+			}
+
 	    body {
 	    	padding-top: 60px; /* When using the navbar-top-fixed */
-				padding-left: 50px;
-				padding-right: 50px;
+				padding-left: 0px;
+				padding-right: 0px;
 				padding-bottom: 50px;
 	    }
+
+			#footer {
+				position: absolute;
+				bottom: 0px;
+				width: 100%;
+				/* Set the fixed height of the footer here */
+				height: 50px;
+				background-color: #f5f5f5;
+			}
+
+			.container .text-muted {
+				margin: 20px 0;
+			}
 
 	    .center {
 		     float: none;
@@ -36,9 +59,14 @@
 		  <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
 		<![endif]-->
 		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-		<script src="/js/jquery-1.9.1.min.js"></script>
+		<!-- Updated JQuery -->
+		<script src="/js/jquery-2.0.3.min.js"></script>
 		<!-- Include all compiled plugins (below), or include individual files as needed -->
 		<script src="/js/bootstrap.min.js"></script>
+		<!-- x-editable -->
+		<script src="/js/bootstrap-editable.js"></script>
+		<!-- JQuery Validator -->
+		<script src="/js/jquery.validate.min.js"></script>
 	</head>
 	<body>
 	  <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -66,7 +94,17 @@
 	  	</div><!-- /.navbar-inner -->
 		</div><!-- /.navbar -->
 
+		<% if flash %>
+		<%= styled_flash %>
+		<% end %>
+
 		<%= yield %>
+
+		<div id="footer">
+      <div class="container">
+        <p class="text-muted">® 2014 Cloudwick Inc.</p>
+      </div>
+    </div>
 
 <!-- 	<footer class="footer">Ashrih ® Cloudwick Inc 2014</footer> -->
   </body>

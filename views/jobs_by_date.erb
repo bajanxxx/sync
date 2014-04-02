@@ -2,11 +2,34 @@
   <div class="page-header">
     <h2>Job Postings: for <%= date %></h2>
   </div>
-  <p>Job listings found: <%= jobs.count %></p>
+  <p>New Job listings found: <%= unread_jobs.count %></p>
   <ul class="list-group">
-    <% jobs.each do |job| %>
-    <!--     <li class="list-group-item"><span class="badge"><%= job[:count] %></span><%= job[:date] %></li> -->
-    <li class="list-group-item"><span class="badge"><%= job.title %></span><a href="/job/<%= job._id %>"><%= job.url %></a></li>
+    <% unread_jobs.each do |job| %>
+    <li class="list-group-item">
+      <span class="badge alert-info"><%= job.location %></span>
+      <span class="badge alert-success"><%= job.company %></span>
+      <a href="/job/<%= job._id %>"><%= job.title %></a>
+    </li>
+    <% end %>
+  </ul>
+  <p>Read Job listings found: <%= read_jobs.count %></p>
+  <ul class="list-group">
+    <% read_jobs.each do |job| %>
+    <% if atten_req_jobs.include?(job) %>
+    <li class="list-group-item list-group-item-danger">
+    <% else %>
+    <li class="list-group-item">
+    <% end %>
+      <span class="badge"><%= job.location %></span>
+      <span class="badge"><%= job.company %></span>
+      <a href="/job/<%= job._id %>"><%= job.title %></a>
+    </li>
     <% end %>
   </ul>
 </div>
+<!--script type="text/javascript">
+  // if (sessionStorage.getItem('JobPostingVisited')) {
+  //   sessionStorage.removeItem('JobPostingVisited');
+  //   window.location.reload(true); // force reaload a page after visiting job posting page
+  // }
+</script-->

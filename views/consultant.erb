@@ -1,0 +1,152 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Consultant <small>(<%= consultant.email %> )</small></h2>
+  </div>
+  <table id="consultantDetails" class="table table-bordered table-striped" style="clear: both">
+     <tbody>
+       <tr>
+         <td width="35%">First Name</td>
+         <td width="65%">
+           <a href="#" id="firstname"></a>
+          </td>
+       </tr>
+       <tr>
+         <td width="35%">Last Name</td>
+         <td width="65%">
+           <a href="#" id="lastname"><%= consultant.last_name %></a>
+         </td>
+       </tr>
+       <tr>
+         <td width="35%">Team</td>
+         <td width="65%">
+           <a href="#" id="team"><%= consultant.team %></a>
+         </td>
+       </tr>
+     </tbody>
+  </table>
+</div>
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h3>Jobs Following</h3>
+  </div>
+  <!-- Two job postings in a row -->
+  <% job_applications.each_slice(2) do |job_applications_in_twos| %>
+    <div class="row">
+      <% job_applications_in_twos.each do |job_application| %>
+      <div class="col-md-6">
+        <!-- If the applied job is to follow up then make if bold -->
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <a href="/job/<%= job_application[:job_id] %>"><strong><%= job_application[:title] %></strong></a>
+          </div>
+          <table class="table table-striped" style="table-layout: fixed; word-wrap: break-word">
+            <tr>
+              <td width="25%">Posted Date</td>
+              <td width="75%"><a href="/jobs/<%= job_application[:posted_date] %>"><%= job_application[:posted_date] %></a></td>
+            </tr>
+            <tr>
+              <td width="25%">Status</td>
+              <td width="75%">
+                <a href="#" id="<%= job_application[:job_id] %>-status" data-value="<%= job_application[:status].join(',') %>">
+                  <%= job_application[:status].join(',') %>
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td width="25%">Comments</td>
+              <td width="75%"><%= job_application[:comments].join(',') %></td>
+            </tr>
+            <tr>
+              <td width="25%">Notes</td>
+              <td width="75%"><a href="#" id="<%= job_application[:job_id] %>-notes"><%= job_application[:notes] %></a></td>
+            </tr>
+          </table>
+        </div>
+      </div> <!-- col-md-4 -->
+      <% end %>
+    </div> <!-- row -->
+  <% end %>
+</div>
+
+<script>
+$(document).ready(function() {
+  // inline editing
+  $.fn.editable.defaults.mode = 'inline';
+  $.fn.editable.defaults.ajaxOptions = {type: "POST"};
+
+  //make username editable
+  $('#firstname').editable({
+    type: 'text',
+    title: 'Enter firstname',
+    placement: 'right',
+    value: '<%= consultant.first_name %>', // initial value, will be updated and send to server side upon change
+    url: '/consultant/update',
+    pk: '<%= consultant.email %>', // primary key (mongo _id)
+    name: 'first_name', // mongo doc_key being update
+    validate: function(value) {
+       if($.trim(value) == '') return 'This field is required';
+    },
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
+
+  $('#lastname').editable({
+    type: 'text',
+    title: 'Enter lastname',
+    placement: 'right',
+    value: '<%= consultant.last_name %>',
+    url: '/consultant/update',
+    pk: '<%= consultant.email %>',
+    name: 'last_name',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
+
+  //make status editable
+  $('#team').editable({
+      type: 'select',
+      title: 'Select team',
+      placement: 'right',
+      value: '<%= consultant.team %>',
+      source: '/consultant/teams', // fetch the teams avaiable from remote url
+      pk: '<%= consultant.email %>',
+      name: 'team',
+      url: '/consultant/update',
+      success: function(response, newValue) {
+        if(!response.status) return response.msg;
+      },
+  });
+
+  <% job_applications.each_slice(2) do |job_applications_in_twos| %>
+    <% job_applications_in_twos.each do |job_application| %>
+      $("#<%= job_application[:job_id] %>-status").editable({
+        type: 'checklist',
+        title: 'Update status of the application',
+        placement: 'right',
+        url: '/consultant/<%= consultant.email %>/application/update',
+        separator: ',', // used to seperate values as arary from data-value
+        source: '/application/status/possible_values',
+        pk: '<%= job_application[:job_id] %>',
+        name: 'status',
+        success: function(response, newValue) {
+          if(!response.status) return response.msg;
+        },
+      })
+
+      $("#<%= job_application[:job_id] %>-notes").editable({
+        type: 'textarea',
+        title: 'Update notes',
+        placement: 'right',
+        url: '/consultant/<%= consultant.email %>/application/update',
+        name: 'notes',
+        pk: '<%= job_application[:job_id] %>',
+        success: function(response, newValue) {
+          if(!response.status) return response.msg;
+        },
+      });
+    <% end %>
+  <% end %>
+});
+</script>

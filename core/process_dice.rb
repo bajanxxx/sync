@@ -75,46 +75,6 @@ class ProcessDicePostings
     end
   end
 
-  # def process(page)
-  #   response = process_request(
-  #     @base_url,
-  #     params = {
-  #       :text => @search_string,
-  #       :age  => @age,
-  #       :page => page + 1,
-  #       :sort => 1
-  #     }
-  #   )
-  #   process_response(response) # process all job postings in specified page
-  # end
-
-  # def process_response(response)
-  #   json = JSON.parse(response.body)
-  #   total_docs = json['count']
-  #   last_doc_in_page = json['lastDocument']
-  #   printf "Processing postings: #{last_doc_in_page} | Total postings: #{total_docs} | Total processed: #{@processed}\n"
-  #   result = json['resultItemList']
-  #   Parallel.each(result, :in_threads => @threads_to_process) do |rs|
-  #     @mutex.synchronize { @processed += 1 }
-  #     response_internal = process_request(rs['detailUrl'])
-  #     if keep_posting?(response_internal)
-  #       @mutex.synchronize {
-  #         @processed_data[rs['detailUrl']] = {
-  #           :title => rs['jobTitle'],
-  #           :company => rs['company'],
-  #           :location => rs['location'],
-  #           :date => rs['date'],
-  #           :skills => pull_skills(response_internal) || nil,
-  #           :email  => pull_email(response_internal) || nil
-  #         }
-  #       }
-  #     end
-  #     # iteration 1 complete 25 records processed update progress
-  #   end
-  #   @fetcher_stats.update_progress(@percentage_per_iteration)
-  #   return if total_docs.to_i == last_doc_in_page.to_i
-  # end
-
   # figure out if the posting is to be kept based on 'Tax Term: *CON_CORP*'
   def keep_posting?(response)
     return false if response.nil?
@@ -158,40 +118,4 @@ class ProcessDicePostings
       []
     end
   end
-
-
-  # def run!
-  #   @traverse_depth.times do |page_count|
-  #     begin
-  #       process(page_count)
-  #     rescue Exception => ex
-  #       p ex
-  #       @fetcher_stats.update_fetcher_state('failed')
-  #       return false
-  #     end
-  #   end
-  #   # Add job postings to mongo
-  #   begin
-  #     @processed_data.each do |url, cols|
-  #       @job_postings.add_posting(
-  #         url,
-  #         cols[:date],
-  #         cols[:title],
-  #         cols[:company],
-  #         cols[:location],
-  #         cols[:skills],
-  #         cols[:email],
-  #         cols[:phone] || 'N/A'
-  #       )
-  #     end
-  #   rescue Exception => ex
-  #     p ex
-  #     @fetcher_stats.update_fetcher_state('failed')
-  #     return false
-  #   end
-  #   # we are done here, set job status as completed
-  #   @fetcher_stats.update_progress(@percentage_for_mongo)
-  #   @fetcher_stats.update_fetcher_state('completed')
-  #   return true
-  # end
 end

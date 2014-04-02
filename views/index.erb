@@ -1,1 +1,24 @@
-<h3>Welcome to cloudwick's job monitoring portal</h3>
+<div class="container theme-showcase" role="main">
+  <h2>Welcome to cloudwick's job monitoring portal</h2>
+  <% if @username %>
+    <% if !jobs.empty? %>
+      <div class="page-header">
+        <h3>Job Postings <small>(to follow up with)</small></h3>
+      </div>
+      <ul class="list-group">
+        <% jobs.each do |job| %>
+        <li class="list-group-item">
+          <span class="badge alert-info"><%= job.location %></span>
+          <span class="badge alert-success"><%= job.company %></span>
+          <a href="/job/<%= job._id %>"><%= job.title %></a>
+        </li>
+        <% end %>
+      </ul>
+      <p class="pull-right">
+        <a href="/jobs">view all posts</a>
+      </p>
+    <% end %>
+  <% else %>
+    <p>Login to continue.</p>
+  <% end %>
+</div>

@@ -8,6 +8,8 @@ require 'mongoid'
 require 'parallel'
 
 require_relative 'models/job'
+require_relative 'models/application'
+require_relative 'models/fetcher'
 
 class ProcessPostings
   def initialize(base_url, search_string, age, pages_to_traverse, page_search)
@@ -19,6 +21,13 @@ class ProcessPostings
     @processed_data     = Hash.new
     @mutex              = Mutex.new
     @processed          = 0
+    @total_postings_max = total_postings
+    @total_postings_req = pages_to_traverse * 50 # user asked for this many postings to process
+    @total_messages_to_process = if @total_postings_req > @total_postings_max
+                                  @total_postings_max
+                                else
+                                  @total_postings_req
+                                end
   end
 
   def process_request(base_url, params = {})
@@ -59,6 +68,16 @@ class ProcessPostings
       end
     end
     return if total_docs.to_i == last_doc_in_page.to_i
+  end
+
+  # Get the total number of job postings for a specified search string
+  def total_postings
+    res = process_request(@base_url, params = {:text => @search_string, :age => @age})
+    JSON.parse(res.body)['count'].to_i
+  end
+
+  def total_message_to_process
+    @total_messages_to_process
   end
 
   # figure out if the posting is to be kept based on 'Tax Term: *CON_CORP*'
@@ -169,15 +188,19 @@ if __FILE__ == $0
 
   Mongoid.load!("./mongoid.yml", :development)
 
-  data = ProcessPostings.new(
+  processor = ProcessPostings.new(
     "http://service.dice.com/api/rest/jobsearch/v1/simple.json",
     options.search_string,
     options.age_of_postings,
     options.traverse_depth,
     options.page_search_string
-  ).run
+  )
 
+  data = processor.run
+
+  puts "Updating job postings"
   data.each do |url, job_posting|
+    # TODO: INSERT JOB POSTING IF THERE IS NO EXISTING JOB POSTING WITH SAME URL
     Job.find_or_create_by(url: url) do |doc|
       doc.url         = url
       doc.date_posted = job_posting[:date_posted]
@@ -189,4 +212,14 @@ if __FILE__ == $0
       doc.phone_nums  = job_posting[:phone_nums]
     end
   end
+
+  puts "Writing Fetcher Stats"
+  Fetcher.create(
+    job_status:             'completed',
+    progress:               100.0,
+    jobs_fetched:           data.count,
+    message:                'Initializing',
+    jobs_processed:         processor.total_message_to_process,
+    init_time:              DateTime.now
+  )
 end

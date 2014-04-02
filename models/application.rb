@@ -1,0 +1,12 @@
+class Application
+  include Mongoid::Document
+
+  field :job_id, type: String
+  field :comments, type: Array
+  field :notes, type: String
+  field :resume_id, type: String
+  field :status, type: Array # [ 'APPLIED', 'CHECKING', 'AWAITING_UPDATE_FROM_USER', 'AWAITING_UPDATE_FROM_VENDOR', 'FOLLOW_UP' ]
+
+  belongs_to :consultant, class_name: 'Consultant'
+  belongs_to :job, class_name: 'Job'
+end
