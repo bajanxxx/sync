@@ -61,7 +61,7 @@ class ProcessDicePostings
     if keep_posting?(res)
       # Only create a document if the url does not exist
       p 'Inserting parsed posting to mongo'
-      Job.find_or_create_by(url: job_posting['detailUrl']) do |doc|
+      Job.find_or_create_by(url: url, date: job_posting['date']) do |doc|
         doc.url         = job_posting['detailUrl']
         doc.date_posted = job_posting['date']
         doc.title       = job_posting['jobTitle']

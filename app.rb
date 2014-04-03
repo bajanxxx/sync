@@ -363,17 +363,42 @@ class JobPortal < Sinatra::Base
   #
   # => Resumes
   #
-  post '/upload/resume' do
-    resume = Resume.create(:file => params[:file][:tempfile])
-    resume.file_name = params[:file][:filename]
-    resume.save
-    partial :resume, :locals => { :resume => resume }
+  get '/test' do
+    erb :test
   end
 
+  post '/upload/resume/:email' do |email|
+    consultant = Consultant.find_by(email: email)
+    file_name = params[:file][:filename]
+    temp_file = params[:file][:tempfile]
+    resume_id = upload_resume(temp_file,file_name)
+    if resume_id
+      p "uploaded resume"
+      consultant.resumes.find_or_create_by(file_name: file_name) do |resume|
+        resume.resume_id   = resume_id
+        resume.resume_name = file_name
+        resume.uploaded_date = DateTime.now
+      end
+    else
+      p "failed uploading resume"
+    end
+    flash[:info] = "Uploaded sucessfully #{resume_id}"
+    redirect back
+  end
+
+  # Download the resume by its id
   get '/resumes/:id' do |id|
-    resume = Resume.where(:id => id).first
-    file = resume.file
-    [200, {'Content-Type' => file.content_type}, [file.read]]
+    # resume_id = Resume.where(:id => id).first
+    resume = download_resume(id)
+    response.headers['content_type'] = "application/octet-stream"
+    attachment(resume.filename)
+    response.write(resume.read)
+    # send_file(
+    #   resume.read,
+    #   :type => 'application/octet-stream',
+    #   :disposition => 'attachment',
+    #   :filename => resume.filename
+    # )
   end
 
   #
@@ -386,13 +411,17 @@ class JobPortal < Sinatra::Base
 
   get '/jobs' do
     jobs = []
-    Job.distinct(:date_posted).reverse.each do |date|
+    Job.distinct(:date_posted).each do |date|
       total_jobs = Job.where(date_posted: date, hide: false).count
       read_jobs  = Job.where(date_posted: date, read: true, hide: false).count
       unread_jobs = total_jobs - read_jobs
       imp_postings = []
       Job.where(date_posted: date, hide: false).each do |job|
-        job.applications.map { |app| imp_postings << job if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED') }
+        job.applications.map do |app|
+          if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
+            imp_postings << job
+          end
+        end
       end
       jobs << {
         :date_url => date.strftime('%Y-%m-%d'),
@@ -407,6 +436,8 @@ class JobPortal < Sinatra::Base
   end
 
   get '/job/:id' do |id|
+    job = Job.find(id)
+    same_urls = Job.where(url: job.url)
     erb :job_by_id,
         :locals =>
         {
@@ -427,7 +458,7 @@ class JobPortal < Sinatra::Base
   # Mark the jobs as to trigger later
   post '/job/:id/:trigger' do |id, trigger|
     job = Job.find(id)
-    p trigger
+    # mark the post as forget and dont show this posting down the line
     if trigger == 'forget'
       job.update_attribute(:hide, true)
       flash[:info] = "Post marked as #{trigger}(#{job.title}). It won't be displayed the next time."
@@ -439,24 +470,16 @@ class JobPortal < Sinatra::Base
     redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
   end
 
-  # Manually enter job postings by the user
+  # TODO: Manually create job postings by the user
   post '/job/:id' do |id|
   end
 
+  # Process and show the jobs for a given date
   get '/jobs/:date' do |date|
-    # process and show the jobs for a given date
-    puts "About to fetch job postings for date: #{date}"
-    # Categorize jobs as read and unread
+    # Categorize jobs as read and unread and those which require attention
     read_jobs = Job.where(date_posted: date, read: true, hide: false)
     unread_jobs = Job.where(date_posted: date, read: false, hide: false)
-    postings_req_attention = []
-    Job.where(date_posted: date, hide: false).each do |job|
-      job.applications.map do |app|
-        if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-          postings_req_attention << job
-        end
-      end
-    end
+    # seperate postings that are read from unread
     read_postings = []
     read_jobs.each do |job|
       read_postings << job
@@ -466,7 +489,9 @@ class JobPortal < Sinatra::Base
       unread_postings << job
     end
 
-    # Sort un-read jobs by priority
+    # sort un-read jobs by priority, p1 postings are which directly have hadoop
+    # in title, and p2 postings are which have some realted big-date keyword in
+    # title
     p1 = Regexp.new('hadoop')
     p2 = Regexp.new('bigdata|big-data|cassandra|nosql|hbase|hive|pig|storm|kafka')
     unread_p1_jobs = unread_postings.find_all { |post| p1.match(post.title.downcase) }
@@ -475,7 +500,16 @@ class JobPortal < Sinatra::Base
     unread_jobs_sorted = unread_p1_jobs + unread_p2_jobs + unread_lp_jobs
 
     # Sort read jobs based on follow-up and applied priority
-    # follow_up_jobs = Job.where(date_posted: date, :trigger.in => ['FOLLOW_UP'])
+    # gather postings that require attention which are basically are the
+    # applications which are marked as follow_up or applied
+    postings_req_attention = []
+    Job.where(date_posted: date, hide: false).each do |job|
+      job.applications.map do |app|
+        if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
+          postings_req_attention << job
+        end
+      end
+    end
     rest_jobs = read_postings - postings_req_attention
     read_jobs_sorted = postings_req_attention + rest_jobs
 
@@ -584,22 +618,42 @@ class JobPortal < Sinatra::Base
   # Upload's a new resume using GridFS and returns id of the document
   # Onlt creates a document if there is no file exists with the same name
   def upload_resume(file_path, file_name)
-    include Mongo
     db = nil
     file_id = nil
     begin
-      db = MongoClient.new('localhost', 27017).db('job_portal')
-      grid = Grid.new(@db)
+      db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+      grid = Mongo::Grid.new(db)
 
       # Check if a file already exists with the name specified
       files_db = db['fs.files']
       unless files_db.find_one({:filename => file_name})
-        file_id = grid.put(File.open(file_path), filename: file_name)
-        return file_id
+        return grid.put(
+          File.open(file_path),
+          filename: file_name,
+          # content_type: file_type,
+          # metadata: { 'description' => description }
+        )
       else
         p 'File already exists'
         return nil
       end
+    rescue
+      return nil
+    ensure
+      db.connection.close if !db.nil?
+    end
+  end
+
+  # returns a grid fs object
+  def download_resume(resume_id)
+    file = nil
+
+    begin
+      db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+      grid = Mongo::Grid.new(db)
+
+      # Get the file out the db
+      return grid.get(BSON::ObjectId(resume_id))
     rescue
       return nil
     ensure

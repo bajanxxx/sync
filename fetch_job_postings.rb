@@ -200,8 +200,8 @@ if __FILE__ == $0
 
   puts "Updating job postings"
   data.each do |url, job_posting|
-    # TODO: INSERT JOB POSTING IF THERE IS NO EXISTING JOB POSTING WITH SAME URL
-    Job.find_or_create_by(url: url) do |doc|
+    # Only insert if a posting with date and url does not exist
+    Job.find_or_create_by(url: url, date: job_posting[:date_posted]) do |doc|
       doc.url         = url
       doc.date_posted = job_posting[:date_posted]
       doc.title       = job_posting[:title]

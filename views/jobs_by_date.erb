@@ -8,6 +8,9 @@
     <li class="list-group-item">
       <span class="badge alert-info"><%= job.location %></span>
       <span class="badge alert-success"><%= job.company %></span>
+      <% if Job.where(id: job.id).count > 1 %>
+      <span class="badge alert-warning">repeated</span>
+      <% end %>
       <a href="/job/<%= job._id %>"><%= job.title %></a>
     </li>
     <% end %>
@@ -22,6 +25,9 @@
     <% end %>
       <span class="badge"><%= job.location %></span>
       <span class="badge"><%= job.company %></span>
+      <% if Job.where(id: job.id).count > 1 %>
+      <span class="badge alert-warning">repeated</span>
+      <% end %>
       <a href="/job/<%= job._id %>"><%= job.title %></a>
     </li>
     <% end %>

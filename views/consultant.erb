@@ -68,8 +68,51 @@
   <% end %>
 </div>
 
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h3>Resumes</h3>
+  </div>
+  <!-- list available resumes -->
+  <div class="row">
+    <div class="col-md-6">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <a><strong>Resumes</strong></a>
+        </div>
+        <ul class="list-group">
+          <% consultant.resumes.each do |resume| %>
+          <li class="list-group-item">
+            <span class="badge"><%= resume.uploaded_date %></span>
+            <a href="/resumes/<%= resume.resume_id %>"><%= resume.resume_name %></a>
+          </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <a><strong>Upload Resume</strong></a>
+        </div>
+        <div class="panel-body">
+          <!-- upload new resumes -->
+          <form id="upload" method="post" action="/upload/resume/<%= consultant.email %>" enctype="multipart/form-data">
+            <input type="file" title="Select resumes to upload" name="file" multiple />
+            <ul id="fileList"></ul>
+            <input type="submit" class="btn btn-primary btn-md" value="upload!"/>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/bootstrap.file-input.js"></script>
 <script>
 $(document).ready(function() {
+  $('input[type=file]').bootstrapFileInput();
+  $('.file-inputs').bootstrapFileInput();
+
   // inline editing
   $.fn.editable.defaults.mode = 'inline';
   $.fn.editable.defaults.ajaxOptions = {type: "POST"};

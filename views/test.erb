@@ -5,20 +5,12 @@
   <div class="row-fluid">
     <div class="span8">
       <div class="jumbotron">
-        <p>This is ONE</p>
-      </div>
-    </div>
-    <div class="span4">
-      <div class="panel panel-primary">
-        <div class="panel-heading">Who are tracking:</div>
-        <div class="panel-body">
-          <ul class="list-group">
-            <li class="list-group-item">
-              <span class="badge alert-danger">APPLIED</span>
-              <a href="#">ashrith@cloudwick.com</a>
-            </li>
-          </ul>
-        </div>
+        <p>File uploader</p>
+        <form method="post" action="/upload/resume" enctype="multipart/form-data">
+          <input type="file" name="file"/>
+          <br>
+          <input type="submit" value="upload!"/>
+        </form>
       </div>
     </div>
   </div>
