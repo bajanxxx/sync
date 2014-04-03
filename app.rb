@@ -387,11 +387,11 @@ class JobPortal < Sinatra::Base
   get '/jobs' do
     jobs = []
     Job.distinct(:date_posted).reverse.each do |date|
-      total_jobs = Job.where(date_posted: date).count
-      read_jobs  = Job.where(date_posted: date, read: true).count
+      total_jobs = Job.where(date_posted: date, hide: false).count
+      read_jobs  = Job.where(date_posted: date, read: true, hide: false).count
       unread_jobs = total_jobs - read_jobs
       imp_postings = []
-      Job.where(date_posted: date).each do |job|
+      Job.where(date_posted: date, hide: false).each do |job|
         job.applications.map { |app| imp_postings << job if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED') }
       end
       jobs << {
@@ -427,9 +427,15 @@ class JobPortal < Sinatra::Base
   # Mark the jobs as to trigger later
   post '/job/:id/:trigger' do |id, trigger|
     job = Job.find(id)
-    job.add_to_set(:trigger, trigger.upcase)
-    job.update_attribute(:read, true) # also mark the job as read
-    flash[:info] = "Post marked as #{trigger}(#{job.title})"
+    p trigger
+    if trigger == 'forget'
+      job.update_attribute(:hide, true)
+      flash[:info] = "Post marked as #{trigger}(#{job.title}). It won't be displayed the next time."
+    else
+      job.add_to_set(:trigger, trigger.upcase)
+      job.update_attribute(:read, true) # also mark the job as read
+      flash[:info] = "Post marked as #{trigger}(#{job.title})"
+    end
     redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
   end
 
@@ -441,10 +447,10 @@ class JobPortal < Sinatra::Base
     # process and show the jobs for a given date
     puts "About to fetch job postings for date: #{date}"
     # Categorize jobs as read and unread
-    read_jobs = Job.where(date_posted: date, read: true)
-    unread_jobs = Job.where(date_posted: date, read: false)
+    read_jobs = Job.where(date_posted: date, read: true, hide: false)
+    unread_jobs = Job.where(date_posted: date, read: false, hide: false)
     postings_req_attention = []
-    Job.where(date_posted: date).each do |job|
+    Job.where(date_posted: date, hide: false).each do |job|
       job.applications.map do |app|
         if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
           postings_req_attention << job

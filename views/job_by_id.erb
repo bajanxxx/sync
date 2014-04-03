@@ -69,7 +69,7 @@
               <li><a id="CHECK_LATER">Check Later</a></li>
               <li><a id="FOLLOW_UP">Add to Follow Up List</a></li>
               <li class="divider"></li>
-              <li><a href="ForgetPost">Forget this posting</a></li>
+              <li><a id="FORGET_POST">Forget this posting</a></li>
             </ul>
           </div>
         </div> <!-- btn-group -->
@@ -169,5 +169,16 @@
       }
     });
   });
-
+  $('#FORGET_POST').click(function() {
+    $.ajax({
+      type: "POST",
+      url: "/job/" + job_id + "/forget",
+      success: function(data){
+        history.go(-1);
+      },
+      error: function(e){
+        alert("Error occurred");
+      }
+    });
+  });
 </script>
