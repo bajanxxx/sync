@@ -235,6 +235,7 @@ class JobPortal < Sinatra::Base
   # Send consultant email reg job details that he/her has to apply
   post '/consultant/send_posting/:email/:job_id' do |email, job_id|
     job = Job.find(job_id)
+    notes = params[:notes]
     # Add consultant to list of 'applications' in the 'consultant' document to keep track of
     user = Consultant.find_by(email: email)
     user.applications.find_or_create_by(job_id: job_id) do |application|
@@ -247,7 +248,9 @@ class JobPortal < Sinatra::Base
       :cc => 'shiva@cloudwick.com',
       :to => email,
       :subject => "Check this job: (#{job.title})",
-      :body => "#{job.company} has posted a job with title (#{job.title}) at #{job.location}.\n Check the following link: #{job.url}",
+      :body => "#{job.company} has posted a job with title (#{job.title}) at #{job.location}.\n" +
+               " Check the following link: #{job.url}\n\n" +
+               "Notes: #{notes}",
       :via => :smtp,
       :via_options => {
         :address              => 'smtp.gmail.com',
@@ -355,6 +358,22 @@ class JobPortal < Sinatra::Base
     else
       status_values.to_json
     end
+  end
+
+  #
+  # => Resumes
+  #
+  post '/upload/resume' do
+    resume = Resume.create(:file => params[:file][:tempfile])
+    resume.file_name = params[:file][:filename]
+    resume.save
+    partial :resume, :locals => { :resume => resume }
+  end
+
+  get '/resumes/:id' do |id|
+    resume = Resume.where(:id => id).first
+    file = resume.file
+    [200, {'Content-Type' => file.content_type}, [file.read]]
   end
 
   #
