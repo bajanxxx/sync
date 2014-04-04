@@ -78,14 +78,10 @@ class JobPortal < Sinatra::Base
     jobs_to_render = []
     follow_up_jobs = Application.where(:status.in => ['FOLLOW_UP', 'APPLIED'])
     follow_up_jobs && follow_up_jobs.each do |application|
-      jobs_to_render << Job.find_by(url: application.job_url)
+      jobs_to_render << Job.where(url: application.job_url, hide: false)
     end
-    erb :index, :locals => { :jobs => jobs_to_render }
-  end
-
-  # TODO: delete route
-  get '/test' do
-    erb :test
+    p jobs_to_render.map! { |job| job.entries }.reject(&:empty?)
+    erb :index, :locals => { :jobs => jobs_to_render.flatten }
   end
 
   #
@@ -610,24 +606,38 @@ class JobPortal < Sinatra::Base
         init_time:              DateTime.now
       )
       traverse_depth = 1
-      @job_processor = ProcessDicePostings.new('hadoop', 1, ['CON_CORP'])
-      total_postings_max = @job_processor.total_postings
-      total_postings_req = traverse_depth * 50 # user asked for this many postings to process
-      total_iterations_required = if total_postings_req > total_postings_max
-                                    total_postings_max
+      search_terms = Job.distinct(:search_term).sort
+      if search_terms.empty?
+        search_terms = %w(hadoop cassandra)
+      end
+      @job_processors = []
+      total_postings_maximum = 0 # aggregated for all job processors
+      total_postings_required = ( traverse_depth * 50 ) * search_terms.length
+      # Gather all the processors
+      search_terms.each do |search_term|
+        @job_processors << ProcessDicePostings.new(search_term, 1, ['CON_CORP'])
+      end
+      @job_processors.each do |processor|
+        total_postings_maximum += processor.total_postings
+      end
+      total_iterations_required = if total_postings_required > total_postings_maximum
+                                    total_postings_maximum
                                   else
-                                    total_postings_req
+                                    total_postings_required
                                   end
       percentage_for_url_processing = 5
       percentage_per_iteration = ( 90.to_f / total_iterations_required )
+
       @jobs_to_process = []
       child_pid = Process.fork do
         Fetcher.last.update_attribute(:message, 'Gathering URLs to process')
         begin
-          traverse_depth.times do |page|
-            p "Processing urls for page: #{page + 1}"
-            @job_processor.get_urls(page).each do |job_posting|
-              @jobs_to_process << job_posting
+          @job_processors.each do |processor|
+            traverse_depth.times do |page|
+              p "Processing urls for page: #{page + 1}"
+              processor.get_urls(page).each do |job_posting|
+                @jobs_to_process << job_posting
+              end
             end
           end
         rescue Exception => ex
@@ -640,7 +650,7 @@ class JobPortal < Sinatra::Base
         Fetcher.last.update_attribute(:message, 'Processing URLs')
         begin
           @jobs_to_process.each do |job|
-            @job_processor.process_job_postings(job)
+            @job_processors.first.process_job_postings(job)
             Fetcher.last.inc(:progress, percentage_per_iteration)
             Fetcher.last.inc(:jobs_processed, 1)
           end
