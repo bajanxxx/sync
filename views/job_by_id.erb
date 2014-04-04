@@ -29,6 +29,55 @@
   </div>
 </div>
 
+<!-- Apply Now Modal -->
+<div class="modal fade" id="ApplyNow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Apply now:</h4>
+      </div>
+      <div class="modal-body">
+        <!-- Populate Consultants to select -->
+        <form id="ApplyNowForm" class="form-horizontal" role="form">
+          <div class="form-group">
+            <label>Consultant: </label>
+            <select id="ApplyNowConsultantEmail" name="ApplyNowConsultantEmail" class="form-control">
+              <% consultants.each do |email| %>
+              <option value="<%= email %>"><%= email %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Select Resume: </label>
+            <select id="ApplyNowConsultantResume" name="ApplyNowConsultantResume" class="form-control">
+              <option value="" selected="selected">None</option>
+              <% consultants.each do |email| %>
+                <% !resumes[email].empty? && resumes[email].each do |resume| %>
+                <option id="<%= email %>" value="<%= resume.resume_name %>"><%= resume.resume_name %></option>
+                <% end %>
+              <% end %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ApplyNowNotes">Vendor Email: </label>
+            <input type="email" id="ApplyNowVendorEmail" class="form-control" placeholder="Email">
+          </div>
+          <div class="form-group">
+            <label for="ApplyNowBody">Email Body: </label>
+            <textarea name="ApplyNowBody" class="form-control" rows="3"></textarea>
+          </div>
+          <p id="ApplyNowFormLabel" class="text-center"></p>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="ApplyNowButton" type="button" class="btn btn-primary">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Actual Container -->
 <div class="container theme-showcase" role="main">
   <div class="page-header">
@@ -37,6 +86,11 @@
   <div class="row-fluid">
     <div class="span8">
       <div class="jumbotron">
+        <div class="row-fluid">
+          <a class="btn btn-primary btn-md" role="button" id="gobackinternal">Go Back</a>
+          <a class="btn btn-primary btn-md pull-right" role="button" href="<%= job.url %>">GoTo Source</a>
+        </div>
+        <hr>
         <table class="table table-hover">
           <tr>
             <th>Job Headers</th>
@@ -50,31 +104,14 @@
           </tr>
           <% end %>
         </table>
-        <div class="btn-group">
-          <div class="btn-group">
-            <a class="btn btn-primary btn-md" role="button" id="gobackinternal">Go Back</a>
-          </div>
-          <div class="btn-group">
-            <a class="btn btn-primary btn-md" role="button" href="<%= job.url %>">Goto Source</a>
-            <!-- <a class="btn btn-primary btn-md" role="button" data-toggle="modal" href="<%= job.url %>" data-target="#loadRemotePage">Load Source</a> -->
-          </div>
-          <div class="btn-group dropup">
-            <button type="button" class="btn btn-primary btn-md">Actions</button>
-            <button type="button" class="btn btn-primary btn-md dropdown-toggle" data-toggle="dropdown">
-              <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu" role="menu">
-              <li><a id="SEND_VENDOR">Send to Vendor</a></li>
-              <li><a id="SEND_CONSULTANT" data-toggle="modal" href="#SendToConsultant">Send to Consultant</a></li>
-              <li><a id="CHECK_LATER">Check Later</a></li>
-              <li><a id="FOLLOW_UP">Add to Follow Up List</a></li>
-              <li class="divider"></li>
-              <li><a id="FORGET_POST">Forget this posting</a></li>
-            </ul>
-          </div>
-        </div> <!-- btn-group -->
+        <div class="btn-group btn-group-justified">
+          <a role="button" class="btn btn-primary" id="SEND_CONSULTANT" data-toggle="modal" href="#SendToConsultant">Foward Consultant</a>
+          <a role="button" class="btn btn-primary" id="FORGET_POST">Forget</a>
+          <a role="button" class="btn btn-primary" id="APPLY_NOW" data-toggle="modal" href="#ApplyNow">Apply</a>
+        </div>
       </div> <!-- jumbotron -->
     </div>
+    <% if !tracking.empty? %>
     <div class="span4">
       <div class="panel panel-primary">
         <div class="panel-heading">Who are tracking:</div>
@@ -92,15 +129,25 @@
         </div>
       </div>
     </div>
+    <% end %>
   </div>
 </div>
 
 <script type="text/javascript">
   // sessionStorage.setItem('JobPostingVisited', 'True');
   var url = document.URL;
-  console.log("url: " + url)
   var job_id = url.substring(url.lastIndexOf('/') + 1);
-  console.log("job_id: " + job_id)
+  // Load resumes based on consultant selected
+  $("#ApplyNowConsultantEmail").change(function() {
+    if($(this).data('options') == undefined){
+      /*Taking an array of all options-2 and kind of embedding it on the select1*/
+      $(this).data('options',$('#ApplyNowConsultantResume option').clone());
+    }
+    var id = $(this).val();
+    var options = $(this).data('options').filter('[id="' + id + '"]');
+    $('#ApplyNowConsultantResume').html(options);
+  });
+
   $('#gobackinternal').click(function() {
     $.ajax({
       type: "POST",
@@ -142,7 +189,7 @@
     var email = $('select[name="ConsultantEmail"]').val();
     var notes = $('textarea[name="ConsultantEmailNotes"]').val();
     console.log(email);
-    $('#SendToConsultantFormLabel').html('Sending email & updating user...');
+    $('#SendToConsultantFormLabel').html('Sending email & updating user ...');
     $.ajax({
       type: "POST",
       url: "/consultant/send_posting/" + email + "/" + job_id,
@@ -154,6 +201,26 @@
       },
       error: function(e) {
         $('#SendToConsultantFormLabel').addClass('text-danger').html('Something went wrong sending email!!!');
+      }
+    });
+  });
+  $('#ApplyNowButton').click(function(){
+    var email  = $('select[name="ApplyNowConsultantEmail"]').val();
+    var resume_name = $('select[name="ApplyNowConsultantResume"]').val();
+    var vendor_email = $('#ApplyNowVendorEmail').val();
+    var email_body = $('textarea[name="ApplyNowBody"]').val();
+    $('#ApplyNowFormLabel').html('Sending email ...');
+    $.ajax({
+      type: 'POST',
+      url: "/posting/apply_now/" + job_id,
+      data: { 'email_body': email_body, 'resume_name': resume_name, 'vendor_email': vendor_email, 'consultant_email': email },
+      success: function(data) {
+        $('#ApplyNowFormLabel').addClass('text-info').html('Sucessfully sent email');
+        $('#ApplyNow').modal('hide');
+        history.go(-1);
+      },
+      error: function(e) {
+        $('#ApplyNowFormLabel').addClass('text-danger').html('Something went wrong sending email!!!');
       }
     });
   });

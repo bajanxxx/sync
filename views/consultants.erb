@@ -57,6 +57,7 @@
       </p>
     </h2>
   </div>
+  <% if !consultants.empty? %>
   <table class="table table-hover">
     <tr>
       <th>Email</th>
@@ -77,6 +78,9 @@
       </tr>
     <% end %>
   </table>
+  <% else %>
+  <h4 class="text-primary">No one's here create consultants using 'Add New'</h4>
+  <% end %>
 </div>
 
 <script type="text/javascript">

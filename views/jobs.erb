@@ -1,24 +1,33 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2>Job Postings
-      <small>(consilated by date)</small>
+      <small>(consolidated by date)</small>
       <p class="pull-right">
         <a href="/fetcher/fetch_now" class="btn btn-primary btn-md" role="button">Update Now &raquo;</a>
       </p>
     </h2>
   </div>
-  <!-- <div class="row col-sm-10"> -->
   <ul class="list-group">
     <% jobs.each do |job| %>
     <li class="list-group-item">
       <span class="badge"><%= job[:count] %></span>
       <span class="badge alert-info">read: <%= job[:read] %></span>
       <span class="badge alert-success">new: <%= job[:unread] %></span>
+      <% if job[:followup] > 0 %>
       <span class="badge alert-danger">attn_req: <%= job[:followup] %></span>
+      <% end %>
       <a href="/jobs/<%= job[:date_url] %>"><%= job[:date] %></a>
     </li>
     <!-- <li class="list-group-item"><span class="badge">21</span><span class="badge">cassandra</span>Friday, 28</li> -->
     <% end %>
   </ul>
-  <!-- </div> -->
+
+  <% if !fetcher.nil? %>
+  <div class="panel panel-default">
+    <div class="panel-heading">Fetcher Stats</div>
+    <div class="panel-body">
+      <strong>Lasr run:</strong> <%= fetcher.init_time %>, <strong>Status:</strong> <%= fetcher.job_status %>, <strong>Processed:</strong> <%= fetcher.jobs_processed %>, <strong>Filtered:</strong> <%= fetcher.jobs_filtered %>, <strong>Inserted:</strong> <%= fetcher.jobs_inserted %>
+    </div>
+  </div>
+  <% end %>
 </div>

@@ -78,7 +78,7 @@ class JobPortal < Sinatra::Base
     jobs_to_render = []
     follow_up_jobs = Application.where(:status.in => ['FOLLOW_UP', 'APPLIED'])
     follow_up_jobs && follow_up_jobs.each do |application|
-      jobs_to_render << Job.find_by(_id: application.job_id)
+      jobs_to_render << Job.find_by(url: application.job_url)
     end
     erb :index, :locals => { :jobs => jobs_to_render }
   end
@@ -176,6 +176,10 @@ class JobPortal < Sinatra::Base
   # => CONSULTANTS
   #
 
+  before '/consultants' do
+    redirect '/login' if !@username
+  end
+
   # Display consultants available
   get '/consultants' do
     erb :consultants, :locals => { :consultants => Consultant.all.entries }
@@ -218,11 +222,12 @@ class JobPortal < Sinatra::Base
     consultant = Consultant.find_by(email: id)
     job_applications = []
     consultant.applications.each do |application|
-      job = Job.find_by(id: application.job_id)
+      job = Job.find_by(url: application.job_url)
       job_applications << {
-        job_id: job.id,
+        job_url: job.url,
         title: job.title,
         posted_date: job.date_posted.strftime('%Y-%m-%d'),
+        application_id: application.id,
         status: application.status || [],
         comments: application.comments,
         resume_used: application.resume_id, # Only if application.status == 'APPLIED'
@@ -238,7 +243,8 @@ class JobPortal < Sinatra::Base
     notes = params[:notes]
     # Add consultant to list of 'applications' in the 'consultant' document to keep track of
     user = Consultant.find_by(email: email)
-    user.applications.find_or_create_by(job_id: job_id) do |application|
+    user.applications.find_or_create_by(job_url: job.url) do |application|
+      # application.add_to_set(:job_id)
       application.add_to_set(:comments, 'Forwareded to consultant')
       application.add_to_set(:status, 'AWAITING_UPDATE_FROM_USER')
     end
@@ -265,10 +271,11 @@ class JobPortal < Sinatra::Base
     # Same old add trigger
     job.add_to_set(:trigger, 'SEND_CONSULTANT')
     job.update_attribute(:read, true) # also mark the job as read
-    flash[:info] = "Post marked as sent to consultant & read(#{job.title})"
+    flash[:info] = "Post marked as 'sent to consultant' & 'read' (#{job.title})"
     redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
   end
 
+  # Delete the consultant and all the applications associated to that email
   post '/consultant/delete/:email' do |email|
     Consultant.find_by(email: email).delete
     Application.delete_all(consultant_id: email)
@@ -313,7 +320,7 @@ class JobPortal < Sinatra::Base
       success = false
       message = "Cannot find user specified by #{consultant_id}"
     end
-    application = consultant.applications.find_by(job_id: application_id)
+    application = consultant.applications.find_by(id: application_id)
     if application.nil?
       success = false
       message = "Cannot find application specified by #{application_id} for user #{consultant_id}"
@@ -344,9 +351,9 @@ class JobPortal < Sinatra::Base
     end
   end
 
-  #
-  # => APPLICATIONS
-  #
+  ###
+  ### => APPLICATIONS
+  ###
 
   get '/application/status/possible_values' do
     status_values = []
@@ -360,12 +367,57 @@ class JobPortal < Sinatra::Base
     end
   end
 
-  #
-  # => Resumes
-  #
-  get '/test' do
-    erb :test
+  ###
+  ### => Apply
+  ###
+
+  post '/posting/apply_now/:id' do |job_id|
+    vendor_email = params[:vendor_email]
+    email_body = params[:email_body]
+    resume_name = params[:resume_name]
+    email = params[:consultant_email]
+    # Add consultant to list of 'applications' in the 'consultant' document to keep track of
+    job = Job.find(job_id)
+    user = Consultant.find_by(email: email)
+    user.applications.find_or_create_by(job_url: job.url) do |application|
+      # application.add_to_set(:job_id)
+      application.add_to_set(:comments, 'Applied/Forwarded to vendor')
+      application.add_to_set(:status, 'APPLIED')
+    end
+    # Retrieve the resume from mongo
+    resume_id = Resume.find_by(resume_name: resume_name).resume_id
+    resume = download_resume(resume_id)
+    # Compose an email to specified consultant
+    Pony.mail(
+      :from => 'admin' + "<" + 'admin@cloudwick.com' + ">",
+      :cc => 'shiva@cloudwick.com',
+      :to => vendor_email,
+      :subject => "Applying Job Post: (#{job.title})",
+      :body => email_body,
+      :attachments => {
+        resume_name => resume.read
+      },
+      :via => :smtp,
+      :via_options => {
+        :address              => 'smtp.gmail.com',
+        :port                 => '587',
+        :enable_starttls_auto => true,
+        :user_name            => 'admin@cloudwick.com',
+        :password             => 'balentine380',
+        :authentication       => :plain,
+        :domain               => 'localhost.localdomain'
+      }
+    )
+    # Same old add trigger
+    job.add_to_set(:trigger, 'SEND_CONSULTANT')
+    job.update_attribute(:read, true) # also mark the job as read
+    flash[:info] = "Post marked as 'applied' & 'read' (#{job.title})"
+    redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
   end
+
+  ###
+  ### => Resumes
+  ###
 
   post '/upload/resume/:email' do |email|
     consultant = Consultant.find_by(email: email)
@@ -411,13 +463,13 @@ class JobPortal < Sinatra::Base
 
   get '/jobs' do
     jobs = []
-    Job.distinct(:date_posted).each do |date|
+    Job.distinct(:date_posted).sort.reverse.each do |date|
       total_jobs = Job.where(date_posted: date, hide: false).count
       read_jobs  = Job.where(date_posted: date, read: true, hide: false).count
       unread_jobs = total_jobs - read_jobs
       imp_postings = []
       Job.where(date_posted: date, hide: false).each do |job|
-        job.applications.map do |app|
+        Application.where(job_url: Job.find(job.id).url).entries.each do |app|
           if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
             imp_postings << job
           end
@@ -432,18 +484,24 @@ class JobPortal < Sinatra::Base
         :followup => imp_postings.count
       }
     end
-    erb :jobs, :locals => { :jobs => jobs }
+    erb :jobs, :locals => { :jobs => jobs, :fetcher => Fetcher.last }
   end
 
   get '/job/:id' do |id|
     job = Job.find(id)
-    same_urls = Job.where(url: job.url)
+    consultant_emails = Consultant.all.pluck(:email)
+    resumes = {}
+    # { email => { Resumes } }
+    consultant_emails.each do |email|
+      resumes[email] = Consultant.find(email).resumes
+    end
     erb :job_by_id,
         :locals =>
         {
           :job => Job.find(id),
-          :consultants => Consultant.all.pluck(:email),
-          :tracking => Application.where(job_id: id)
+          :consultants => Consultant.all.pluck(:email), # for sending emails
+          :resumes => resumes,
+          :tracking => Application.where(job_url: job.url)
         }
   end
 
@@ -504,7 +562,7 @@ class JobPortal < Sinatra::Base
     # applications which are marked as follow_up or applied
     postings_req_attention = []
     Job.where(date_posted: date, hide: false).each do |job|
-      job.applications.map do |app|
+      Application.where(job_url: Job.find(job.id).url).entries.each do |app|
         if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
           postings_req_attention << job
         end
@@ -555,7 +613,6 @@ class JobPortal < Sinatra::Base
       percentage_per_iteration = ( 90.to_f / total_iterations_required )
       @jobs_to_process = []
       child_pid = Process.fork do
-        p 'Gathering URLs to process'
         Fetcher.last.update_attribute(:message, 'Gathering URLs to process')
         begin
           traverse_depth.times do |page|
@@ -567,15 +624,13 @@ class JobPortal < Sinatra::Base
         rescue Exception => ex
           Fetcher.last.update_attribute(:message, ex)
           Fetcher.last.update_attribute(:job_status, 'failed')
-          return
+          Process.exit
         end
         Fetcher.last.inc(:total_jobs_to_process, @jobs_to_process.length)
         Fetcher.last.inc(:progress, percentage_for_url_processing)
         Fetcher.last.update_attribute(:message, 'Processing URLs')
-        p 'Processing URLs'
         begin
           @jobs_to_process.each do |job|
-            # p "Processing job posting: #{job}"
             @job_processor.process_job_postings(job)
             Fetcher.last.inc(:progress, percentage_per_iteration)
             Fetcher.last.inc(:jobs_processed, 1)
@@ -583,7 +638,7 @@ class JobPortal < Sinatra::Base
         rescue Exception => ex
           Fetcher.last.update_attribute(:message, ex)
           Fetcher.last.update_attribute(:job_status, 'failed')
-          return
+          Process.exit
         end
         Fetcher.last.update_attribute(:message, 'completed with no errors')
         Fetcher.last.update_attribute(:job_status, 'completed')
@@ -646,19 +701,17 @@ class JobPortal < Sinatra::Base
 
   # returns a grid fs object
   def download_resume(resume_id)
-    file = nil
+    db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+    grid = Mongo::Grid.new(db)
 
-    begin
-      db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
-      grid = Mongo::Grid.new(db)
-
-      # Get the file out the db
-      return grid.get(BSON::ObjectId(resume_id))
-    rescue
-      return nil
-    ensure
-      db.connection.close if !db.nil?
-    end
+    # Get the file out the db
+    return grid.get(BSON::ObjectId(resume_id))
+    # return grid.get(resume_id)
+  rescue Exception => ex
+    p ex
+    return nil
+  ensure
+    db.connection.close if !db.nil?
   end
 
   # Validates user signup

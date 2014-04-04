@@ -1,7 +1,8 @@
 class Application
   include Mongoid::Document
 
-  field :job_id, type: String
+  # field :job_id, type: Array
+  field :job_url, type: String
   field :comments, type: Array
   field :notes, type: String
   field :resume_id, type: String

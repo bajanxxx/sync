@@ -198,10 +198,13 @@ if __FILE__ == $0
 
   data = processor.run
 
+  inserted_docs = 0
+
   puts "Updating job postings"
   data.each do |url, job_posting|
     # Only insert if a posting with date and url does not exist
-    Job.find_or_create_by(url: url, date: job_posting[:date_posted]) do |doc|
+    Job.find_or_create_by(url: url, date_posted: job_posting[:date_posted]) do |doc|
+      inserted_docs += 1
       doc.url         = url
       doc.date_posted = job_posting[:date_posted]
       doc.title       = job_posting[:title]
@@ -215,11 +218,12 @@ if __FILE__ == $0
 
   puts "Writing Fetcher Stats"
   Fetcher.create(
-    job_status:             'completed',
-    progress:               100.0,
-    jobs_fetched:           data.count,
-    message:                'Initializing',
-    jobs_processed:         processor.total_message_to_process,
-    init_time:              DateTime.now
+    job_status:     'completed',
+    progress:       100.0,
+    jobs_filtered:  data.count,
+    message:        'Initializing',
+    jobs_processed: processor.total_message_to_process,
+    init_time:      DateTime.now,
+    jobs_inserted:  inserted_docs
   )
 end

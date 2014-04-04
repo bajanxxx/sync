@@ -16,6 +16,7 @@ class ProcessDicePostings
     @processed_data     = Hash.new
     @mutex              = Mutex.new
     @processed          = 0
+    @inserted           = 0
   end
 
   # Process a http request using net/http, also follow redirect's one level deep
@@ -60,9 +61,9 @@ class ProcessDicePostings
     res = process_request(job_posting['detailUrl'])
     if keep_posting?(res)
       # Only create a document if the url does not exist
-      p 'Inserting parsed posting to mongo'
-      Job.find_or_create_by(url: url, date: job_posting['date']) do |doc|
-        doc.url         = job_posting['detailUrl']
+      url = job_posting['detailUrl']
+      Job.find_or_create_by(url: url, date_posted: job_posting['date']) do |doc|
+        doc.url         = url
         doc.date_posted = job_posting['date']
         doc.title       = job_posting['jobTitle']
         doc.company     = job_posting['company']
@@ -70,8 +71,9 @@ class ProcessDicePostings
         doc.skills      = pull_skills(res)
         doc.emails      = pull_email(res)
         doc.phone_nums  = pull_phone(res)
+        Fetcher.last.inc(:jobs_inserted, 1)
       end
-      Fetcher.last.inc(:jobs_fetched, 1)
+      Fetcher.last.inc(:jobs_filtered, 1)
     end
   end
 

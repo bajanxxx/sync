@@ -5,7 +5,8 @@ class Fetcher
 
   field :job_status,            type: String
   field :progress,              type: Float
-  field :jobs_fetched,          type: Integer
+  field :jobs_filtered,         type: Integer
+  field :jobs_inserted,         type: Integer
   field :message,               type: String
   field :jobs_processed,        type: Integer
   field :total_jobs_to_process, type: Integer

@@ -30,14 +30,14 @@
             $("#progressinner").css("width", '100%');
             $("#progressouter").removeClass('progress-stripped active').addClass('progress-bar-success')
             // $('#progressouter').load(document.URL +  '#progressouter');
-            $("#console-text").html('Sucessfully completed.')
+            $("#console-text").addClass('text-info').html('Sucessfully completed.')
             console.log("clearing interval")
             clearInterval(interval)
           } else {
             console.log("state is unknown")
             $("#progressinner").css("width", '100%');
             $("#progressouter").removeClass('progress-stripped active').addClass('progress-bar-danger')
-            $("#console-text").html('Something went wrong.')
+            $("#console-text").addClass('text-danger').html('Something went wrong.')
             console.log("clearing interval")
             clearInterval(interval)
           }
