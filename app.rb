@@ -462,29 +462,87 @@ class JobPortal < Sinatra::Base
   end
 
   get '/jobs' do
-    jobs = []
-    Job.distinct(:date_posted).sort.reverse.each do |date|
-      total_jobs = Job.where(date_posted: date, hide: false).count
-      read_jobs  = Job.where(date_posted: date, read: true, hide: false).count
-      unread_jobs = total_jobs - read_jobs
-      imp_postings = []
-      Job.where(date_posted: date, hide: false).each do |job|
+    jobs = {}
+    Job.distinct(:search_term).sort.each do |search_term|
+      jobs[search_term] = []
+      Job.where(:search_term => search_term).distinct(:date_posted).sort.reverse.each do |date|
+        total_jobs = Job.where(:search_term => search_term, date_posted: date, hide: false).count
+        read_jobs  = Job.where(:search_term => search_term, date_posted: date, read: true, hide: false).count
+        unread_jobs = total_jobs - read_jobs
+        imp_postings = []
+        Job.where(:search_term => search_term, date_posted: date, hide: false).each do |job|
+          Application.where(job_url: Job.find(job.id).url).entries.each do |app|
+            if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
+              imp_postings << job
+            end
+          end
+        end
+        jobs[search_term] << {
+          date_url: date.strftime('%Y-%m-%d'),
+          date:     date.strftime('%A, %b %d'),
+          count:    total_jobs,
+          read:     read_jobs,
+          unread:   unread_jobs,
+          followup: imp_postings.count
+        }
+      end
+    end
+    erb :jobs, :locals => { :jobs => jobs, :fetcher => Fetcher.last }
+  end
+
+  # Process and show the jobs for a given date
+  get '/jobs/:date' do |date|
+    categorized_jobs = {}
+    p2_search_params = %w(bigdata big-data nosql hbase hive pig storm kafka hadoop cassandra)
+    Job.distinct(:search_term).sort.each do |search_term|
+      read_jobs = Job.where(:search_term => search_term, date_posted: date, read: true, hide: false)
+      unread_jobs = Job.where(:search_term => search_term, date_posted: date, read: false, hide: false)
+      # seperate postings that are read from unread
+      read_postings = []
+      read_jobs.each do |job|
+        read_postings << job
+      end
+      unread_postings = []
+      unread_jobs.each do |job|
+        unread_postings << job
+      end
+      p1 = Regexp.new(search_term)
+      p2 = Regexp.new((p2_search_params - [search_term]).join('|'))
+      # sort un-read jobs by priority, p1 postings are which directly have hadoop
+      # in title, and p2 postings are which have some realted big-date keyword in
+      # title
+      unread_p1_jobs = unread_postings.find_all { |post| p1.match(post.title.downcase) }
+      unread_p2_jobs = unread_postings.find_all { |post| p2.match(post.title.downcase) }
+      unread_lp_jobs  = unread_postings - ( unread_p1_jobs + unread_p2_jobs )
+      unread_jobs_sorted = unread_p1_jobs + unread_p2_jobs + unread_lp_jobs
+
+      # Sort read jobs based on follow-up and applied priority
+      # gather postings that require attention which are basically are the
+      # applications which are marked as follow_up or applied
+      postings_req_attention = []
+      Job.where(:search_term => search_term, date_posted: date, hide: false).each do |job|
         Application.where(job_url: Job.find(job.id).url).entries.each do |app|
           if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-            imp_postings << job
+            postings_req_attention << job
           end
         end
       end
-      jobs << {
-        :date_url => date.strftime('%Y-%m-%d'),
-        :date     => date.strftime('%A, %b %d'),
-        :count    => total_jobs,
-        :read     => read_jobs,
-        :unread   => unread_jobs,
-        :followup => imp_postings.count
+      rest_jobs = read_postings - postings_req_attention
+      read_jobs_sorted = postings_req_attention + rest_jobs
+
+      categorized_jobs[search_term] = {
+        read_jobs:      read_jobs_sorted,
+        unread_jobs:    unread_jobs_sorted,
+        atten_req_jobs: postings_req_attention
       }
     end
-    erb :jobs, :locals => { :jobs => jobs, :fetcher => Fetcher.last }
+
+    # finally render the page
+    erb :jobs_by_date,
+        :locals => {
+          :date => date,
+          :categorized_jobs => categorized_jobs,
+        }
   end
 
   get '/job/:id' do |id|
@@ -530,55 +588,6 @@ class JobPortal < Sinatra::Base
 
   # TODO: Manually create job postings by the user
   post '/job/:id' do |id|
-  end
-
-  # Process and show the jobs for a given date
-  get '/jobs/:date' do |date|
-    # Categorize jobs as read and unread and those which require attention
-    read_jobs = Job.where(date_posted: date, read: true, hide: false)
-    unread_jobs = Job.where(date_posted: date, read: false, hide: false)
-    # seperate postings that are read from unread
-    read_postings = []
-    read_jobs.each do |job|
-      read_postings << job
-    end
-    unread_postings = []
-    unread_jobs.each do |job|
-      unread_postings << job
-    end
-
-    # sort un-read jobs by priority, p1 postings are which directly have hadoop
-    # in title, and p2 postings are which have some realted big-date keyword in
-    # title
-    p1 = Regexp.new('hadoop')
-    p2 = Regexp.new('bigdata|big-data|cassandra|nosql|hbase|hive|pig|storm|kafka')
-    unread_p1_jobs = unread_postings.find_all { |post| p1.match(post.title.downcase) }
-    unread_p2_jobs = unread_postings.find_all { |post| p2.match(post.title.downcase) }
-    unread_lp_jobs  = unread_postings - ( unread_p1_jobs + unread_p2_jobs )
-    unread_jobs_sorted = unread_p1_jobs + unread_p2_jobs + unread_lp_jobs
-
-    # Sort read jobs based on follow-up and applied priority
-    # gather postings that require attention which are basically are the
-    # applications which are marked as follow_up or applied
-    postings_req_attention = []
-    Job.where(date_posted: date, hide: false).each do |job|
-      Application.where(job_url: Job.find(job.id).url).entries.each do |app|
-        if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-          postings_req_attention << job
-        end
-      end
-    end
-    rest_jobs = read_postings - postings_req_attention
-    read_jobs_sorted = postings_req_attention + rest_jobs
-
-    # finally render the page
-    erb :jobs_by_date,
-        :locals => {
-          :date => date,
-          :read_jobs => read_jobs_sorted,
-          :unread_jobs => unread_jobs_sorted,
-          :atten_req_jobs => postings_req_attention
-        }
   end
 
   #

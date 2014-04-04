@@ -7,20 +7,26 @@
       </p>
     </h2>
   </div>
-  <ul class="list-group">
-    <% jobs.each do |job| %>
-    <li class="list-group-item">
-      <span class="badge"><%= job[:count] %></span>
-      <span class="badge alert-info">read: <%= job[:read] %></span>
-      <span class="badge alert-success">new: <%= job[:unread] %></span>
-      <% if job[:followup] > 0 %>
-      <span class="badge alert-danger">attn_req: <%= job[:followup] %></span>
+  <% jobs.each do |search_term, consolidated| %>
+    <div class="panel panel-info">
+      <div class="panel-heading">
+        <strong><%= search_term %></strong>
+      </div>
+      <% consolidated.each do |jobs_info| %>
+      <ul class="list-group">
+        <li class="list-group-item">
+          <span class="badge"><%= jobs_info[:count] %></span>
+          <span class="badge alert-info">read: <%= jobs_info[:read] %></span>
+          <span class="badge alert-success">new: <%= jobs_info[:unread] %></span>
+          <% if jobs_info[:followup] > 0 %>
+          <span class="badge alert-danger">attn_req: <%= jobs_info[:followup] %></span>
+          <% end %>
+          <a href="/jobs/<%= jobs_info[:date_url] %>"><%= jobs_info[:date] %></a>
+        </li>
+      </ul>
       <% end %>
-      <a href="/jobs/<%= job[:date_url] %>"><%= job[:date] %></a>
-    </li>
-    <!-- <li class="list-group-item"><span class="badge">21</span><span class="badge">cassandra</span>Friday, 28</li> -->
-    <% end %>
-  </ul>
+    </div>
+  <% end %>
 
   <% if !fetcher.nil? %>
   <div class="panel panel-default">

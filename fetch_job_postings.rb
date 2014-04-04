@@ -205,6 +205,7 @@ if __FILE__ == $0
     # Only insert if a posting with date and url does not exist
     Job.find_or_create_by(url: url, date_posted: job_posting[:date_posted]) do |doc|
       inserted_docs += 1
+      doc.search_term = options.search_string.downcase
       doc.url         = url
       doc.date_posted = job_posting[:date_posted]
       doc.title       = job_posting[:title]

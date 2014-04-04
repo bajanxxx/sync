@@ -2,40 +2,110 @@
   <div class="page-header">
     <h2>Job Postings: for <%= date %></h2>
   </div>
-  <p>New Job listings found: <%= unread_jobs.count %></p>
-  <ul class="list-group">
-    <% unread_jobs.each do |job| %>
-    <li class="list-group-item">
-      <span class="badge alert-info"><%= job.location %></span>
-      <span class="badge alert-success"><%= job.company %></span>
-      <% if Job.where(id: job.id).count > 1 %>
-      <span class="badge alert-warning">repeated</span>
-      <% end %>
-      <a href="/job/<%= job._id %>"><%= job.title %></a>
-    </li>
-    <% end %>
-  </ul>
-  <p>Read Job listings found: <%= read_jobs.count %></p>
-  <ul class="list-group">
-    <% read_jobs.each do |job| %>
-    <% if atten_req_jobs.include?(job) %>
-    <li class="list-group-item list-group-item-danger">
-    <% else %>
-    <li class="list-group-item">
-    <% end %>
-      <span class="badge"><%= job.location %></span>
-      <span class="badge"><%= job.company %></span>
-      <% if Job.where(id: job.id).count > 1 %>
-      <span class="badge alert-warning">repeated</span>
-      <% end %>
-      <a href="/job/<%= job._id %>"><%= job.title %></a>
-    </li>
-    <% end %>
-  </ul>
+  <% categorized_jobs.each do |search_term, jobs_info| %>
+  <div class="panel panel-info">
+    <div class="panel-heading">
+      <strong><%= search_term %></strong>
+    </div>
+
+    <div class="panel-body">
+      <p class="text-left">New Job listings found: <%= jobs_info[:unread_jobs].count %></p>
+      <ul class="list-group">
+        <% jobs_info[:unread_jobs].each do |job| %>
+        <li class="list-group-item">
+          <div class="pull-right button-group">
+            <% if Job.where(url: job.url).count > 1 %>
+            <span class="badge alert-warning">repeated</span>
+            <% end %>
+            <span class="badge alert-info"><%= job.location %></span>
+            <span class="badge alert-success"><%= job.company %></span>
+            <button id="deletebtn<%= job.id %>" class="btn btn-xs btn-default">x</button>
+          </div>
+          <a href="/job/<%= job._id %>">
+            <%= job.title %>
+          </a>
+        </li>
+        <% end %>
+      </ul>
+      <p class="text-left">Read Job listings found: <%= jobs_info[:read_jobs].count %></p>
+      <ul class="list-group">
+        <% jobs_info[:read_jobs].each do |job| %>
+        <% if jobs_info[:atten_req_jobs].include?(job) %>
+        <li class="list-group-item list-group-item-danger">
+        <% else %>
+        <li class="list-group-item" href="/job/<%= job._id %>">
+        <% end %>
+          <div class="pull-right button-group">
+            <span class="badge"><%= job.location %></span>
+            <span class="badge"><%= job.company %></span>
+            <% if Job.where(id: job.id).count > 1 %>
+            <span class="badge alert-warning">repeated</span>
+            <% end %>
+            <button id="deletebtn<%= job.id %>" class="btn btn-xs btn-default">x</button>
+          </div>
+          <a  href="/job/<%= job._id %>">
+            <%= job.title %>
+          </a>
+        </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+  <% end %>
 </div>
-<!--script type="text/javascript">
-  // if (sessionStorage.getItem('JobPostingVisited')) {
-  //   sessionStorage.removeItem('JobPostingVisited');
-  //   window.location.reload(true); // force reaload a page after visiting job posting page
-  // }
-</script-->
+
+<script type="text/javascript">
+$(document).ready(function(){
+  <% categorized_jobs.each do |search_term, jobs_info| %>
+  <% jobs_info[:read_jobs].each do |job| %>
+  $('#deletebtn<%= job.id %>').hover(
+    function(){ // mouseenter
+      // $('#delete-<%= job.id %>').removeClass('btn-default').addClass('btn-danger');
+      $("#deletebtn<%= job.id %>").removeClass('btn-default').addClass('btn-danger');
+    },
+    function(){ // mouseleave
+      $('#deletebtn<%= job.id %>').removeClass('btn-danger').addClass('btn-default');
+    }
+  );
+
+  $('#deletebtn<%= job.id %>').click(function(){
+    $.ajax({
+      type: "POST",
+      url: "/job/<%= job.id %>/forget",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred");
+      }
+    });
+  });
+  <% end %>
+
+  <% jobs_info[:unread_jobs].each do |job| %>
+  $('#deletebtn<%= job.id %>').hover(
+    function(){ // mouseenter
+      // $('#delete-<%= job.id %>').removeClass('btn-default').addClass('btn-danger');
+      $("#deletebtn<%= job.id %>").removeClass('btn-default').addClass('btn-danger');
+    },
+    function(){ // mouseleave
+      $('#deletebtn<%= job.id %>').removeClass('btn-danger').addClass('btn-default');
+    }
+  );
+
+  $('#deletebtn<%= job.id %>').click(function(){
+    $.ajax({
+      type: "POST",
+      url: "/job/<%= job.id %>/forget",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred");
+      }
+    });
+  });
+  <% end %>
+  <% end %>
+});
+</script>

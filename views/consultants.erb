@@ -89,11 +89,12 @@ $(document).ready(function(){
   <% consultants.each_with_index do |consultant, count| %>
   $('#consultant<%= count+1 %>').hover(
     function(){ // mouseenter
-    $('#deletebutton<%= count+1 %>').html('x');
+      $('#deletebutton<%= count+1 %>').html('x');
     },
     function(){ // mouseleave
-    $('#deletebutton<%= count+1 %>').empty();
-  });
+      $('#deletebutton<%= count+1 %>').empty();
+    }
+  );
 
   $('#deletebutton<%= count+1 %>').click(function(){
     $.ajax({

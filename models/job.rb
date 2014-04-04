@@ -3,6 +3,7 @@
 class Job
   include Mongoid::Document
 
+  field :search_term, type: String
   field :url,         type: String
   field :date_posted, type: Date
   field :title,       type: String
