@@ -64,6 +64,7 @@ class ProcessDicePostings
       url = job_posting['detailUrl']
       Job.find_or_create_by(url: url, date_posted: job_posting['date']) do |doc|
         doc.url         = url
+        doc.search_term = @search_string.downcase
         doc.date_posted = job_posting['date']
         doc.title       = job_posting['jobTitle']
         doc.company     = job_posting['company']

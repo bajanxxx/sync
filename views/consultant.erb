@@ -60,6 +60,11 @@
               <td width="25%">Notes</td>
               <td width="75%"><a href="#" id="<%= job_application[:application_id] %>-notes"><%= job_application[:notes] %></a></td>
             </tr>
+            <tr>
+              <td width="25%">Associate Resume</td>
+              <td width="75%">
+                <a href="#" id="<%= job_application[:application_id] %>-resume" data-type="select2" data-value="<%= job_application[:resume_name] %>" data-title="Select Resume"><%= job_application[:resume_name] %></a>
+              </td>
           </table>
         </div>
       </div> <!-- col-md-4 -->
@@ -84,7 +89,7 @@
           <% consultant.resumes.each do |resume| %>
           <li class="list-group-item">
             <span class="badge"><%= resume.uploaded_date %></span>
-            <a href="/resumes/<%= resume.resume_id %>"><%= resume.resume_name %></a>
+            <a href="/resumes/<%= resume.id %>"><%= resume.resume_name %></a>
           </li>
           <% end %>
         </ul>
@@ -190,6 +195,17 @@ $(document).ready(function() {
         success: function(response, newValue) {
           if(!response.status) return response.msg;
         },
+      });
+
+      $("#<%= job_application[:application_id] %>-resume").editable({
+        source: '/resumes/all/<%= consultant.email %>',
+        pk: '<%= job_application[:application_id] %>',
+        url: '/consultant/<%= consultant.email %>/application/update',
+        name: 'resume_id',
+        select2: {
+          placeholder: 'Select resume to associate',
+          minimumInputLength: 2
+        }
       });
     <% end %>
   <% end %>

@@ -240,11 +240,16 @@ class JobPortal < Sinatra::Base
 
   # Render each consultant individually by email
   get '/consultant/view/:id' do |id|
-    if @username == id
+    if @username == id || @admin_user
       consultant = Consultant.find_by(email: id)
       job_applications = []
       consultant.applications.each do |application|
         job = Job.find_by(url: application.job_url)
+        resume_name = begin
+                        Resume.find_by(_id: application.resume_id).resume_name
+                      rescue Mongoid::Errors::DocumentNotFound
+                        ''
+                      end
         job_applications << {
           job_url: job.url,
           title: job.title,
@@ -253,6 +258,7 @@ class JobPortal < Sinatra::Base
           status: application.status || [],
           comments: application.comments,
           resume_used: application.resume_id, # Only if application.status == 'APPLIED'
+          resume_name: resume_name, # assicoated with the application
           notes: application.notes
         }
       end
@@ -410,7 +416,7 @@ class JobPortal < Sinatra::Base
       application.add_to_set(:status, 'APPLIED')
     end
     # Retrieve the resume from mongo
-    resume_id = Resume.find_by(resume_name: resume_name).resume_id
+    resume_id = Resume.find_by(resume_name: resume_name).id
     resume = download_resume(resume_id)
     # Compose an email to specified consultant
     Pony.mail(
@@ -446,20 +452,19 @@ class JobPortal < Sinatra::Base
 
   post '/upload/resume/:email' do |email|
     consultant = Consultant.find_by(email: email)
-    file_name = params[:file][:filename]
+    file_name = email.split('@').first.upcase + '_' + params[:file][:filename]
     temp_file = params[:file][:tempfile]
     resume_id = upload_resume(temp_file,file_name)
     if resume_id
-      p "uploaded resume"
       consultant.resumes.find_or_create_by(file_name: file_name) do |resume|
-        resume.resume_id   = resume_id
+        resume.id = resume_id
         resume.resume_name = file_name
         resume.uploaded_date = DateTime.now
       end
+      flash[:info] = "Uploaded sucessfully #{resume_id}"
     else
-      p "failed uploading resume"
+      flash[:warning] = "Failed uploading resume. Resume with #{file_name} already exists!."
     end
-    flash[:info] = "Uploaded sucessfully #{resume_id}"
     redirect back
   end
 
@@ -476,6 +481,23 @@ class JobPortal < Sinatra::Base
     #   :disposition => 'attachment',
     #   :filename => resume.filename
     # )
+  end
+
+  # Get all the resumes associated for a consultant
+  get '/resumes/all/:id' do |consultant_id|
+    consultant = Consultant.find_by(email: consultant_id)
+    resumes = []
+    consultant.resumes.each do |resume|
+      resumes << {
+        id: resume.id,
+        text: resume.resume_name
+      }
+    end
+    if request.xhr?
+      halt 200, resumes.to_json
+    else
+      resumes.to_json
+    end
   end
 
   #
@@ -745,7 +767,7 @@ class JobPortal < Sinatra::Base
           # metadata: { 'description' => description }
         )
       else
-        p 'File already exists'
+        # p 'File already exists'
         return nil
       end
     rescue
