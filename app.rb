@@ -150,7 +150,6 @@ class JobPortal < Sinatra::Base
 
   get '/logout' do
     cookie = request.cookies['user_session']
-    p cookie
     @sessions.end_session(cookie)
     session.clear # clear the cookies on user logout
     erb "<div class='alert alert-message'>Logged out</div>"
