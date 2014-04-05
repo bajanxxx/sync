@@ -3,5 +3,6 @@ class User
 
   field :email,    type: String
   field :password, type: String
+  field :admin,    type: Boolean, default: false
   field :_id,      type: String, default: ->{ email }
 end

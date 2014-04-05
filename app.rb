@@ -62,11 +62,18 @@ class JobPortal < Sinatra::Base
     @@expiration_date = Time.now + (60 * 2)
     # user browser cookies
     cookie = request.cookies['user_session'] || nil
-    @username = begin
-                  Session.find_by(_id: cookie).username
-                rescue Mongoid::Errors::DocumentNotFound
-                  nil
-                end
+    @username   = begin
+                    Session.find_by(_id: cookie).username
+                  rescue Mongoid::Errors::DocumentNotFound
+                    nil
+                  end
+    @admin_user = if @username
+                    begin
+                      User.find_by(_id: @username).admin
+                    rescue Mongoid::Errors::DocumentNotFound
+                      false
+                    end
+                  end
   end
 
   #
@@ -75,13 +82,28 @@ class JobPortal < Sinatra::Base
 
   get '/' do
     # for logged in users show follow up jobs and applied jobs of 10 each
-    jobs_to_render = []
-    follow_up_jobs = Application.where(:status.in => ['FOLLOW_UP', 'APPLIED'])
-    follow_up_jobs && follow_up_jobs.each do |application|
-      jobs_to_render << Job.where(url: application.job_url, hide: false)
+    consultant = begin
+                  Consultant.find_by(email: @username).id
+                 rescue Mongoid::Errors::DocumentNotFound
+                   ''
+                 end
+    if @username
+      if @admin_user
+        jobs_to_render = []
+        follow_up_jobs = Application.where(:status.in => ['FOLLOW_UP', 'APPLIED'])
+        follow_up_jobs && follow_up_jobs.each do |application|
+          jobs_to_render << Job.where(url: application.job_url, hide: false)
+        end
+        jobs_to_render.map! { |job| job.entries }.reject(&:empty?)
+        erb :index, :locals => { :jobs => jobs_to_render.flatten }
+      elsif @username == consultant
+        redirect "/consultant/view/#{@username}"
+      else
+        erb :admin_access_req
+      end
+    else
+      erb :index
     end
-    p jobs_to_render.map! { |job| job.entries }.reject(&:empty?)
-    erb :index, :locals => { :jobs => jobs_to_render.flatten }
   end
 
   #
@@ -178,7 +200,11 @@ class JobPortal < Sinatra::Base
 
   # Display consultants available
   get '/consultants' do
-    erb :consultants, :locals => { :consultants => Consultant.all.entries }
+    if @admin_user
+      erb :consultants, :locals => { :consultants => Consultant.all.entries }
+    else
+      erb :admin_access_req
+    end
   end
 
   # Add a new consultant
@@ -215,22 +241,26 @@ class JobPortal < Sinatra::Base
 
   # Render each consultant individually by email
   get '/consultant/view/:id' do |id|
-    consultant = Consultant.find_by(email: id)
-    job_applications = []
-    consultant.applications.each do |application|
-      job = Job.find_by(url: application.job_url)
-      job_applications << {
-        job_url: job.url,
-        title: job.title,
-        posted_date: job.date_posted.strftime('%Y-%m-%d'),
-        application_id: application.id,
-        status: application.status || [],
-        comments: application.comments,
-        resume_used: application.resume_id, # Only if application.status == 'APPLIED'
-        notes: application.notes
-      }
+    if @username == id
+      consultant = Consultant.find_by(email: id)
+      job_applications = []
+      consultant.applications.each do |application|
+        job = Job.find_by(url: application.job_url)
+        job_applications << {
+          job_url: job.url,
+          title: job.title,
+          posted_date: job.date_posted.strftime('%Y-%m-%d'),
+          application_id: application.id,
+          status: application.status || [],
+          comments: application.comments,
+          resume_used: application.resume_id, # Only if application.status == 'APPLIED'
+          notes: application.notes
+        }
+      end
+      erb :consultant, :locals => { :consultant => consultant, :job_applications => job_applications }
+    else
+      erb :admin_access_req
     end
-    erb :consultant, :locals => { :consultant => consultant, :job_applications => job_applications }
   end
 
   # Send consultant email reg job details that he/her has to apply
@@ -458,87 +488,95 @@ class JobPortal < Sinatra::Base
   end
 
   get '/jobs' do
-    jobs = {}
-    Job.distinct(:search_term).sort.each do |search_term|
-      jobs[search_term] = []
-      Job.where(:search_term => search_term).distinct(:date_posted).sort.reverse.each do |date|
-        total_jobs = Job.where(:search_term => search_term, date_posted: date, hide: false).count
-        read_jobs  = Job.where(:search_term => search_term, date_posted: date, read: true, hide: false).count
-        unread_jobs = total_jobs - read_jobs
-        imp_postings = []
-        Job.where(:search_term => search_term, date_posted: date, hide: false).each do |job|
-          Application.where(job_url: Job.find(job.id).url).entries.each do |app|
-            if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-              imp_postings << job
+    if @admin_user
+      jobs = {}
+      Job.distinct(:search_term).sort.each do |search_term|
+        jobs[search_term] = []
+        Job.where(:search_term => search_term).distinct(:date_posted).sort.reverse.each do |date|
+          total_jobs = Job.where(:search_term => search_term, date_posted: date, hide: false).count
+          read_jobs  = Job.where(:search_term => search_term, date_posted: date, read: true, hide: false).count
+          unread_jobs = total_jobs - read_jobs
+          imp_postings = []
+          Job.where(:search_term => search_term, date_posted: date, hide: false).each do |job|
+            Application.where(job_url: Job.find(job.id).url).entries.each do |app|
+              if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
+                imp_postings << job
+              end
             end
           end
+          jobs[search_term] << {
+            date_url: date.strftime('%Y-%m-%d'),
+            date:     date.strftime('%A, %b %d'),
+            count:    total_jobs,
+            read:     read_jobs,
+            unread:   unread_jobs,
+            followup: imp_postings.count
+          }
         end
-        jobs[search_term] << {
-          date_url: date.strftime('%Y-%m-%d'),
-          date:     date.strftime('%A, %b %d'),
-          count:    total_jobs,
-          read:     read_jobs,
-          unread:   unread_jobs,
-          followup: imp_postings.count
-        }
       end
+      erb :jobs, :locals => { :jobs => jobs, :fetcher => Fetcher.last }
+    else
+      erb :admin_access_req
     end
-    erb :jobs, :locals => { :jobs => jobs, :fetcher => Fetcher.last }
   end
 
   # Process and show the jobs for a given date
   get '/jobs/:date' do |date|
-    categorized_jobs = {}
-    p2_search_params = %w(bigdata big-data nosql hbase hive pig storm kafka hadoop cassandra)
-    Job.distinct(:search_term).sort.each do |search_term|
-      read_jobs = Job.where(:search_term => search_term, date_posted: date, read: true, hide: false)
-      unread_jobs = Job.where(:search_term => search_term, date_posted: date, read: false, hide: false)
-      # seperate postings that are read from unread
-      read_postings = []
-      read_jobs.each do |job|
-        read_postings << job
-      end
-      unread_postings = []
-      unread_jobs.each do |job|
-        unread_postings << job
-      end
-      p1 = Regexp.new(search_term)
-      p2 = Regexp.new((p2_search_params - [search_term]).join('|'))
-      # sort un-read jobs by priority, p1 postings are which directly have hadoop
-      # in title, and p2 postings are which have some realted big-date keyword in
-      # title
-      unread_p1_jobs = unread_postings.find_all { |post| p1.match(post.title.downcase) }
-      unread_p2_jobs = unread_postings.find_all { |post| p2.match(post.title.downcase) }
-      unread_lp_jobs  = unread_postings - ( unread_p1_jobs + unread_p2_jobs )
-      unread_jobs_sorted = unread_p1_jobs + unread_p2_jobs + unread_lp_jobs
+    if @admin_user
+      categorized_jobs = {}
+      p2_search_params = %w(bigdata big-data nosql hbase hive pig storm kafka hadoop cassandra)
+      Job.distinct(:search_term).sort.each do |search_term|
+        read_jobs = Job.where(:search_term => search_term, date_posted: date, read: true, hide: false)
+        unread_jobs = Job.where(:search_term => search_term, date_posted: date, read: false, hide: false)
+        # seperate postings that are read from unread
+        read_postings = []
+        read_jobs.each do |job|
+          read_postings << job
+        end
+        unread_postings = []
+        unread_jobs.each do |job|
+          unread_postings << job
+        end
+        p1 = Regexp.new(search_term)
+        p2 = Regexp.new((p2_search_params - [search_term]).join('|'))
+        # sort un-read jobs by priority, p1 postings are which directly have hadoop
+        # in title, and p2 postings are which have some realted big-date keyword in
+        # title
+        unread_p1_jobs = unread_postings.find_all { |post| p1.match(post.title.downcase) }
+        unread_p2_jobs = unread_postings.find_all { |post| p2.match(post.title.downcase) }
+        unread_lp_jobs  = unread_postings - ( unread_p1_jobs + unread_p2_jobs )
+        unread_jobs_sorted = unread_p1_jobs + unread_p2_jobs + unread_lp_jobs
 
-      # Sort read jobs based on follow-up and applied priority
-      # gather postings that require attention which are basically are the
-      # applications which are marked as follow_up or applied
-      postings_req_attention = []
-      Job.where(:search_term => search_term, date_posted: date, hide: false).each do |job|
-        Application.where(job_url: Job.find(job.id).url).entries.each do |app|
-          if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-            postings_req_attention << job
+        # Sort read jobs based on follow-up and applied priority
+        # gather postings that require attention which are basically are the
+        # applications which are marked as follow_up or applied
+        postings_req_attention = []
+        Job.where(:search_term => search_term, date_posted: date, hide: false).each do |job|
+          Application.where(job_url: Job.find(job.id).url).entries.each do |app|
+            if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
+              postings_req_attention << job
+            end
           end
         end
-      end
-      rest_jobs = read_postings - postings_req_attention
-      read_jobs_sorted = postings_req_attention + rest_jobs
+        rest_jobs = read_postings - postings_req_attention
+        read_jobs_sorted = postings_req_attention + rest_jobs
 
-      categorized_jobs[search_term] = {
-        read_jobs:      read_jobs_sorted,
-        unread_jobs:    unread_jobs_sorted,
-        atten_req_jobs: postings_req_attention
-      }
-    end
-
-    # finally render the page
-    erb :jobs_by_date,
-        :locals => {
-          :date => date,
-          :categorized_jobs => categorized_jobs,
+        categorized_jobs[search_term] = {
+          read_jobs:      read_jobs_sorted,
+          unread_jobs:    unread_jobs_sorted,
+          atten_req_jobs: postings_req_attention
         }
+      end
+
+      # finally render the page
+      erb :jobs_by_date,
+          :locals => {
+            :date => date,
+            :categorized_jobs => categorized_jobs,
+          }
+    else
+      erb :admin_access_req
+    end
   end
 
   get '/job/:id' do |id|

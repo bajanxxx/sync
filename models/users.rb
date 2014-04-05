@@ -49,7 +49,11 @@ class UserDAO
     user = find_user(username)
 
     if !user
-      User.create(email: username, password: password_hash)
+      if User.where(:admin => true).count > 0
+        User.create!(email: username, password: password_hash)
+      else
+        User.create!(email: username, password: password_hash, admin: true)
+      end
       return true
     else
       return false
