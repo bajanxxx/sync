@@ -436,7 +436,7 @@ class JobPortal < Sinatra::Base
       :subject => "Applying Job Post: (#{job.title})",
       :body => email_body,
       :attachments => {
-        resume_name => resume.read
+        "#{email.split('@').first.upcase}.docx" => resume.read
       },
       :via => :smtp,
       :via_options => {
