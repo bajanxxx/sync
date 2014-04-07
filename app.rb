@@ -106,6 +106,16 @@ class JobPortal < Sinatra::Base
     end
   end
 
+  not_found do
+    status 404
+    erb :not_found
+  end
+
+  error do
+    error_msg = request.env['sinatra.error']
+    erb :error, :locals => { error_msg: error_msg }
+  end
+
   #
   # => USERS AND SESSIONS
   #
