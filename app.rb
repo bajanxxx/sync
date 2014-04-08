@@ -14,6 +14,7 @@ require_relative 'models/consultants'
 require_relative 'models/resumes'
 require_relative 'models/fetcher'
 require_relative 'core/process_dice'
+require_relative 'core/settings'
 require_relative 'models/consultant'
 require_relative 'models/application'
 require_relative 'models/resume'
@@ -74,6 +75,8 @@ class JobPortal < Sinatra::Base
                       false
                     end
                   end
+    # Load email information
+    Settings.load!("conf/emails.yaml")
   end
 
   #
@@ -290,21 +293,50 @@ class JobPortal < Sinatra::Base
       application.add_to_set(:status, 'AWAITING_UPDATE_FROM_USER')
     end
     # Compose an email to specified consultant
+    # p Settings.email
+    # p Settings.password
+    # p Settings.smtp_address
+    # p Settings.smtp_port
+    email_body = <<EOBODY
+      <p>Hi,</p>
+      <p>Check the following link: <a href="#{job.url}">#{job.title}</a> for the job posting.</p>
+      <p>Job Details:</p>
+      <table width="100%" border="0" cellspacing="0" cellpading="0">
+        <tr>
+          <td align="left" width="20%" valign="top"><strong>Job Title</strong></td>
+          <td align="left" width="20%" valign="top">#{job.title}</td>
+        <tr>
+        <tr>
+          <td align="left" width="20%" valign="top"><strong>Job Location</strong></td>
+          <td align="left" width="20%" valign="top">#{job.location}</td>
+        <tr>
+        <tr>
+          <td align="left" width="20%" valign="top"><strong>Job Posted</strong></td>
+          <td align="left" width="20%" valign="top">#{job.date_posted}</td>
+        <tr>
+        <tr>
+          <td align="left" width="20%" valign="top"><strong>Job Skills</strong></td>
+          <td align="left" width="20%" valign="top">#{job.skills}</td>
+        <tr>
+      </table>
+      <br/>
+      <p><strong>Notes</strong>: #{notes}</p>
+      <p><strong>Important</strong>: <font color="red"> Update your resume as per the job requirement. Try to include all the technologies.</font></p>
+      <p>Thanks,<br/>Shiva.</p>
+EOBODY
     Pony.mail(
-      :from => 'admin' + "<" + 'admin@cloudwick.com' + ">",
-      :cc => 'shiva@cloudwick.com',
+      :from => Settings.email.split('@').first + "<" + Settings.email + ">",
       :to => email,
-      :subject => "Check this job: (#{job.title})",
-      :body => "#{job.company} has posted a job with title (#{job.title}) at #{job.location}.\n" +
-               " Check the following link: #{job.url}\n\n" +
-               "Notes: #{notes}",
+      :subject => "Apply/Check this job: #{job.title}(#{job.location})",
+      :headers => { 'Content-Type' => 'text/html' },
+      :body => email_body,
       :via => :smtp,
       :via_options => {
-        :address              => 'smtp.gmail.com',
-        :port                 => '587',
+        :address              => Settings.smtp_address,
+        :port                 => Settings.smtp_port,
         :enable_starttls_auto => true,
-        :user_name            => 'admin@cloudwick.com',
-        :password             => 'balentine380',
+        :user_name            => Settings.email,
+        :password             => Settings.password,
         :authentication       => :plain,
         :domain               => 'localhost.localdomain'
       }
@@ -430,8 +462,7 @@ class JobPortal < Sinatra::Base
     resume = download_resume(resume_id)
     # Compose an email to specified consultant
     Pony.mail(
-      :from => 'admin' + "<" + 'admin@cloudwick.com' + ">",
-      :cc => 'shiva@cloudwick.com',
+      :from => Settings.email.split('@').first + "<" + Settings.email + ">",
       :to => vendor_email,
       :subject => "Applying Job Post: (#{job.title})",
       :body => email_body,
@@ -440,11 +471,11 @@ class JobPortal < Sinatra::Base
       },
       :via => :smtp,
       :via_options => {
-        :address              => 'smtp.gmail.com',
-        :port                 => '587',
+        :address              => Settings.smtp_address,
+        :port                 => Settings.smtp_port,
         :enable_starttls_auto => true,
-        :user_name            => 'admin@cloudwick.com',
-        :password             => 'balentine380',
+        :user_name            => Settings.email,
+        :password             => Settings.password,
         :authentication       => :plain,
         :domain               => 'localhost.localdomain'
       }

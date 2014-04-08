@@ -1,0 +1,5 @@
+---
+email: admin@cloudwick.com
+password: balentine380
+smtp_address: smtp.gmail.com
+smtp_port: 587
