@@ -2,16 +2,16 @@
   <div class="page-header">
     <h2>Job Postings: for <%= date %></h2>
   </div>
-  <% categorized_jobs.each do |search_term, jobs_info| %>
+  <% sorted_categories.each do |search_term| %>
   <div class="panel panel-info">
     <div class="panel-heading">
       <strong><%= search_term %></strong>
     </div>
 
     <div class="panel-body">
-      <p class="text-left">New Job listings found: <%= jobs_info[:unread_jobs].count %></p>
+      <p class="text-left">New Job listings found: <%= categorized_jobs[search_term][:unread_jobs].count %></p>
       <ul class="list-group">
-        <% jobs_info[:unread_jobs].each do |job| %>
+        <% categorized_jobs[search_term][:unread_jobs].each do |job| %>
         <li class="list-group-item">
           <div class="pull-right button-group">
             <% if Job.where(url: job.url).count > 1 %>
@@ -27,10 +27,10 @@
         </li>
         <% end %>
       </ul>
-      <p class="text-left">Read Job listings found: <%= jobs_info[:read_jobs].count %></p>
+      <p class="text-left">Read Job listings found: <%= categorized_jobs[search_term][:read_jobs].count %></p>
       <ul class="list-group">
-        <% jobs_info[:read_jobs].each do |job| %>
-        <% if jobs_info[:atten_req_jobs].include?(job) %>
+        <% categorized_jobs[search_term][:read_jobs].each do |job| %>
+        <% if categorized_jobs[search_term][:atten_req_jobs].include?(job) %>
         <li class="list-group-item list-group-item-danger">
         <% else %>
         <li class="list-group-item" href="/job/<%= job._id %>">

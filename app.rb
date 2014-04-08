@@ -630,11 +630,18 @@ EOBODY
         }
       end
 
+      # sort categories if it has hadoop in it
+      sorted_categories = []
+      sorted_categories << 'hadoop' if categorized_jobs.keys.include?('hadoop')
+      tmp_categories = categorized_jobs.keys - sorted_categories
+      sorted_categories = sorted_categories + tmp_categories
+
       # finally render the page
       erb :jobs_by_date,
           :locals => {
             :date => date,
             :categorized_jobs => categorized_jobs,
+            :sorted_categories => sorted_categories
           }
     else
       erb :admin_access_req
