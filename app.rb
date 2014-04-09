@@ -406,7 +406,7 @@ EOBODY
     end
     begin
       case update_key
-      when 'status', 'Comments'
+      when 'Comments'
         application.add_to_set(update_key.to_sym, update_value)
       else
         application.update_attribute(update_key.to_sym, update_value)
@@ -443,6 +443,15 @@ EOBODY
       halt 200, status_values.to_json
     else
       status_values.to_json
+    end
+  end
+
+  delete '/application/:id' do |id|
+    Application.find(id).delete
+    if request.xhr?
+      halt 200
+    else
+      'OK'
     end
   end
 
@@ -665,10 +674,10 @@ EOBODY
     erb :job_by_id,
         :locals =>
         {
-          :job => Job.find(id),
+          :job         => Job.find(id),
           :consultants => Consultant.all.pluck(:email), # for sending emails
-          :resumes => resumes,
-          :tracking => Application.where(job_url: job.url)
+          :resumes     => resumes,
+          :tracking    => Application.where(job_url: job.url)
         }
   end
 
