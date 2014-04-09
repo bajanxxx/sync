@@ -266,6 +266,7 @@ class JobPortal < Sinatra::Base
         job_applications << {
           job_url: job.url,
           job_id: job.id,
+          vendor: job.company,
           title: job.title,
           posted_date: job.date_posted.strftime('%Y-%m-%d'),
           application_id: application.id,

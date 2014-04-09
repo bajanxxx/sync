@@ -40,8 +40,10 @@
             <% if admin_user %>
             <a href="/job/<%= job_application[:job_id] %>"><strong><%= job_application[:title] %></strong></a>
             <button id="deletebtn<%= job_application[:application_id] %>" class="btn btn-xs btn-default pull-right">x</button>
+            <button class="btn btn-xs btn-info pull-right"><%= job_application[:vendor] %></button>
             <% else %>
             <a href="<%= job_application[:job_url] %>"><strong><%= job_application[:title] %></strong></a>
+            <button class="btn btn-xs btn-info pull-right"><%= job_application[:vendor] %></button>
             <% end %>
           </div>
           <table class="table table-striped" style="table-layout: fixed; word-wrap: break-word">
