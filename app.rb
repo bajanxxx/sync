@@ -265,6 +265,7 @@ class JobPortal < Sinatra::Base
                       end
         job_applications << {
           job_url: job.url,
+          job_id: job.id,
           title: job.title,
           posted_date: job.date_posted.strftime('%Y-%m-%d'),
           application_id: application.id,
@@ -275,7 +276,12 @@ class JobPortal < Sinatra::Base
           notes: application.notes
         }
       end
-      erb :consultant, :locals => { :consultant => consultant, :job_applications => job_applications }
+      erb :consultant,
+          :locals => {
+            :consultant => consultant,
+            :job_applications => job_applications,
+            :admin_user => @admin_user
+          }
     else
       erb :admin_access_req
     end

@@ -37,12 +37,20 @@
         <!-- If the applied job is to follow up then make if bold -->
         <div class="panel panel-info">
           <div class="panel-heading">
+            <% if admin_user %>
+            <a href="/job/<%= job_application[:job_id] %>"><strong><%= job_application[:title] %></strong></a>
+            <% else %>
             <a href="<%= job_application[:job_url] %>"><strong><%= job_application[:title] %></strong></a>
+            <% end %>
           </div>
           <table class="table table-striped" style="table-layout: fixed; word-wrap: break-word">
             <tr>
               <td width="25%">Posted Date</td>
-              <td width="75%"><a href="/jobs/<%= job_application[:application_id] %>"><%= job_application[:posted_date] %></a></td>
+              <% if admin_user %>
+              <td width="75%"><a href="/jobs/<%= job_application[:posted_date] %>"><%= job_application[:posted_date] %></a></td>
+              <% else %>
+              <td width="75%"><%= job_application[:posted_date] %></td>
+              <% end %>
             </tr>
             <tr>
               <td width="25%">Status</td>
