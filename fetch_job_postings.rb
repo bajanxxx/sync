@@ -188,7 +188,7 @@ if __FILE__ == $0
 
   puts "Initializing fetcher @ #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
 
-  Mongoid.load!(File.expand_path('./mongoid.yml', __FILE__), :development)
+  Mongoid.load!(File.expand_path('./mongoid.yml', File.dirname(__FILE__)), :development)
 
   processor = ProcessPostings.new(
     'http://service.dice.com/api/rest/jobsearch/v1/simple.json',
