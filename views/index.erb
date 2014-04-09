@@ -10,6 +10,7 @@
         <li class="list-group-item">
           <span class="badge alert-info"><%= job.location %></span>
           <span class="badge alert-success"><%= job.company %></span>
+          <span class="badge"><%= job.date_posted %></span>
           <a href="/job/<%= job._id %>"><%= job.title %></a>
         </li>
         <% end %>
