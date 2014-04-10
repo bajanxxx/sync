@@ -5,7 +5,7 @@
   <% sorted_categories.each do |search_term| %>
   <div class="panel panel-info">
     <div class="panel-heading">
-      <strong><%= search_term %></strong>
+      <strong><%= search_term.capitalize %></strong>
     </div>
 
     <div class="panel-body">
@@ -16,6 +16,12 @@
           <div class="pull-right button-group">
             <% if Job.where(url: job.url).count > 1 %>
             <span class="badge alert-warning">repeated</span>
+            <% end %>
+            <!-- Initials of users who are tracking it -->
+            <% if tracking.keys.include?(job.url) %>
+            <% tracking[job.url].each do |user| %>
+            <span class="badge alert-default"><%= user %></span>
+            <% end %>
             <% end %>
             <span class="badge alert-info"><%= job.location %></span>
             <span class="badge alert-success"><%= job.company %></span>
@@ -36,6 +42,12 @@
         <li class="list-group-item" href="/job/<%= job._id %>">
         <% end %>
           <div class="pull-right button-group">
+            <!-- Initials of users who are tracking it -->
+            <% if tracking.keys.include?(job.url) %>
+            <% tracking[job.url].each do |user| %>
+            <span class="badge alert-info"><%= user %></span>
+            <% end %>
+            <% end %>
             <span class="badge"><%= job.location %></span>
             <span class="badge"><%= job.company %></span>
             <% if Job.where(id: job.id).count > 1 %>

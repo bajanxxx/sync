@@ -35,7 +35,13 @@
       <% job_applications_in_twos.each do |job_application| %>
       <div class="col-md-6">
         <!-- If the applied job is to follow up then make if bold -->
+        <% if job_application[:status].include?('APPLIED') %>
+        <div class="panel panel-danger">
+        <% elsif job_application[:status].include?('FOLLOW_UP') %>
+        <div class="panel panel-warning">
+        <% else %>
         <div class="panel panel-info">
+        <% end %>
           <div class="panel-heading">
             <% if admin_user %>
             <a href="/job/<%= job_application[:job_id] %>"><strong><%= job_application[:title] %></strong></a>

@@ -280,7 +280,7 @@ class JobPortal < Sinatra::Base
       erb :consultant,
           :locals => {
             :consultant => consultant,
-            :job_applications => job_applications,
+            :job_applications => job_applications.sort_by{|h| h[:title]},
             :admin_user => @admin_user
           }
     else
@@ -646,6 +646,20 @@ EOBODY
         }
       end
 
+      # list of users tracking a job
+      tracking = {}
+      categorized_jobs.each do |search_term, categorized|
+        categorized.each do |job_category, jobs|
+          jobs.each do |job|
+            job_url = Job.find(job.id).url
+            Application.where(job_url: job_url).entries.each do |app|
+              consultant = Consultant.find_by(email: app.consultant_id)
+              (tracking[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
+            end
+          end
+        end
+      end
+
       # sort categories if it has hadoop in it
       sorted_categories = []
       sorted_categories << 'hadoop' if categorized_jobs.keys.include?('hadoop')
@@ -657,7 +671,8 @@ EOBODY
           :locals => {
             :date => date,
             :categorized_jobs => categorized_jobs,
-            :sorted_categories => sorted_categories
+            :sorted_categories => sorted_categories,
+            :tracking => tracking
           }
     else
       erb :admin_access_req
