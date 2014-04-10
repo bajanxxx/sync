@@ -136,11 +136,11 @@ class JobPortal < Sinatra::Base
   post '/login' do
     username = params[:username]
     password = params[:password]
-    puts "user submitted '#{username}' with pass: '#{password}'"
+    # puts "user submitted '#{username}' with pass: '#{password}'"
     user_record = @users.validate_login(username, password)
 
     if user_record
-      puts "Starting a session for user: #{user_record.email}"
+      # puts "Starting a session for user: #{user_record.email}"
       session_id = @sessions.start_session(user_record.email)
       redirect '/internal_error' unless session_id
       response.set_cookie(
@@ -199,7 +199,7 @@ class JobPortal < Sinatra::Base
         )
       redirect '/'
     else
-      puts "user validation failed"
+      # puts "user validation failed"
       erb :signup # with errors
     end
   end
