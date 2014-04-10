@@ -14,14 +14,14 @@
         <% categorized_jobs[search_term][:unread_jobs].each do |job| %>
         <li class="list-group-item">
           <div class="pull-right button-group">
-            <% if Job.where(url: job.url).count > 1 %>
-            <span class="badge alert-warning">repeated</span>
-            <% end %>
             <!-- Initials of users who are tracking it -->
             <% if tracking.keys.include?(job.url) %>
             <% tracking[job.url].uniq.each do |user| %>
             <span class="badge alert-default"><%= user %></span>
             <% end %>
+            <% end %>
+            <% if Job.where(url: job.url).count > 1 %>
+            <span class="badge alert-warning">repeated</span>
             <% end %>
             <span class="badge alert-info"><%= job.location %></span>
             <span class="badge alert-success"><%= job.company %></span>

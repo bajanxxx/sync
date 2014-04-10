@@ -77,13 +77,14 @@ ruby /opt/job_portal/fetch_job_postings.rb \
   --page-search CON_CORP
 ```
 
-Create a cron job for the fetcher to run continuously:
+Create the following cron job's for the fetcher to run continuously & also to backup mongo:
 
 ```
 0 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_job_postings.rb --search hadoop --age-of-postings 1 --traverse-depth 25 --page-search CON_CORP >> /var/log/job_portal_fetcher.log 2>&1
 0 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_job_postings.rb --search hadoop --age-of-postings 1 --traverse-depth 1 --page-search CON_CORP >> /var/log/job_portal_fetcher.log 2>&1
 0 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_job_postings.rb --search cassandra --age-of-postings 1 --traverse-depth 25 --page-search CON_CORP >> /var/log/job_portal_fetcher.log 2>&1
 0 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_job_postings.rb --search cassandra --age-of-postings 1 --traverse-depth 1 --page-search CON_CORP >> /var/log/job_portal_fetcher.log 2>&1
+0 0 * * * /bin/bash /opt/job_portal/backup_mongo.sh -p "/mongo-backup-100 /mongo-backup-217" -d job_portal >> /var/log/job_portal_backup.log 2>&1
 ```
 
 License and Authors

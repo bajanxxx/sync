@@ -216,6 +216,9 @@ if __FILE__ == $0
       doc.skills      = job_posting[:skills]
       doc.emails      = job_posting[:emails]
       doc.phone_nums  = job_posting[:phone_nums]
+      # If the url previously exists in the dataset with different date_posted and
+      # marked as **forget** then mark make post as hidden.
+      doc.hide = true if Job.where(url: url, hide: true).count > 1
     end
   end
 

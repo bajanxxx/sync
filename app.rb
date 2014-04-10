@@ -572,7 +572,7 @@ EOBODY
       jobs = {}
       Job.distinct(:search_term).sort.each do |search_term|
         jobs[search_term] = []
-        Job.where(:search_term => search_term).distinct(:date_posted).sort.reverse.each do |date|
+        Job.where(:search_term => search_term).distinct(:date_posted).sort.reverse[0..7].each do |date|
           total_jobs = Job.where(:search_term => search_term, date_posted: date, hide: false).count
           read_jobs  = Job.where(:search_term => search_term, date_posted: date, read: true, hide: false).count
           unread_jobs = total_jobs - read_jobs
