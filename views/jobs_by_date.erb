@@ -19,7 +19,7 @@
             <% end %>
             <!-- Initials of users who are tracking it -->
             <% if tracking.keys.include?(job.url) %>
-            <% tracking[job.url].each do |user| %>
+            <% tracking[job.url].uniq.each do |user| %>
             <span class="badge alert-default"><%= user %></span>
             <% end %>
             <% end %>
@@ -44,7 +44,7 @@
           <div class="pull-right button-group">
             <!-- Initials of users who are tracking it -->
             <% if tracking.keys.include?(job.url) %>
-            <% tracking[job.url].each do |user| %>
+            <% tracking[job.url].uniq.each do |user| %>
             <span class="badge alert-info"><%= user %></span>
             <% end %>
             <% end %>
