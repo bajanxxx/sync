@@ -16,6 +16,7 @@ class Job
   field :hide,        type: Boolean, default: false # specify whether a user want this post to be hidden
   field :desc,        type: String
   field :trigger,     type: Array # possible triggers => [ 'SEND_TO_VENDOR', 'SEND_TO_CONSULTANT', 'CHECK_LATER', 'APPLY' ]
+  field :link_active, type: Boolean, default: true # specify whether a job posting link is active or not
 
   has_many :applications, class_name: 'Application'
 end
