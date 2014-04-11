@@ -126,7 +126,7 @@
               <% if application.status.include?('APPLIED') %>
               <span class="badge alert-danger">APPLIED</span>
               <% end %>
-              <a href="/consultant/view/<%= application.consultant_id %>"><%= application.consultant_id %></a>
+              <a href="/consultant/view/<%= application.consultant_id %>"><%= application.consultant_id.split('@').first %></a>
             </li>
             <% end %>
           </ul>
