@@ -93,17 +93,48 @@ class JobPortal < Sinatra::Base
     if @username
       if @admin_user
         jobs_to_render = []
+        jobs_to_render_interviews = []
         follow_up_jobs = Application.where(:status.in => ['FOLLOW_UP', 'APPLIED'])
         follow_up_jobs && follow_up_jobs.each do |application|
           jobs_to_render << Job.where(url: application.job_url, hide: false)
         end
+        interviews_scheduled = Application.where(:status.in => ['INTERVIEW_SCHEDULED'])
+        interviews_scheduled && interviews_scheduled.each do |application|
+          jobs_to_render_interviews << Job.where(url: application.job_url, hide: false)
+        end
         # remove empty records
         jobs_to_render.map!{ |job| job.entries }.reject(&:empty?)
+        jobs_to_render_interviews.map!{ |job| job.entries }.reject(&:empty?)
+
+        # jobs_to_render
+        jobs = jobs_to_render.flatten.uniq {|e| e[:url] }
+        jobs_interview = jobs_to_render_interviews.flatten.uniq {|e| e[:url]}
+
+        # list of users tracking a job
+        tracking_applied = {}
+        tracking_interview = {}
+        jobs.each do |job|
+          job_url = Job.find(job.id).url
+          Application.where(job_url: job_url).entries.each do |app|
+            consultant = Consultant.find_by(email: app.consultant_id)
+            (tracking_applied[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
+          end
+        end
+        jobs_interview.each do |job|
+          job_url = Job.find(job.id).url
+          Application.where(job_url: job_url, hide: false).entries.each do |app|
+            consultant = Consultant.find_by(email: app.consultant_id)
+            (tracking_interview[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
+          end
+        end
 
         erb :index,
             :locals => {
               # Only send the unique jobs by url
-              :jobs => jobs_to_render.flatten.uniq {|e| e[:url] }
+              :jobs => jobs,
+              :jobs_interview => jobs_interview,
+              :tracking_applied => tracking_applied,
+              :tracking_interview => tracking_interview
             }
       elsif @username == consultant
         redirect "/consultant/view/#{@username}"
@@ -269,19 +300,22 @@ class JobPortal < Sinatra::Base
                       rescue Mongoid::Errors::DocumentNotFound
                         ''
                       end
-        job_applications << {
-          job_url: job.url,
-          job_id: job.id,
-          vendor: job.company,
-          title: job.title,
-          posted_date: job.date_posted.strftime('%Y-%m-%d'),
-          application_id: application.id,
-          status: application.status || [],
-          comments: application.comments,
-          resume_used: application.resume_id, # Only if application.status == 'APPLIED'
-          resume_name: resume_name, # assicoated with the application
-          notes: application.notes
-        }
+        # Only show applications that aren't hidden
+        unless application.hide
+          job_applications << {
+            job_url: job.url,
+            job_id: job.id,
+            vendor: job.company,
+            title: job.title,
+            posted_date: job.date_posted.strftime('%Y-%m-%d'),
+            application_id: application.id,
+            status: application.status || [],
+            comments: application.comments,
+            resume_used: application.resume_id, # Only if application.status == 'APPLIED'
+            resume_name: resume_name, # assicoated with the application
+            notes: application.notes
+          }
+        end
       end
       erb :consultant,
           :locals => {
@@ -493,7 +527,8 @@ EOBODY
 
   get '/application/status/possible_values' do
     status_values = []
-    %w(APPLIED CHECKING AWAITING_UPDATE_FROM_USER AWAITING_UPDATE_FROM_VENDOR FOLLOW_UP).each do |status|
+    %w(APPLIED CHECKING AWAITING_UPDATE_FROM_USER AWAITING_UPDATE_FROM_VENDOR
+    FOLLOW_UP INTERVIEW_SCHEDULED REJECTED_BY_VENDOR REJECTED_BY_CLIENT).each do |status|
       status_values << { value: status, text: status }
     end
     if request.xhr?
@@ -504,7 +539,7 @@ EOBODY
   end
 
   delete '/application/:id' do |id|
-    Application.find(id).delete
+    Application.find(id).update_attribute(:hide, true)
     if request.xhr?
       halt 200
     else

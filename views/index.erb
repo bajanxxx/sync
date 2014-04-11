@@ -1,6 +1,26 @@
 <div class="container theme-showcase" role="main">
   <h2>Welcome to cloudwick's job monitoring portal</h2>
   <% if @username %>
+    <% if !jobs_interview.empty? %>
+      <div class="page-header">
+        <h3>Interviews scheduled</h3>
+      </div>
+      <ul class="list-group">
+        <% jobs_interview.each do |job| %>
+        <li class="list-group-item">
+          <span class="badge alert-info"><%= job.location %></span>
+          <span class="badge alert-success"><%= job.company %></span>
+          <span class="badge"><%= job.date_posted %></span>
+          <% if tracking_interview.keys.include?(job.url) %>
+          <% tracking_interview[job.url].uniq.each do |user| %>
+          <span class="badge alert-info"><%= user %></span>
+          <% end %>
+          <% end %>
+          <a href="/job/<%= job._id %>"><%= job.title %></a>
+        </li>
+        <% end %>
+      </ul>
+    <% end %>
     <% if !jobs.empty? %>
       <div class="page-header">
         <h3>Job Postings <small>(to follow up with)</small></h3>
@@ -11,6 +31,11 @@
           <span class="badge alert-info"><%= job.location %></span>
           <span class="badge alert-success"><%= job.company %></span>
           <span class="badge"><%= job.date_posted %></span>
+          <% if tracking_applied.keys.include?(job.url) %>
+          <% tracking_applied[job.url].uniq.each do |user| %>
+          <span class="badge alert-info"><%= user %></span>
+          <% end %>
+          <% end %>
           <a href="/job/<%= job._id %>"><%= job.title %></a>
         </li>
         <% end %>
