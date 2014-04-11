@@ -119,6 +119,10 @@
           <ul class="list-group">
             <% tracking.each do |application| %>
             <li class="list-group-item">
+              <!-- Send a reminder email to consultant -->
+              <button id="SendNotification<%= application.id %>" type="button" class="btn btn-default btn-xs pull-right">
+                <span class="glyphicon glyphicon-send"></span>
+              </button>
               <% if application.status.include?('APPLIED') %>
               <span class="badge alert-danger">APPLIED</span>
               <% end %>
@@ -260,4 +264,21 @@
       }
     });
   });
+
+  <% if !tracking.empty? %>
+    <% tracking.each do |application| %>
+    $('#SendNotification<%= application.id %>').click(function() {
+      $.ajax({
+        type: "POST",
+        url: "/consultant/send_reminder/<%= application.consultant_id %>",
+        data: { 'job_url': '<%= application.job_url %>' },
+        success: function(data) {
+          location.reload();
+        },
+        error: function(e) {
+        }
+      });
+    });
+    <% end %>
+  <% end %>
 </script>

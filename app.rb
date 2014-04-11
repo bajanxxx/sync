@@ -357,6 +357,56 @@ EOBODY
     redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
   end
 
+  post '/consultant/send_reminder/:email' do |email|
+    job_url = params[:job_url]
+    job = Job.find_by(url: job_url)
+    email_body = <<EOBODY
+      <p>Hi,</p>
+      <p>This is a reminder regarding job posting: <a href="#{job.url}">#{job.title}</a> you have been tracking in cloudwick's job portal.</p>
+      <p>Follow up with the vendor and let me know the status.</p>
+      <p>Job Details:</p>
+      <table width="100%" border="0" cellspacing="0" cellpading="0">
+        <tr>
+          <td align="left" width="20%" valign="top"><strong>Job Title</strong></td>
+          <td align="left" width="20%" valign="top">#{job.title}</td>
+        <tr>
+        <tr>
+          <td align="left" width="20%" valign="top"><strong>Job Location</strong></td>
+          <td align="left" width="20%" valign="top">#{job.location}</td>
+        <tr>
+        <tr>
+          <td align="left" width="20%" valign="top"><strong>Job Posted</strong></td>
+          <td align="left" width="20%" valign="top">#{job.date_posted}</td>
+        <tr>
+        <tr>
+          <td align="left" width="20%" valign="top"><strong>Job Skills</strong></td>
+          <td align="left" width="20%" valign="top">#{job.skills}</td>
+        <tr>
+      </table>
+      <br/>
+      <p><strong>Important</strong>: <font color="red"> Update the status of the posting in the <strong>job_portal</strong>.</font></p>
+      <p>Thanks,<br/>Shiva.</p>
+EOBODY
+    Pony.mail(
+      :from => Settings.email.split('@').first + "<" + Settings.email + ">",
+      :to => email,
+      :subject => "Reminder for job posting: #{job.title}(#{job.location})",
+      :headers => { 'Content-Type' => 'text/html' },
+      :body => email_body,
+      :via => :smtp,
+      :via_options => {
+        :address              => Settings.smtp_address,
+        :port                 => Settings.smtp_port,
+        :enable_starttls_auto => true,
+        :user_name            => Settings.email,
+        :password             => Settings.password,
+        :authentication       => :plain,
+        :domain               => 'localhost.localdomain'
+      }
+    )
+    flash[:info] = "Sent reminder to constultant email: #{email}"
+  end
+
   # Delete the consultant and all the applications associated to that email
   post '/consultant/delete/:email' do |email|
     Consultant.find_by(email: email).delete
@@ -572,7 +622,7 @@ EOBODY
       jobs = {}
       Job.distinct(:search_term).sort.each do |search_term|
         jobs[search_term] = []
-        Job.where(:search_term => search_term).distinct(:date_posted).sort.reverse[0..7].each do |date|
+        Job.where(:search_term => search_term).distinct(:date_posted).sort.reverse[0..6].each do |date|
           total_jobs = Job.where(:search_term => search_term, date_posted: date, hide: false).count
           read_jobs  = Job.where(:search_term => search_term, date_posted: date, read: true, hide: false).count
           unread_jobs = total_jobs - read_jobs
