@@ -19,6 +19,14 @@ function start () {
   fi
 }
 
+function status () {
+  if ps aux | grep -v grep | grep -v $0 | grep $PROCESS_NAME > /dev/null; then
+    echo "Service ${PROCESS_NAME} is running..."
+  else
+    echo "Service ${PROCESS_NAME} is not running!!!"
+  fi
+}
+
 function stop () {
   if ps aux | grep -v grep | grep -v $0 | grep $PROCESS_NAME > /dev/null; then
     echo "Stopping ${PROCESS_NAME} ..."
