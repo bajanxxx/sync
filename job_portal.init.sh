@@ -39,6 +39,7 @@ function stop () {
 
 function restart () {
   stop
+  sleep 5
   start
 }
 
