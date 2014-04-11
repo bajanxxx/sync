@@ -100,7 +100,11 @@ class JobPortal < Sinatra::Base
         # remove empty records
         jobs_to_render.map!{ |job| job.entries }.reject(&:empty?)
 
-        erb :index, :locals => { :jobs => jobs_to_render.flatten }
+        erb :index,
+            :locals => {
+              # Only send the unique jobs by url
+              :jobs => jobs_to_render.flatten.uniq {|e| e[:url] }
+            }
       elsif @username == consultant
         redirect "/consultant/view/#{@username}"
       else
