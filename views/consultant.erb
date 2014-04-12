@@ -198,28 +198,6 @@ $(document).ready(function() {
 
   <% job_applications.each_slice(2) do |job_applications_in_twos| %>
     <% job_applications_in_twos.each do |job_application| %>
-      $('#deletebtn<%= job_application[:application_id] %>').hover(
-        function(){ // mouseenter
-          $("#deletebtn<%= job_application[:application_id] %>").removeClass('btn-default').addClass('btn-danger');
-        },
-        function(){ // mouseleave
-          $('#deletebtn<%= job_application[:application_id] %>').removeClass('btn-danger').addClass('btn-default');
-        }
-      );
-
-      $('#deletebtn<%= job_application[:application_id] %>').click(function(){
-        $.ajax({
-          type: "DELETE",
-          url: "/application/<%= job_application[:application_id] %>",
-          success: function(data){
-            location.reload();
-          },
-          error: function(e){
-            alert("Error occurred");
-          }
-        });
-      });
-
       $("#<%= job_application[:application_id] %>-status").editable({
         type: 'checklist',
         title: 'Update status of the application',
@@ -271,6 +249,35 @@ $(document).ready(function() {
           width: 300,
           placeholder: 'Select resume to associate',
           minimumInputLength: 2
+        }
+      });
+
+      $('#deletebtn<%= job_application[:application_id] %>').hover(
+        function(){ // mouseenter
+          $("#deletebtn<%= job_application[:application_id] %>").removeClass('btn-default').addClass('btn-danger');
+        },
+        function(){ // mouseleave
+          $('#deletebtn<%= job_application[:application_id] %>').removeClass('btn-danger').addClass('btn-default');
+        }
+      );
+
+      $('#deletebtn<%= job_application[:application_id] %>').click(function(){
+        console.log("Clicked!!!");
+        if ($('#<%= job_application[:application_id] %>-closing_status').text() == 'Empty') {
+          console.log($('#<%= job_application[:application_id] %>-closing_status').text());
+          alert("Closing status should be updated.");
+        } else {
+          console.log($('#<%= job_application[:application_id] %>-closing_status').text());
+          $.ajax({
+            type: "DELETE",
+            url: "/application/<%= job_application[:application_id] %>",
+            success: function(data){
+              location.reload();
+            },
+            error: function(e){
+              alert("Error occurred");
+            }
+          });
         }
       });
     <% end %>

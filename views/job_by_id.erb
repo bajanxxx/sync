@@ -141,7 +141,16 @@
           <ul class="list-group">
             <% tracking.each do |application| %>
             <li class="list-group-item">
-              <a href="/consultant/view/<%= application.consultant_id %>"><%= application.consultant_id.split('@').first %></a> <%= application.notes %>
+              <a href="/consultant/view/<%= application.consultant_id %>"><strong><%= application.consultant_id.split('@').first %></strong></a>
+              <% if application.notes %>
+              <strong>notes</strong>: <%= application.notes %>.
+              <% end %>
+              <% if application.status %>
+              <strong>status</strong>: <%= application.status.join(', ').downcase %>.
+              <% end %>
+              <% if application.closing_status %>
+              <strong>closing_status</strong>: <%= application.closing_status.join(', ').downcase %>.
+              <% end %>
             </li>
             <% end %>
           </ul>
