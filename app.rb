@@ -122,7 +122,7 @@ class JobPortal < Sinatra::Base
         end
         jobs_interview.each do |job|
           job_url = Job.find(job.id).url
-          Application.where(job_url: job_url, hide: false).entries.each do |app|
+          Application.where(job_url: job_url).select{|a| a.hide == true}.entries.each do |app|
             consultant = Consultant.find_by(email: app.consultant_id)
             (tracking_interview[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
           end
