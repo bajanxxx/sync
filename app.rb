@@ -94,11 +94,11 @@ class JobPortal < Sinatra::Base
       if @admin_user
         jobs_to_render = []
         jobs_to_render_interviews = []
-        follow_up_jobs = Application.where(:status.in => ['FOLLOW_UP', 'APPLIED'], hide: false)
+        follow_up_jobs = Application.where(:status.in => ['FOLLOW_UP', 'APPLIED']).select {|a| a.hide == false }
         follow_up_jobs && follow_up_jobs.each do |application|
           jobs_to_render << Job.where(url: application.job_url, hide: false)
         end
-        interviews_scheduled = Application.where(:status.in => ['INTERVIEW_SCHEDULED'], hide: false)
+        interviews_scheduled = Application.where(:status.in => ['INTERVIEW_SCHEDULED']).select {|a| a.hide == false }
         interviews_scheduled && interviews_scheduled.each do |application|
           jobs_to_render_interviews << Job.where(url: application.job_url, hide: false)
         end
