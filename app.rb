@@ -310,6 +310,7 @@ class JobPortal < Sinatra::Base
             posted_date: job.date_posted.strftime('%Y-%m-%d'),
             application_id: application.id,
             status: application.status || [],
+            closing_status: application.closing_status || [], # for admin only
             comments: application.comments,
             resume_used: application.resume_id, # Only if application.status == 'APPLIED'
             resume_name: resume_name, # assicoated with the application
@@ -529,6 +530,18 @@ EOBODY
     status_values = []
     %w(APPLIED CHECKING AWAITING_UPDATE_FROM_USER AWAITING_UPDATE_FROM_VENDOR
     FOLLOW_UP INTERVIEW_SCHEDULED REJECTED_BY_VENDOR REJECTED_BY_CLIENT).each do |status|
+      status_values << { value: status, text: status }
+    end
+    if request.xhr?
+      halt 200, status_values.to_json
+    else
+      status_values.to_json
+    end
+  end
+
+  get '/application/closing_status/possible_values' do
+    status_values = []
+    %w(BILLING_RATE_NOT_NEGOTIATED UNDER_QUALIFIED INTERVIEW_FAILED APPROVED).each do |status|
       status_values << { value: status, text: status }
     end
     if request.xhr?

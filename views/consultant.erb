@@ -69,9 +69,19 @@
                 </a>
               </td>
             </tr>
+            <% if admin_user %>
+            <tr>
+              <td width="25%">Closing Status</td>
+              <td width="75%">
+                <a href="#" id="<%= job_application[:application_id] %>-closing_status" data-value="<%= job_application[:closing_status].join(',') %>">
+                  <%= job_application[:closing_status].join(', ') %>
+                </a>
+              </td>
+            </tr>
+            <% end %>
             <tr>
               <td width="25%">Comments</td>
-              <td width="75%"><%= job_application[:comments].join(',') %></td>
+              <td width="75%"><%= job_application[:comments].join(', ') %></td>
             </tr>
             <tr>
               <td width="25%">Notes</td>
@@ -222,7 +232,23 @@ $(document).ready(function() {
         success: function(response, newValue) {
           if(!response.status) return response.msg;
         },
-      })
+      });
+
+      <% if admin_user %>
+      $("#<%= job_application[:application_id] %>-closing_status").editable({
+        type: 'checklist',
+        title: 'Reason for closing the application',
+        placement: 'right',
+        url: '/consultant/<%= consultant.email %>/application/update',
+        separator: ',', // used to seperate values as arary from data-value
+        source: '/application/closing_status/possible_values',
+        pk: '<%= job_application[:application_id] %>',
+        name: 'closing_status',
+        success: function(response, newValue) {
+          if(!response.status) return response.msg;
+        },
+      });
+      <% end %>
 
       $("#<%= job_application[:application_id] %>-notes").editable({
         type: 'textarea',
