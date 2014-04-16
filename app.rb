@@ -7,6 +7,7 @@ require 'mongoid'
 require 'json'
 require 'date'
 require 'pony'
+require 'awesome_print'
 
 require_relative 'models/sessions'
 require_relative 'models/users'
@@ -671,22 +672,47 @@ EOBODY
 
   get '/jobs' do
     if @admin_user
-      jobs = {}
+      dice_jobs = {}
+      indeed_jobs = {}
+
       Job.distinct(:search_term).sort.each do |search_term|
-        jobs[search_term] = []
-        Job.where(:search_term => search_term).distinct(:date_posted).sort.reverse[0..6].each do |date|
-          total_jobs = Job.where(:search_term => search_term, date_posted: date, hide: false).count
-          read_jobs  = Job.where(:search_term => search_term, date_posted: date, read: true, hide: false).count
+        dice_jobs[search_term] = []
+        Job.where(:search_term => search_term, :source => 'DICE').distinct(:date_posted).sort.reverse[0..6].each do |date|
+          total_jobs = Job.where(:search_term => search_term, :source => 'DICE', date_posted: date, hide: false).count
+          read_jobs  = Job.where(:search_term => search_term, :source => 'DICE', date_posted: date, read: true, hide: false).count
           unread_jobs = total_jobs - read_jobs
           imp_postings = []
-          Job.where(:search_term => search_term, date_posted: date, hide: false).each do |job|
+          Job.where(:search_term => search_term, :source => 'DICE', date_posted: date, hide: false).each do |job|
             Application.where(job_url: Job.find(job.id).url).entries.each do |app|
               if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
                 imp_postings << job
               end
             end
           end
-          jobs[search_term] << {
+          dice_jobs[search_term] << {
+            date_url: date.strftime('%Y-%m-%d'),
+            date:     date.strftime('%A, %b %d'),
+            count:    total_jobs,
+            read:     read_jobs,
+            unread:   unread_jobs,
+            followup: imp_postings.count
+          }
+        end
+
+        indeed_jobs[search_term] = []
+        Job.where(:search_term => search_term, :source => 'INDEED').distinct(:date_posted).sort.reverse[0..6].each do |date|
+          total_jobs = Job.where(:search_term => search_term, :source => 'INDEED', date_posted: date, hide: false).count
+          read_jobs  = Job.where(:search_term => search_term, :source => 'INDEED', date_posted: date, read: true, hide: false).count
+          unread_jobs = total_jobs - read_jobs
+          imp_postings = []
+          Job.where(:search_term => search_term, :source => 'INDEED', date_posted: date, hide: false).each do |job|
+            Application.where(job_url: Job.find(job.id).url).entries.each do |app|
+              if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
+                imp_postings << job
+              end
+            end
+          end
+          indeed_jobs[search_term] << {
             date_url: date.strftime('%Y-%m-%d'),
             date:     date.strftime('%A, %b %d'),
             count:    total_jobs,
@@ -696,7 +722,8 @@ EOBODY
           }
         end
       end
-      erb :jobs, :locals => { :jobs => jobs, :fetcher => Fetcher.last }
+
+      erb :jobs, :locals => { :dice_jobs => dice_jobs, :indeed_jobs => indeed_jobs, :fetcher => Fetcher.last }
     else
       erb :admin_access_req
     end
@@ -705,77 +732,78 @@ EOBODY
   # Process and show the jobs for a given date
   get '/jobs/:date' do |date|
     if @admin_user
-      categorized_jobs = {}
+      categorized_jobs = Hash.new { |hash, key| hash[key] = {} }
+      tracking = {}
       p2_search_params = %w(bigdata big-data nosql hbase hive pig storm kafka hadoop cassandra)
-      Job.distinct(:search_term).sort.each do |search_term|
-        read_jobs = Job.where(:search_term => search_term, date_posted: date, read: true, hide: false)
-        unread_jobs = Job.where(:search_term => search_term, date_posted: date, read: false, hide: false)
-        # seperate postings that are read from unread
-        read_postings = []
-        read_jobs.each do |job|
-          read_postings << job
-        end
-        unread_postings = []
-        unread_jobs.each do |job|
-          unread_postings << job
-        end
-        p1 = Regexp.new(search_term)
-        p2 = Regexp.new((p2_search_params - [search_term]).join('|'))
-        # sort un-read jobs by priority, p1 postings are which directly have hadoop
-        # in title, and p2 postings are which have some realted big-date keyword in
-        # title
-        unread_p1_jobs = unread_postings.find_all { |post| p1.match(post.title.downcase) }
-        unread_p2_jobs = unread_postings.find_all { |post| p2.match(post.title.downcase) }
-        unread_lp_jobs  = unread_postings - ( unread_p1_jobs + unread_p2_jobs )
-        unread_jobs_sorted = unread_p1_jobs + unread_p2_jobs + unread_lp_jobs
 
-        # Sort read jobs based on follow-up and applied priority
-        # gather postings that require attention which are basically are the
-        # applications which are marked as follow_up or applied
-        postings_req_attention = []
-        Job.where(:search_term => search_term, date_posted: date, hide: false).each do |job|
-          Application.where(job_url: Job.find(job.id).url).entries.each do |app|
-            if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-              postings_req_attention << job
+      %w(DICE INDEED).each do |source|
+        Job.distinct(:search_term).sort.each do |search_term|
+          read_jobs = Job.where(search_term: search_term, source: source, date_posted: date, read: true, hide: false)
+          unread_jobs = Job.where(search_term: search_term, source: source, date_posted: date, read: false, hide: false)
+
+          # seperate postings that are read from unread
+          read_postings = []
+          read_jobs.each do |job|
+            read_postings << job
+          end
+          unread_postings = []
+          unread_jobs.each do |job|
+            unread_postings << job
+          end
+          p1 = Regexp.new(search_term)
+          p2 = Regexp.new((p2_search_params - [search_term]).join('|'))
+          # sort un-read jobs by priority, p1 postings are which directly have hadoop
+          # in title, and p2 postings are which have some realted big-date keyword in
+          # title
+          unread_p1_jobs = unread_postings.find_all { |post| p1.match(post.title.downcase) }
+          unread_p2_jobs = unread_postings.find_all { |post| p2.match(post.title.downcase) }
+          unread_lp_jobs  = unread_postings - ( unread_p1_jobs + unread_p2_jobs )
+          unread_jobs_sorted = unread_p1_jobs + unread_p2_jobs + unread_lp_jobs
+
+          # Sort read jobs based on follow-up and applied priority
+          # gather postings that require attention which are basically are the
+          # applications which are marked as follow_up or applied
+          postings_req_attention = []
+          Job.where(search_term: search_term, source: source, date_posted: date, hide: false).each do |job|
+            Application.where(job_url: Job.find(job.id).url).entries.each do |app|
+              if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
+                postings_req_attention << job
+              end
             end
           end
-        end
-        rest_jobs = read_postings - postings_req_attention
-        read_jobs_sorted = postings_req_attention + rest_jobs
+          rest_jobs = read_postings - postings_req_attention
+          read_jobs_sorted = postings_req_attention + rest_jobs
 
-        categorized_jobs[search_term] = {
-          read_jobs:      read_jobs_sorted,
-          unread_jobs:    unread_jobs_sorted,
-          atten_req_jobs: postings_req_attention
-        }
+          categorized_jobs[source][search_term] = {
+            read_jobs:      read_jobs_sorted,
+            unread_jobs:    unread_jobs_sorted,
+            atten_req_jobs: postings_req_attention
+          }
+        end
       end
 
       # list of users tracking a job
-      tracking = {}
-      categorized_jobs.each do |search_term, categorized|
-        categorized.each do |job_category, jobs|
-          jobs.each do |job|
-            job_url = Job.find(job.id).url
-            Application.where(job_url: job_url).entries.each do |app|
-              consultant = Consultant.find_by(email: app.consultant_id)
-              (tracking[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
+      categorized_jobs.each do |source, categorized|
+        categorized.each do |search_term, category|
+          category.each do |job_category, jobs|
+            jobs.each do |job|
+              job_url = Job.find(job.id).url
+              Application.where(job_url: job_url).entries.each do |app|
+                consultant = Consultant.find_by(email: app.consultant_id)
+                (tracking[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
+              end
             end
           end
         end
       end
 
-      # sort categories if it has hadoop in it
-      sorted_categories = []
-      sorted_categories << 'hadoop' if categorized_jobs.keys.include?('hadoop')
-      tmp_categories = categorized_jobs.keys - sorted_categories
-      sorted_categories = sorted_categories + tmp_categories
+      # ap categorized_jobs
 
       # finally render the page
       erb :jobs_by_date,
           :locals => {
             :date => date,
             :categorized_jobs => categorized_jobs,
-            :sorted_categories => sorted_categories,
             :tracking => tracking
           }
     else
@@ -820,8 +848,8 @@ EOBODY
       job.add_to_set(:trigger, trigger.upcase)
       job.update_attribute(:read, true) # also mark the job as read
       flash[:info] = "Post marked as #{trigger}(#{job.title})"
+      redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
     end
-    redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
   end
 
   # TODO: Manually create job postings by the user

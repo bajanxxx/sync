@@ -4,6 +4,7 @@ class Job
   include Mongoid::Document
 
   field :search_term, type: String
+  field :source,      type: String # Specify what the source is DICE, INDEED
   field :url,         type: String
   field :date_posted, type: Date
   field :title,       type: String

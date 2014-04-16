@@ -209,6 +209,7 @@ if __FILE__ == $0
       inserted_docs += 1
       doc.search_term = options.search_string.downcase
       doc.url         = url
+      doc.source      = 'DICE'
       doc.date_posted = job_posting[:date_posted]
       doc.title       = job_posting[:title]
       doc.company     = job_posting[:company]
