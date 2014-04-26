@@ -961,7 +961,11 @@ EOBODY
     puts "Search term is #{search_term}"
     results = []
 
-    if uri?(search_term)
+    if search_term.match(/\s/)
+      Job.full_text_search(search_term, match: :all).entries.map do |job|
+        results << { id: job._id, title: job.title }
+      end
+    elsif uri?(search_term)
       begin
         job = Job.find_by(url: search_term)
         results << {id: job._id, title: job.title}
@@ -970,10 +974,7 @@ EOBODY
       end
     else
       Job.full_text_search(search_term).entries.map do |job|
-        results << {
-          id: job._id,
-          title: job.title
-        }
+        results << { id: job._id, title: job.title }
       end
     end
     puts results.inspect
@@ -987,11 +988,13 @@ EOBODY
 
   # Check if the specified string is an url
   def uri?(string)
-  uri = URI.parse(string)
-  %w(http https).include?(uri.scheme)
+    uri = URI.parse(string)
+    %w(http https).include?(uri.scheme)
   rescue URI::BadURIError
     false
   rescue URI::InvalidURIError
+    false
+  rescue TypeError
     false
   end
 
