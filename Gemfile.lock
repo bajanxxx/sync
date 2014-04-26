@@ -13,8 +13,10 @@ GEM
     bson_ext (1.9.2)
       bson (~> 1.9.2)
     builder (3.0.4)
+    colored (1.2)
     daemons (1.1.9)
     eventmachine (1.0.3)
+    fast-stemmer (1.0.2)
     i18n (0.6.9)
     json (1.8.1)
     macaddr (1.6.7)
@@ -23,6 +25,7 @@ GEM
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
     mime-types (1.25.1)
+    mini_portile (0.5.3)
     mongo (1.9.2)
       bson (~> 1.9.2)
     mongoid (3.1.6)
@@ -30,8 +33,13 @@ GEM
       moped (~> 1.4)
       origin (~> 1.0)
       tzinfo (~> 0.3.29)
+    mongoid_search (0.3.2)
+      fast-stemmer (~> 1.0.0)
+      mongoid (>= 3.0.0)
     moped (1.5.2)
     multi_json (1.9.2)
+    nokogiri (1.6.1)
+      mini_portile (~> 0.5.0)
     origin (1.1.0)
     parallel (1.0.0)
     polyglot (0.3.4)
@@ -44,6 +52,7 @@ GEM
       rack
     rack-test (0.6.2)
       rack (>= 1.0)
+    rake (10.3.1)
     sinatra (1.4.3)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -80,12 +89,16 @@ PLATFORMS
 DEPENDENCIES
   awesome_print
   bson_ext
+  colored
   json
   mongo
   mongoid
+  mongoid_search
+  nokogiri
   parallel
   pony
   rack-flash
+  rake
   sinatra
   sinatra-contrib
   sinatra-flash

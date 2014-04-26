@@ -1,0 +1,25 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Search results <small>(for <%= search_term %>)</small></h2>
+  </div>
+
+  <div class="tab-content">
+  <% if results.empty? %>
+    Nothing found here with the search term specified
+  <% else %>
+    <div class="panel panel-info">
+      <div class="panel-body">
+        <ul class="list-group">
+        <% results.each do |result| %>
+          <li class="list-group-item">
+            <a href="/job/<%= result[:id] %>">
+              <%= result[:title] %>
+            </a>
+          </li>
+        <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+  </div>
+</div>

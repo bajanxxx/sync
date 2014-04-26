@@ -2,6 +2,7 @@
 # Usage: Job.create(:url => )
 class Job
   include Mongoid::Document
+  include Mongoid::Search
 
   field :search_term, type: String
   field :source,      type: String # Specify what the source is DICE, INDEED
@@ -18,6 +19,9 @@ class Job
   field :desc,        type: String
   field :trigger,     type: Array # possible triggers => [ 'SEND_TO_VENDOR', 'SEND_TO_CONSULTANT', 'CHECK_LATER', 'APPLY' ]
   field :link_active, type: Boolean, default: true # specify whether a job posting link is active or not
+  
+  index({ url: 1 }, { unique: true, name: "url_index" })
 
+  search_in :title, :company, :location, :skills, :emails
   has_many :applications, class_name: 'Application'
 end

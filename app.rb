@@ -4,6 +4,7 @@ require 'sinatra/base'
 require 'sinatra/flash'
 require 'mongo' # Req for GRIDFS
 require 'mongoid'
+require 'mongoid_search'
 require 'json'
 require 'date'
 require 'pony'
@@ -955,9 +956,44 @@ EOBODY
     end
   end
 
+  post '/search' do
+    search_term = params[:search]
+    puts "Search term is #{search_term}"
+    results = []
+
+    if uri?(search_term)
+      begin
+        job = Job.find_by(url: search_term)
+        results << {id: job._id, title: job.title}
+      rescue Mongoid::Errors::DocumentNotFound
+        # do nothing
+      end
+    else
+      Job.full_text_search(search_term).entries.map do |job|
+        results << {
+          id: job._id,
+          title: job.title
+        }
+      end
+    end
+    puts results.inspect
+
+    erb :search, :locals => { :search_term => search_term ,:results => results }
+  end
+
   #
   # => HELPERS
   #
+
+  # Check if the specified string is an url
+  def uri?(string)
+  uri = URI.parse(string)
+  %w(http https).include?(uri.scheme)
+  rescue URI::BadURIError
+    false
+  rescue URI::InvalidURIError
+    false
+  end
 
   # Upload's a new resume using GridFS and returns id of the document
   # Onlt creates a document if there is no file exists with the same name
