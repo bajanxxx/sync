@@ -272,7 +272,7 @@ class JobPortal < Sinatra::Base
       message = "fields cannot be empty"
     else
       begin
-        consultant = Consultant.find_by(email: email)
+        Consultant.find_by(email: email)
       rescue Mongoid::Errors::DocumentNotFound
         success = true
         Consultant.create(
@@ -956,9 +956,9 @@ EOBODY
     end
   end
 
+  # Handles the search queries for job collection
   post '/search' do
     search_term = params[:search]
-    puts "Search term is #{search_term}"
     results = []
 
     if search_term.match(/\s/)
@@ -973,11 +973,10 @@ EOBODY
         # do nothing
       end
     else
-      Job.full_text_search(search_term).entries.map do |job|
-        results << { id: job._id, title: job.title }
+      Job.full_text_search(search_term).entries.map do |j|
+        results << { id: j._id, title: j.title }
       end
     end
-    puts results.inspect
 
     erb :search, :locals => { :search_term => search_term ,:results => results }
   end
@@ -1002,7 +1001,6 @@ EOBODY
   # Onlt creates a document if there is no file exists with the same name
   def upload_resume(file_path, file_name)
     db = nil
-    file_id = nil
     begin
       db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
       grid = Mongo::Grid.new(db)
