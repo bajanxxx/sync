@@ -9,6 +9,7 @@ require 'mongoid_search'
 require 'parallel'
 require 'colored'
 require 'nokogiri'
+require 'timeout'
 
 require_relative 'models/job'
 require_relative 'models/application'
@@ -85,16 +86,23 @@ class ProcessIndeedPostings
     xml = Nokogiri::XML.parse(response.body).xpath("//results//result")
     Parallel.each(xml, :in_threads => 50) do |job_posting|
       @indeed_mutex.synchronize { @indeed_processed_posts += 1 }
-      uri = URI.parse(job_posting.at('url').text.gsub("\n", ''))
-      # Fetch the indivual job posting details
-      internal_reponse = ProcessURL.process_request(
-        'http://api.indeed.com/ads/apigetjobs',
-        params = {
-          jobkeys: CGI.parse(uri.query)['jk'],
-          publisher: @publisher_id,
-          v: @version
-        }
-      )
+      internal_reponse = nil
+      begin
+        Timeout.timeout(10) do
+          uri = URI.parse(job_posting.at('url').text.gsub("\n", ''))
+          # Fetch the indivual job posting details
+          internal_reponse = ProcessURL.process_request(
+            'http://api.indeed.com/ads/apigetjobs',
+            params = {
+              jobkeys: CGI.parse(uri.query)['jk'],
+              publisher: @publisher_id,
+              v: @version
+            }
+          )
+        end
+      rescue
+        puts "URL processing took more than 10 seconds to process, dropping!"
+      end
       Nokogiri::XML.parse(internal_reponse.body).xpath("//results//result").each do |rs|
         job_uri = URI.parse(rs.at('url').text)
         raw_job_html = ProcessURL.process_request("#{job_uri.scheme}://#{job_uri.host}#{job_uri.path}", CGI.parse(job_uri.query))
