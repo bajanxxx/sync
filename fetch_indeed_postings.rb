@@ -21,12 +21,19 @@ class ProcessURL
     uri       = URI.parse(base_url)
     uri.query = URI.encode_www_form(params) unless params.nil?
     printf "Processing page request (#{uri.to_s.gsub('%', '%%')})\n".blue
-    response = Net::HTTP.get_response(uri)
-    if response.code == '301' || response.code == '302'
-      printf "Following redirection to process #{response.header['location'].gsub('%', '%%')}\n".cyan
-      response = process_request(response.header['location'], nil, limit - 1)
+    response = nil
+    begin
+      Timeout::timeout(10) do
+        response = Net::HTTP.get_response(uri)
+        if response.code == '301' || response.code == '302'
+          printf "Following redirection to process #{response.header['location'].gsub('%', '%%')}\n".cyan
+          response = process_request(response.header['location'], nil, limit - 1)
+        end
+        return response
+      end
+    rescue Timeout::Error
+      puts "Failed to parse request in 10 seconds, skipping.".red
     end
-    return response
   rescue URI::InvalidURIError
     $stderr.printf "Failed parsing URL: #{base_url}\n".red
     return nil
@@ -86,23 +93,16 @@ class ProcessIndeedPostings
     xml = Nokogiri::XML.parse(response.body).xpath("//results//result")
     Parallel.each(xml, :in_threads => 50) do |job_posting|
       @indeed_mutex.synchronize { @indeed_processed_posts += 1 }
-      internal_reponse = nil
-      begin
-        Timeout.timeout(10) do
-          uri = URI.parse(job_posting.at('url').text.gsub("\n", ''))
-          # Fetch the indivual job posting details
-          internal_reponse = ProcessURL.process_request(
-            'http://api.indeed.com/ads/apigetjobs',
-            params = {
-              jobkeys: CGI.parse(uri.query)['jk'],
-              publisher: @publisher_id,
-              v: @version
-            }
-          )
-        end
-      rescue
-        puts "URL processing took more than 10 seconds to process, dropping!"
-      end
+      uri = URI.parse(job_posting.at('url').text.gsub("\n", ''))
+      # Fetch the indivual job posting details
+      internal_reponse = ProcessURL.process_request(
+        'http://api.indeed.com/ads/apigetjobs',
+        params = {
+          jobkeys: CGI.parse(uri.query)['jk'],
+          publisher: @publisher_id,
+          v: @version
+        }
+      )
       Nokogiri::XML.parse(internal_reponse.body).xpath("//results//result").each do |rs|
         job_uri = URI.parse(rs.at('url').text)
         raw_job_html = ProcessURL.process_request("#{job_uri.scheme}://#{job_uri.host}#{job_uri.path}", CGI.parse(job_uri.query))
