@@ -31,8 +31,8 @@ rvm rubygems current
 **Install Gem Dependencies:**
 
 ```
-rvm use 2.0.0@global
-cd /opt/job_portal && bundle install
+cd /opt/job_portal
+rvm @global do bundle install
 ```
 
 Install MongoDB:

@@ -5,6 +5,7 @@ require 'pathname'
 require 'optparse'
 require 'ostruct'
 require 'mongoid'
+require 'mongoid_search'
 require 'parallel'
 
 require_relative 'models/job'

@@ -2,7 +2,7 @@ require 'rubygems'
 require 'sinatra'
 require 'sinatra/base'
 require 'sinatra/flash'
-require 'mongo' # Req for GRIDFS
+require 'mongo'
 require 'mongoid'
 require 'mongoid_search'
 require 'json'
@@ -10,6 +10,7 @@ require 'date'
 require 'pony'
 require 'awesome_print'
 
+# Load the mongo models
 require_relative 'models/sessions'
 require_relative 'models/users'
 require_relative 'models/consultants'
