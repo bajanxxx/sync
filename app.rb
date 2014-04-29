@@ -9,6 +9,7 @@ require 'json'
 require 'date'
 require 'pony'
 require 'awesome_print'
+require 'rest-client'
 
 # Load the mongo models
 require_relative 'models/sessions'
@@ -21,6 +22,7 @@ require_relative 'core/settings'
 require_relative 'models/consultant'
 require_relative 'models/application'
 require_relative 'models/resume'
+require_relative 'models/vendor'
 
 #
 # Monkey Patch Sinatra flash to bootstrap alert
@@ -378,6 +380,7 @@ EOBODY
     Pony.mail(
       :from => Settings.email.split('@').first + "<" + Settings.email + ">",
       :to => email,
+      :cc => Settings.cc,
       :subject => "Apply/Check this job: #{job.title}(#{job.location})",
       :headers => { 'Content-Type' => 'text/html' },
       :body => email_body,
@@ -432,6 +435,7 @@ EOBODY
     Pony.mail(
       :from => Settings.email.split('@').first + "<" + Settings.email + ">",
       :to => email,
+      :cc => Settings.cc,
       :subject => "Reminder for job posting: #{job.title}(#{job.location})",
       :headers => { 'Content-Type' => 'text/html' },
       :body => email_body,
@@ -587,6 +591,7 @@ EOBODY
     Pony.mail(
       :from => Settings.email.split('@').first + "<" + Settings.email + ">",
       :to => vendor_email,
+      :cc => Settings.cc,
       :subject => "Applying Job Post: (#{job.title})",
       :body => email_body,
       :attachments => {
@@ -980,6 +985,79 @@ EOBODY
     end
 
     erb :search, :locals => { :search_term => search_term ,:results => results }
+  end
+
+  ###
+  ### Vendors
+  ###
+  before '/vendors' do
+    redirect '/login' if !@username
+  end
+
+  # Display vendors available
+  get '/vendors' do
+    if @admin_user
+      coll = Vendor.all.entries
+      # coll = (1..1000).to_a
+      curr_page = if params[:page].nil?
+                    1
+                  else
+                    params[:page].to_i
+                  end
+      page_size = 10
+      num_pages = coll.size / page_size
+      batch_end = curr_page * page_size
+      batch_start = curr_page == 1 ? 0 : batch_end - page_size
+      curr_batch = coll[batch_start..batch_end-1]
+      puts "curr_page: #{curr_page}, num_pages: #{num_pages}, page_size: #{page_size}"
+      erb :vendors,
+          :locals => {
+            num_pages: num_pages,
+            curr_batch: curr_batch,
+            curr_page: curr_page,
+            last_page: num_pages,
+            page_size: page_size
+          }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  # Add a new vendor
+  post '/vendor/new' do
+    first_name = params[:FirstName]
+    last_name  = params[:LastName]
+    email      = params[:Email]
+    company    = params[:Company]
+    success    = true
+    message    = "Successfully added vendor with email: #{email}"
+
+    if first_name.empty? || last_name.empty? || email.empty?
+      success = false
+      message = "fields cannot be empty"
+    else
+      begin
+        Vendor.find_by(email: email)
+      rescue Mongoid::Errors::DocumentNotFound
+        success = true
+        Vendor.create(
+          first_name: first_name,
+          last_name: last_name,
+          email: email,
+          company: company
+        )
+      else
+        success = false
+        message = "Vendor already exists with email address: #{email}"
+      end
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  # Parse csv, tsv file and upload them to mongo
+  post '/vendors/bulk' do
+
   end
 
   #
