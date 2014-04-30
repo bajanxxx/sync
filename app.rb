@@ -88,6 +88,7 @@ class JobPortal < Sinatra::Base
                     rescue Mongoid::Errors::DocumentNotFound
                       'ADMIN'
                     end
+                  end
     # Load email information
     Settings.load!("conf/emails.yaml")
   end
