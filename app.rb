@@ -84,7 +84,7 @@ class JobPortal < Sinatra::Base
                   end
     @admin_name = if @admin_user
                     begin
-                      User.find_by(_id: @username).email.split('@').capitalize
+                      User.find_by(_id: @username).email.split('@').first.capitalize
                     rescue Mongoid::Errors::DocumentNotFound
                       'ADMIN'
                     end
