@@ -82,6 +82,12 @@ class JobPortal < Sinatra::Base
                       false
                     end
                   end
+    @admin_name = if @admin_user
+                    begin
+                      User.find_by(_id: @username).email.split('@').capitalize
+                    rescue Mongoid::Errors::DocumentNotFound
+                      'ADMIN'
+                    end
     # Load email information
     Settings.load!("conf/emails.yaml")
   end
@@ -354,7 +360,7 @@ class JobPortal < Sinatra::Base
     # p Settings.smtp_port
     email_body = <<EOBODY
       <p>Hi,</p>
-      <p><strong>#{@admin_user}</strong> sent the following link: <a href="#{job.url}">#{job.title}</a> for the job posting. Please take a look at this posting.</p>
+      <p><strong>#{@admin_name}</strong> sent the following link: <a href="#{job.url}">#{job.title}</a> for the job posting. Please take a look at this posting.</p>
       <p>Job Details:</p>
       <table width="100%" border="0" cellspacing="0" cellpading="0">
         <tr>
@@ -409,7 +415,7 @@ EOBODY
     job = Job.find_by(url: job_url)
     email_body = <<EOBODY
       <p>Hi,</p>
-      <p>This is a reminder from <strong>#{@admin_user}</strong> regarding job posting: <a href="#{job.url}">#{job.title}</a> you have been tracking in cloudwick's job portal.</p>
+      <p>This is a reminder from <strong>#{@admin_name}</strong> regarding job posting: <a href="#{job.url}">#{job.title}</a> you have been tracking in cloudwick's job portal.</p>
       <p>Follow up with the vendor and let me know the status.</p>
       <p>Job Details:</p>
       <table width="100%" border="0" cellspacing="0" cellpading="0">
