@@ -12,7 +12,10 @@
 		<link href="/css/select2.css" rel="stylesheet"/>
 		<!-- <link href="/css/badge_formatting.css" rel="stylesheet"> -->
 		<!-- Booststrap validator -->
-		<link href="/css/bootstrapValidator.css" rel="stylesheet"/>
+    <link href="/css/bootstrapValidator.css" rel="stylesheet"/>
+		<link href="/css/summernote.css" rel="stylesheet"/>
+		<link href="/css/summernote-bs3.css" rel="stylesheet"/>
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.min.css">
 
 		<style>
 			html {
@@ -53,6 +56,10 @@
 	    .alignrightcontents {
 	    	text-align: right !important;
 	    }
+
+			.modal-wide .modal-dialog {
+  			width: 80%; /* or whatever you wish */
+			}
 		</style>
 		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -70,7 +77,10 @@
 		<!-- JQuery Validator -->
 		<script src="/js/jquery.validate.min.js"></script>
 		<!-- Select2 -->
-		<script src="/js/select2.js"></script>
+    <script src="/js/select2.js"></script>
+    <!-- Bootstrap Paginator -->
+    <script src="/js/bootstrap-paginator.min.js"></script>
+		<script src="/js/summernote.min.js"></script>
 	</head>
 	<body>
 	  <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -80,15 +90,20 @@
 	        <ul class="nav navbar-nav">
 	          <li><a href="/jobs">Jobs</a></li>
 	          <li><a href="/consultants">Consultants</a></li>
+						<li><a href="/vendors">Vendors</a></li>
+						<li><a href="/campaign">Campaign</a></li>
 	        </ul>
 					<ul class="nav navbar-nav pull-right">
 						<form action="/search" method="post" class="navbar-form navbar-left" role="search">
-  						<div class="form-group">
-    						<input type="text" class="form-control" name="search" id="search" placeholder="Search">
-  						</div>
   						<% if @admin_user %>
+							<div class="form-group">
+								<input type="text" class="form-control" name="search" id="search" placeholder="Search for job details">
+							</div>
   						<input type="submit" class="btn btn-info btn-small" value="Submit"/>
   						<% else %>
+							<div class="form-group">
+								<input type="text" class="form-control" name="search" id="search" placeholder="Only for admin only">
+							</div>
   						<input type="submit" class="btn btn-info btn-small" disabled="disabled" value="Submit"/>
   						<% end %>
 						</form>

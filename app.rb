@@ -10,6 +10,7 @@ require 'date'
 require 'pony'
 require 'awesome_print'
 require 'rest-client'
+require 'csv'
 
 # Load the mongo models
 require_relative 'models/sessions'
@@ -23,6 +24,7 @@ require_relative 'models/consultant'
 require_relative 'models/application'
 require_relative 'models/resume'
 require_relative 'models/vendor'
+require_relative 'models/template'
 
 #
 # Monkey Patch Sinatra flash to bootstrap alert
@@ -352,7 +354,7 @@ class JobPortal < Sinatra::Base
     # p Settings.smtp_port
     email_body = <<EOBODY
       <p>Hi,</p>
-      <p>Check the following link: <a href="#{job.url}">#{job.title}</a> for the job posting.</p>
+      <p><strong>#{@admin_user}</strong> sent the following link: <a href="#{job.url}">#{job.title}</a> for the job posting. Please take a look at this posting.</p>
       <p>Job Details:</p>
       <table width="100%" border="0" cellspacing="0" cellpading="0">
         <tr>
@@ -407,7 +409,7 @@ EOBODY
     job = Job.find_by(url: job_url)
     email_body = <<EOBODY
       <p>Hi,</p>
-      <p>This is a reminder regarding job posting: <a href="#{job.url}">#{job.title}</a> you have been tracking in cloudwick's job portal.</p>
+      <p>This is a reminder from <strong>#{@admin_user}</strong> regarding job posting: <a href="#{job.url}">#{job.title}</a> you have been tracking in cloudwick's job portal.</p>
       <p>Follow up with the vendor and let me know the status.</p>
       <p>Job Details:</p>
       <table width="100%" border="0" cellspacing="0" cellpading="0">
@@ -1029,6 +1031,7 @@ EOBODY
     last_name  = params[:LastName]
     email      = params[:Email]
     company    = params[:Company]
+    phone      = params[:Phone]
     success    = true
     message    = "Successfully added vendor with email: #{email}"
 
@@ -1044,7 +1047,8 @@ EOBODY
           first_name: first_name,
           last_name: last_name,
           email: email,
-          company: company
+          company: company,
+          phone: phone
         )
       else
         success = false
@@ -1056,8 +1060,103 @@ EOBODY
   end
 
   # Parse csv, tsv file and upload them to mongo
-  post '/vendors/bulk' do
+  post '/vendors/bulkadd' do
+    email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
+    parsed_records = 0
+    failed_records = 0
+    new_records_inserted = 0
+    duplicate_records = 0
+    csv = CSV.parse(File.read(params[:file][:tempfile]), headers: true)
+    csv.each do |vendor|
+      if vendor['email']
+        if vendor.fetch('email') =~ email_regex
+          parsed_records += 1
+          begin
+            Vendor.find_by(email: vendor.fetch('email'))
+            duplicate_records += 1
+          rescue Mongoid::Errors::DocumentNotFound
+            new_records_inserted += 1
+            Vendor.create(
+              email: vendor['email'],
+              first_name: vendor['first_name'],
+              last_name: vendor['last_name'],
+              company: vendor['company'],
+              phone: vendor['phone']
+            )
+          end
+        end
+      else
+        failed_records += 1
+      end
+    end
+    message = "Parsed: #{parsed_records}, invalid-records: #{failed_records},"\
+      " inserted-records: #{new_records_inserted}, duplicate-records: #{duplicate_records}."
 
+    flash[:info] = message
+    redirect back
+  end
+
+  ###
+  ### Email Campaigning
+  ###
+  before '/campaign' do
+    redirect '/login' if !@username
+  end
+
+  get '/campaign' do
+    if @admin_user
+      erb :campaign, :locals => { :templates => Template.all }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  post '/campaign/email_template' do
+    template_name = params[:name]
+    template_subject = params[:subject]
+    template_body = params[:body]
+    success    = true
+    message    = "Successfully added email template with name: #{template_name}"
+
+    if template_name.empty? || template_body.empty? || template_subject.empty?
+      success = false
+      message = "fields cannot be empty"
+    else
+      begin
+        Template.find_by(name: template_name)
+      rescue Mongoid::Errors::DocumentNotFound
+        success = true
+        Template.create(
+          name: template_name,
+          subject: template_subject,
+          content: template_body
+        )
+      else
+        success = false
+        message = "Template already exists with name: #{template_name}"
+      end
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  # Start an email campaign using the vendors list we have and keep track of replied, bounces, spam
+  post '/campaign/start' do
+    # {"name"=>"First Template (Cloudwick Reaching Out)", "all_vendors"=>"true", "replied_vendors_only"=>"false"}
+    puts params
+  end
+
+  # Handle email replies sent using campaign
+  post '/campaign/reply' do
+  end
+
+  # Handle email unsubscribes
+  post '/campaign/unsubscribe' do
+  end
+
+  # Handle email bounce
+  post '/campaign/bounce' do
+    # get the email address and mark that email as blocked
   end
 
   #
@@ -1074,6 +1173,18 @@ EOBODY
     false
   rescue TypeError
     false
+  end
+
+  # Send email out using mailgun
+  def send_mail(to_address, subject, body, tag = 'Cloudwick Email Campaigning')
+    RestClient.post "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/messages",
+      from: Settings.mailgun_email.split('@').first + "<" + Settings.mailgun_email + ">",
+      to: to_address,
+      subject: subject,
+      text: body,
+      "o:tag" => tag,
+      "o:tracking" => true,
+      "o:tracking-opens" => true
   end
 
   # Upload's a new resume using GridFS and returns id of the document

@@ -1,0 +1,230 @@
+<!-- Modal Definitions -->
+<div class="modal fade modal-wide" id="AddCampaignTemplate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Add/Update Template</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <div class="form-group">
+            <label for="TemplateName">Template Name: </label>
+            <input type="text" class="form-control" id="TemplateName" placeholder="Enter name of the template">
+          </div>
+          <div class="form-group">
+            <label for="TemplateSubject">Template Subject: </label>
+            <input type="text" class="form-control" id="TemplateSubject" placeholder="Enter a subject for email">
+          </div>
+        </form>
+        <div id="summernote">Start adding content here...</div>
+        <p id="AddCampaignTemplateFormLabel" class="text-center"></p>
+        <hr />
+        <button id="SubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="StartEmailCampaign" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Start Email Campaign</h4>
+      </div>
+      <div class="modal-body">
+        <% if templates.count > 0 %>
+        <form id="SendToVendorsForm" class="form-horizontal">
+          <fieldset>
+            <label for="templateName">Select a email template to use: </label>
+            <select name="TemplateName" id="TemplateNameSelected" class="form-control">
+              <% templates.each do |template| %>
+              <option><%= template.name %> (<%= template.subject %>)</option>
+              <% end %>
+            </select>
+          </fieldset>
+          <div class="checkbox">
+            <label>
+              <input id="AllVendorsChecked" type="checkbox"> Send out to all vendors
+            </label>
+          </div>
+          <div class="checkbox">
+            <label>
+              <input id="RepliedVendorsOnlyChecked" type="checkbox"> Send out vendors who replied back
+            </label>
+          </div>
+          <hr />
+          <button id="SubmitCampaignBtn" name="SubmitBtn" class="btn btn-large btn-primary">Submit</button>
+        </form>
+        <% else %>
+        <p class='text-danger text-center'>Hey man add some templates there are no templates here</p>
+        <hr />
+        <button id="SubmitCampaignBtn" name="SubmitBtn" class="btn btn-large btn-primary disabled">Submit</button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Email Campaigning
+      <p class="pull-right">
+        <a id="AddNewEmailTemplate" class="btn btn-primary btn-md" data-toggle="modal" href="#AddCampaignTemplate" role="button">Add Email Template &raquo;</a>
+        <a id="SendEmailCampaignBtn" class="btn btn-primary btn-md" data-toggle="modal" href="#StartEmailCampaign" role="button">Start New Campaign &raquo;</a>
+      </p>
+    </h2>
+  </div>
+</div>
+
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+<div class="row">
+  <div id="container" class="col-md-6" style="width: 50%; height: 400px; margin: 0 auto"></div>
+  <div id="container2" class="col-md-6" style="width: 50%; height: 400px; margin: 0 auto"></div>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('#summernote').summernote();
+
+  $('#SubmitBtn').click(function() {
+    var sHTML = $('#summernote').code();
+    var name = $('#TemplateName').val();
+    var subject = $('#TemplateSubject').val();
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/campaign/email_template",
+      data: {'name': name, 'subject': subject, 'body': sHTML},
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg)
+          $('#AddCampaignTemplateFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg)
+          $('#AddCampaignTemplateFormLabel').addClass('text-info').html(data.msg);
+          $('#AddCampaignTemplate').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        $('#AddCampaignTemplateFormLabel').addClass('text-danger').html('Something went wrong adding email template!!!');
+      }
+    });
+  });
+
+  $('#SubmitCampaignBtn').click(function() {
+    var template_name = $('#TemplateNameSelected').val();
+    var all_vendors = $('#AllVendorsChecked').prop('checked');
+    var replied_vendors_only = $('#RepliedVendorsOnlyChecked').prop('checked');
+    $.ajax({
+      type: 'POST',
+      dataType: "json",
+      url: "/campaign/start",
+      data: {'name': template_name, 'all_vendors': all_vendors, 'replied_vendors_only': replied_vendors_only},
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg)
+        } else {
+          console.log("Success: " + data.msg)
+          location.reload();
+        }
+      },
+      error: function(data) {
+        console.log("Failed")
+      }
+    });
+  });
+  // Charts KEWL
+  $(function () {
+    $('#container').highcharts({
+        chart: {
+          plotBackgroundColor: null,
+          plotBorderWidth: null,
+          plotShadow: false
+        },
+        title: {
+          text: 'Email Campaign 1'
+        },
+        tooltip: {
+    	    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    }
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Email count',
+            data: [
+                ['Delivered', 1254],
+                ['Bounced', 124],
+                {
+                    name: 'Replied',
+                    y: 55,
+                    sliced: true,
+                    selected: true
+                },
+                ['Unsubscribed', 10],
+            ]
+        }]
+    });
+  });
+  $(function () {
+    $('#container2').highcharts({
+        chart: {
+          plotBackgroundColor: null,
+          plotBorderWidth: null,
+          plotShadow: false
+        },
+        title: {
+          text: 'Email Campaign 2'
+        },
+        tooltip: {
+          pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    }
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Email count',
+            data: [
+                ['Delivered', 300],
+                ['Bounced', 124],
+                {
+                    name: 'Replied',
+                    y: 55,
+                    sliced: true,
+                    selected: true
+                },
+                ['Unsubscribed', 10],
+            ]
+        }]
+    });
+  });
+});
+</script>

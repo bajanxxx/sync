@@ -19,7 +19,7 @@ class Job
   field :desc,        type: String
   field :trigger,     type: Array # possible triggers => [ 'SEND_TO_VENDOR', 'SEND_TO_CONSULTANT', 'CHECK_LATER', 'APPLY' ]
   field :link_active, type: Boolean, default: true # specify whether a job posting link is active or not
-  
+
   index({ url: 1 }, { unique: true, name: "url_index" })
 
   search_in :title, :company, :location, :skills, :emails

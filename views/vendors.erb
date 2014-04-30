@@ -36,6 +36,13 @@
               <span class="help-block"></span>
             </div>
           </div>
+          <div class="form-group">
+            <label class="control-label col-sm-3 col-md-3" for="Phone">Phone:</label>
+            <div class="col-md-5 col-xm-6">
+              <input type="text" class="form-control" id="Phone" name="Phone" placeholder="Phone" />
+              <span class="help-block"></span>
+            </div>
+          </div>
           <p id="AddVendorFormLabel" class="text-center"></p>
           <div class="form-group">
             <div class="col-sm-offset-3 col-md-offset-3 col-lg-offset-3 col-md-9">
@@ -48,6 +55,26 @@
   </div>
 </div>
 <!-- Vendor batch add modal -->
+<div class="modal fade" id="AddVendorFromFile" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Add Vendor(s) From File</h4>
+      </div>
+      <div class="modal-body">
+        <!-- upload file to parse and add/update vendors -->
+        <form id="upload" method="post" action="/vendors/bulkadd" enctype="multipart/form-data">
+          <input type="file" title="Select file to upload" name="file" multiple />
+          <ul id="fileList"></ul>
+          <input type="submit" class="btn btn-primary btn-md" value="upload!"/>
+        </form>
+        <br>
+        <p><strong>Note: </strong> Currently supports csv files and allows following headers ('email', 'first_name', 'last_name', 'phone', 'company')</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Actual Container -->
 <div class="container theme-showcase" role="main">
@@ -55,7 +82,7 @@
     <h2>Vendors
       <p class="pull-right">
         <a id="AddNewVendor" class="btn btn-primary btn-md" data-toggle="modal" href="#AddVendor" role="button">Add Vendor &raquo;</a>
-        <a id="AddNewVendorBatch" class="btn btn-primary btn-md" data-toggle="modal" href="#" role="button">Add From File &raquo;</a>
+        <a id="AddNewVendorBatch" class="btn btn-primary btn-md" data-toggle="modal" href="#AddVendorFromFile" role="button">Add From File &raquo;</a>
       </p>
     </h2>
   </div>
@@ -83,36 +110,43 @@
   <h4 class="text-primary">No one's here create vendors using 'Add New'</h4>
   <% end %>
 </div>
+
+<script src="/js/bootstrap.file-input.js"></script>
 <script tpye='text/javascript'>
+$(document).ready(function() {
+  $('input[type=file]').bootstrapFileInput();
+  $('.file-inputs').bootstrapFileInput();
+});
+
 var options = {
- size: "normal",
- alignment: "center",
- bootstrapMajorVersion: 3,
- currentPage: <%= curr_page %>,
- totalPages: <%= num_pages == 0 ? 1 : num_pages %>,
- numberOfPages: <%= page_size %>,
- pageUrl: function(type, page, current) {
+  size: "normal",
+  alignment: "center",
+  bootstrapMajorVersion: 3,
+  currentPage: <%= curr_page %>,
+  totalPages: <%= num_pages == 0 ? 1 : num_pages %>,
+  numberOfPages: <%= page_size %>,
+  pageUrl: function(type, page, current) {
    return "?page="+page;
- },
- useBootstrapTooltip:true,
-          tooltipTitles: function (type, page, current) {
-              switch (type) {
-              case "first":
-                  return "Go To First Page <i class='icon-fast-backward icon-white'></i>";
-              case "prev":
-                  return "Go To Previous Page <i class='icon-backward icon-white'></i>";
-              case "next":
-                  return "Go To Next Page <i class='icon-forward icon-white'></i>";
-              case "last":
-                  return "Go To Last Page <i class='icon-fast-forward icon-white'></i>";
-              case "page":
-                  return "Go to page " + page + " <i class='icon-file icon-white'></i>";
-              }
-          },
-          bootstrapTooltipOptions: {
-              html: true,
-              placement: 'bottom'
-          }
+  },
+  useBootstrapTooltip:true,
+  tooltipTitles: function (type, page, current) {
+    switch (type) {
+    case "first":
+        return "Go To First Page <i class='icon-fast-backward icon-white'></i>";
+    case "prev":
+        return "Go To Previous Page <i class='icon-backward icon-white'></i>";
+    case "next":
+        return "Go To Next Page <i class='icon-forward icon-white'></i>";
+    case "last":
+        return "Go To Last Page <i class='icon-fast-forward icon-white'></i>";
+    case "page":
+        return "Go to page " + page + " <i class='icon-file icon-white'></i>";
+    }
+  },
+  bootstrapTooltipOptions: {
+    html: true,
+    placement: 'bottom'
+  }
 }
 
 <% if num_pages > 1 %>
@@ -145,6 +179,7 @@ $(AddNewVendor).click(function () {
   var lastName = $("#LastName");
   var email = $("#Email");
   var team = $("#Company");
+  var phone = $('#Phone');
   var form = $('#AddForm');
   var submitBtn = $('#SubmitBtn');
 
