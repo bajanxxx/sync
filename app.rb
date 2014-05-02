@@ -25,6 +25,7 @@ require_relative 'models/application'
 require_relative 'models/resume'
 require_relative 'models/vendor'
 require_relative 'models/template'
+require_relative 'models/campaign'
 
 #
 # Monkey Patch Sinatra flash to bootstrap alert
@@ -90,7 +91,7 @@ class JobPortal < Sinatra::Base
                     end
                   end
     # Load email information
-    Settings.load!("conf/emails.yaml")
+    Settings.load!("conf/config.yaml")
   end
 
   #
@@ -1018,7 +1019,7 @@ EOBODY
       batch_end = curr_page * page_size
       batch_start = curr_page == 1 ? 0 : batch_end - page_size
       curr_batch = coll[batch_start..batch_end-1]
-      puts "curr_page: #{curr_page}, num_pages: #{num_pages}, page_size: #{page_size}"
+      # puts "curr_page: #{curr_page}, num_pages: #{num_pages}, page_size: #{page_size}"
       erb :vendors,
           :locals => {
             num_pages: num_pages,
@@ -1112,7 +1113,10 @@ EOBODY
 
   get '/campaign' do
     if @admin_user
-      erb :campaign, :locals => { :templates => Template.all }
+      Campaign.all.each do |campaign|
+        get_campaign_stats(campaign._id)
+      end
+      erb :campaign, :locals => { :templates => Template.all, :campaigns => Campaign.all }
     else
       erb :admin_access_req
     end
@@ -1149,21 +1153,56 @@ EOBODY
 
   # Start an email campaign using the vendors list we have and keep track of replied, bounces, spam
   post '/campaign/start' do
-    # {"name"=>"First Template (Cloudwick Reaching Out)", "all_vendors"=>"true", "replied_vendors_only"=>"false"}
-    puts params
+    # {"name"=>"First Template|(Cloudwick Reaching Out)", "all_vendors"=>"true", "replied_vendors_only"=>"false"}
+    template_name = params[:name].split('|').first
+    all_vendors = params[:all_vendors]
+    replied_vendors_only = params[:replied_vendors_only]
+    success    = true
+    message    = "Starting Campaign..."
+
+    # Get template details
+    template = Template.find_by(name: template_name)
+    template_subject = template.subject
+    template_body    = template.content
+    vendors = if all_vendors == 'true'
+                Vendor.only(:_id).all.entries.map(&:_id)
+              else
+                Vendor.where(email_replies_recieved.gt => 0).only(_id).map(&:_id)
+              end
+    # Fork a process which sends out emails and exits
+    child_pid = Process.fork do
+      create_campaign Settings.mailgun_campaign_name, Settings.mailgun_campaign_id
+      vendors.each do |vendor_email|
+        send_mail(vendor_email, template_subject, template_body, Settings.mailgun_campaign_id)
+        Vendor.find_by(_id: vendor_email).inc(:emails_sent, 1)
+      end
+      flash[:info] = "Sucessfully queued #{vendors.count} emails."
+      Process.exit
+    end
+    Process.detach child_pid
+    flash[:info] = "Starting campaign with vendors: '#{vendors.count}' and template: '#{params[:name]}'"
+    { success: success, msg: message }.to_json
   end
 
   # Handle email replies sent using campaign
   post '/campaign/reply' do
+    puts params
   end
 
   # Handle email unsubscribes
   post '/campaign/unsubscribe' do
+    puts params
   end
 
   # Handle email bounce
   post '/campaign/bounce' do
     # get the email address and mark that email as blocked
+    puts params
+  end
+
+  # Fetch the events for a specified campaign
+  post '/campaign/events' do
+    puts params
   end
 
   #
@@ -1183,15 +1222,69 @@ EOBODY
   end
 
   # Send email out using mailgun
-  def send_mail(to_address, subject, body, tag = 'Cloudwick Email Campaigning')
+  def send_mail(to_address, subject, body, campaign_id, tag = 'Cloudwick Email Campaigning')
     RestClient.post "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/messages",
       from: Settings.mailgun_email.split('@').first + "<" + Settings.mailgun_email + ">",
       to: to_address,
       subject: subject,
       text: body,
+      'o:campaign' => campaign_id,
       "o:tag" => tag,
-      "o:tracking" => true,
-      "o:tracking-opens" => true
+      # TODO: remove me to send actual emails
+      "o:testmode" => true
+  end
+
+  def create_campaign(campaign_name, campaign_id)
+    unless campaign_exists?(campaign_id)
+      response = RestClient.post(
+        "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/campaigns",
+        name: campaign_name,
+        id: campaign_id
+      )
+      if response.code == 200
+        Campaign.find_or_create_by(_id: campaign_id) do |campaign|
+          campaign.campaign_name = campaign_name
+          campaign.campaign_id = campaign_id
+        end
+      end
+    else
+      Campaign.find_or_create_by(_id: campaign_id) do |campaign|
+        campaign.campaign_name = campaign_name
+        campaign.campaign_id = campaign_id
+      end
+    end
+  end
+
+  def campaign_exists?(campaign_id)
+    exists = false
+    response = RestClient.get "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/campaigns"
+    if response.code == 200
+      parsed = JSON.parse(response.body, { symbolize_names: true })
+      exists = true if parsed[:items].find { |ele| ele[:id] == campaign_id }
+    end
+    return exists
+  end
+
+  def get_campaign_stats(campaign_id)
+    data = {}
+    if campaign_exists?(campaign_id)
+      response = RestClient.get("https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/campaigns/#{campaign_id}/stats")
+      data = JSON.parse(response.body, { symbolize_names: true })
+      puts data
+      if data
+        campaign = Campaign.find_by(_id: campaign_id)
+        campaign.update_attributes(
+          total_complained: data[:total][:complained],
+          total_clicked: data[:total][:clicked],
+          total_opened: data[:total][:opened],
+          total_unsubscribed: data[:total][:unsubscribed],
+          total_sent: data[:total][:sent],
+          total_delivered: data[:total][:delivered],
+          total_dropped: data[:total][:dropped]
+        )
+      end
+    end
+    {}
   end
 
   # Upload's a new resume using GridFS and returns id of the document

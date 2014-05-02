@@ -1,0 +1,23 @@
+---
+#
+# GMail Configuration
+#
+email: admin@cloudwick.com
+cc: jobs@cloudwick.com
+password: balentine380
+smtp_address: smtp.gmail.com
+smtp_port: 587
+#
+# Pusher configuration
+#
+pusher_api_id: '73588'
+pusher_key: '6190d80d2c93a25e0192'
+pusher.secret: '2e55a93f44287709b37d'
+#
+# Mail Gun configuration
+#
+mailgun_api_key: 'key-62-8e5xuuc0b1ojaxobl2n13mkuw4qg2'
+mailgun_domain: 'mg.cloudwick.com'
+mailgun_email: 'jobs@mg.cloudwick.com'
+mailgun_campaign_name: 'Jobs Campigning'
+mailgun_campaign_id: 'jobs_campaign'
