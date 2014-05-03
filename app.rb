@@ -13,20 +13,27 @@ require 'rest-client'
 require 'csv'
 
 # Load the mongo models
-require_relative 'models/sessions'
-require_relative 'models/users'
+require_relative 'models/application'
+require_relative 'models/attachment'
+require_relative 'models/attachments'
+require_relative 'models/campaign'
+require_relative 'models/consultant'
 require_relative 'models/consultants'
-require_relative 'models/resumes'
+require_relative 'models/email'
 require_relative 'models/fetcher'
+require_relative 'models/job'
+require_relative 'models/resume'
+require_relative 'models/resumes'
+require_relative 'models/session'
+require_relative 'models/sessions'
+require_relative 'models/template'
+require_relative 'models/user'
+require_relative 'models/users'
+require_relative 'models/vendor'
+
+# Load core stuff
 require_relative 'core/process_dice'
 require_relative 'core/settings'
-require_relative 'models/consultant'
-require_relative 'models/application'
-require_relative 'models/resume'
-require_relative 'models/vendor'
-require_relative 'models/template'
-require_relative 'models/campaign'
-require_relative 'models/email'
 
 #
 # Monkey Patch Sinatra flash to bootstrap alert
@@ -1322,7 +1329,8 @@ EOBODY
           total_unsubscribed: data[:total][:unsubscribed],
           total_sent: data[:total][:sent],
           total_delivered: data[:total][:delivered],
-          total_dropped: data[:total][:dropped]
+          total_dropped: data[:total][:dropped],
+          unique_opens: data[:unique][:opened][:recipient]
         )
       end
     end
