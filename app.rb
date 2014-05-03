@@ -1140,6 +1140,9 @@ EOBODY
         success = true
         # Create a new campaign for tacking all the events
         create_campaign(template_name, template_name.downcase.gsub(' ', '-'))
+        # Create a new route to handle replies to this campaign
+        create_route
+        # Create the actual tempalte
         Template.create(
           name: template_name,
           subject: template_subject,
@@ -1267,10 +1270,10 @@ EOBODY
       subject: subject,
       text: body,
       'o:campaign' => campaign_id,
-      "o:tag" => tag,
+      'o:tag' => tag,
       'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}",
       # TODO: remove me to send actual emails
-      "o:testmode" => true
+      # "o:testmode" => true
   end
 
   def create_campaign(campaign_name, campaign_id)
@@ -1324,6 +1327,29 @@ EOBODY
       end
     end
     {}
+  end
+
+  def create_route
+    route_name = Settings.mailgun_routes_name
+    unless route_exists?(route_name)
+      response = RestClient.post(
+        "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/routes",
+        priority: 0,
+        description: route_name,
+        expression: "match_recipient('#{Settings.mailgun_email}')",
+        action: [ "forward('http://#{Settings.bind_ip}:#{Settings.bind_port}/campaign/reply')" ] + Settings.mailgun_routes_forward.map{ |mail| "forward(#{mail})" } + [ "stop()" ]
+      )
+    end
+  end
+
+  def route_exists?(route_name)
+    exists = false
+    response = RestClient.get("https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/routes")
+    if response.code == 200
+      parsed = JSON.parse(response.body, { symbolize_names: true })
+      exists = true if parsed[:items].find { |ele| ele[:description] == route_name }
+    end
+    return exists
   end
 
   # Upload's a new resume using GridFS and returns id of the document
