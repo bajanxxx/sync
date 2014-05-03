@@ -1271,7 +1271,7 @@ EOBODY
       text: body,
       'o:campaign' => campaign_id,
       'o:tag' => tag,
-      'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}",
+      'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}"
       # TODO: remove me to send actual emails
       # "o:testmode" => true
   end
