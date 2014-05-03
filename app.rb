@@ -26,6 +26,7 @@ require_relative 'models/resume'
 require_relative 'models/vendor'
 require_relative 'models/template'
 require_relative 'models/campaign'
+require_relative 'models/email'
 
 #
 # Monkey Patch Sinatra flash to bootstrap alert
@@ -1135,8 +1136,10 @@ EOBODY
     else
       begin
         Template.find_by(name: template_name)
-      rescue Mongoid::Errors::DocumentNotFound
+      rescue Mongoid::Errors::DocumentNotFound # template not found
         success = true
+        # Create a new campaign for tacking all the events
+        create_campaign(template_name, template_name.downcase.gsub(' ', '-'))
         Template.create(
           name: template_name,
           subject: template_subject,
@@ -1151,6 +1154,10 @@ EOBODY
     { success: success, msg: message }.to_json
   end
 
+  # Deletes email template and its associated campaign
+  delete '/campaign/email_template' do
+  end
+
   # Start an email campaign using the vendors list we have and keep track of replied, bounces, spam
   post '/campaign/start' do
     # {"name"=>"First Template|(Cloudwick Reaching Out)", "all_vendors"=>"true", "replied_vendors_only"=>"false"}
@@ -1163,7 +1170,9 @@ EOBODY
     # Get template details
     template = Template.find_by(name: template_name)
     template_subject = template.subject
-    template_body    = template.content
+    template_body = template.content
+    campaign_id = template.name.downcase.gsub(' ', '-')
+    # Select vendors to send emails out to
     vendors = if all_vendors == 'true'
                 Vendor.only(:_id).all.entries.map(&:_id)
               else
@@ -1171,9 +1180,8 @@ EOBODY
               end
     # Fork a process which sends out emails and exits
     child_pid = Process.fork do
-      create_campaign Settings.mailgun_campaign_name, Settings.mailgun_campaign_id
       vendors.each do |vendor_email|
-        send_mail(vendor_email, template_subject, template_body, Settings.mailgun_campaign_id)
+        send_mail(vendor_email, template_subject, template_body, campaign_id)
         Vendor.find_by(_id: vendor_email).inc(:emails_sent, 1)
       end
       flash[:info] = "Sucessfully queued #{vendors.count} emails."
@@ -1186,7 +1194,32 @@ EOBODY
 
   # Handle email replies sent using campaign
   post '/campaign/reply' do
-    puts params
+    puts 'Email received, processing...'
+    email = Email.create(
+      recipient: params['recipient'],
+      sender: params['sender'],
+      subject: params['subject'],
+      from: params['From'],
+      received: params['Received'],
+      stripped_text: params['stripped-text'],
+      stripped_signature: params['stripped-signature'],
+      message_id: params['Message-Id'],
+      attachments_count: params['attachment-count'] || 0
+    )
+    # Upload attachments
+    attachment_count = params['attachment-count'].to_i
+    if attachment_count > 0
+      attachment_count.times do |index|
+        attachment_tmp_file = params["attachment-#{index+1}"][:tempfile]
+        attachment_filename = params["attachment-#{index+1}"][:filename]
+        attachment_id = upload_attachment(attachment_tmp_file, attachment_filename)
+        email.attachments.create(
+          _id: attachment_id,
+          filename: attachment_filename,
+          uploaded_date: DateTime.now
+        )
+      end
+    end
   end
 
   # Handle email unsubscribes
@@ -1194,10 +1227,15 @@ EOBODY
     puts params
   end
 
-  # Handle email bounce
+  # Handle email bounce (delete's the respective email)
   post '/campaign/bounce' do
-    # get the email address and mark that email as blocked
-    puts params
+    puts 'Recieved a bounce email'
+    recipient_email = parmas['recipient']
+    begin
+      Vendor.find_by(_id: recipient_email).delete
+    rescue Mongoid::Errors::DocumentNotFound
+      puts "Cannot find vendor email: #{parmas['recipient']}"
+    end
   end
 
   # Fetch the events for a specified campaign
@@ -1230,6 +1268,7 @@ EOBODY
       text: body,
       'o:campaign' => campaign_id,
       "o:tag" => tag,
+      'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}",
       # TODO: remove me to send actual emails
       "o:testmode" => true
   end
@@ -1315,6 +1354,28 @@ EOBODY
     end
   end
 
+  # Upload mail attachments
+  def upload_attachment(file_path, file_name)
+    db = nil
+    begin
+      db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+      grid = Mongo::Grid.new(db)
+      files_db = db['fs.files']
+      unless files_db.find_one({:file_name => file_name})
+        return grid.put(
+          File.open(file_path),
+          filename: file_name
+        )
+      else
+        return nil
+      end
+    rescue
+      return nil
+    ensure
+      db.connection.close if !db.nil?
+    end
+  end
+
   # returns a grid fs object
   def download_resume(resume_id)
     db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
@@ -1323,6 +1384,20 @@ EOBODY
     # Get the file out the db
     return grid.get(BSON::ObjectId(resume_id))
     # return grid.get(resume_id)
+  rescue Exception => ex
+    p ex
+    return nil
+  ensure
+    db.connection.close if !db.nil?
+  end
+
+  # returns a grid fs object
+  def download_attachment(attachment_id)
+    db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+    grid = Mongo::Grid.new(db)
+
+    # Get the file out the db
+    return grid.get(BSON::ObjectId(attachment_id))
   rescue Exception => ex
     p ex
     return nil
