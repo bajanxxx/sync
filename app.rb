@@ -1227,7 +1227,7 @@ EOBODY
       attachments_count: params['attachment-count'] || 0
     )
     unless campaign_id == 'Uncategozired'
-      Campaign.push(:replies, email.id)
+      Campaign.find_by(_id: campaign_id).push(:replies, email.id)
     end
     # Upload attachments
     attachment_count = params['attachment-count'].to_i
