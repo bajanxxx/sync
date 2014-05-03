@@ -1268,7 +1268,7 @@ EOBODY
       from: Settings.mailgun_email.split('@').first + "<" + Settings.mailgun_email + ">",
       to: to_address,
       subject: subject,
-      text: body,
+      html: body,
       'o:campaign' => campaign_id,
       'o:tag' => tag,
       'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}"
