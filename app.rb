@@ -1139,7 +1139,7 @@ EOBODY
       rescue Mongoid::Errors::DocumentNotFound # template not found
         success = true
         # Create a new campaign for tacking all the events
-        create_campaign(template_name, template_name.downcase.gsub(' ', '-'))
+        create_campaign(template_name, template_name.downcase.gsub(' ', '_'))
         # Create a new route to handle replies to this campaign
         create_route
         # Create the actual tempalte
@@ -1174,7 +1174,7 @@ EOBODY
     template = Template.find_by(name: template_name)
     template_subject = template.subject
     template_body = template.content
-    campaign_id = template.name.downcase.gsub(' ', '-')
+    campaign_id = template.name.downcase.gsub(' ', '_')
     # Select vendors to send emails out to
     vendors = if all_vendors == 'true'
                 Vendor.only(:_id).all.entries.map(&:_id)
