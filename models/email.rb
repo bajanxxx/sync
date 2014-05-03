@@ -9,6 +9,7 @@ class Email
   field :stripped_text, type: String
   field :stripped_signature, type: String
   field :message_id, type: String # format: campaign_id@mailgun_domain
+  field :campaign_id, type: String
   field :attachments_count, type: Integer
 
   has_many :attachments, class_name: 'Attachement'

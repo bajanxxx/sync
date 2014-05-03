@@ -1205,6 +1205,15 @@ EOBODY
   # Handle email replies sent using campaign
   post '/campaign/reply' do
     puts 'Email received, processing...'
+    # Get the campaign information that this reply belongs to
+    existing_campaigns = Campaign.only(:_id).all.entries.map(&:_id)
+    references = params['References'].scan(/<(.*?)>/).flatten
+    possible_campaign = existing_campaigns.map { |c| c if references.map{ |r| r.split('@').first }.include?(c) }.compact
+    campaign_id = if possible_campaign.empty?
+                    'Uncategozired'
+                  else
+                    possible_campaign.first
+                  end
     email = Email.create(
       recipient: params['recipient'],
       sender: params['sender'],
@@ -1214,8 +1223,12 @@ EOBODY
       stripped_text: params['stripped-text'],
       stripped_signature: params['stripped-signature'],
       message_id: params['Message-Id'],
+      campaign_id: campaign_id,
       attachments_count: params['attachment-count'] || 0
     )
+    unless campaign_id == 'Uncategozired'
+      Campaign.push(:replies, email.id)
+    end
     # Upload attachments
     attachment_count = params['attachment-count'].to_i
     if attachment_count > 0
