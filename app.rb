@@ -1332,12 +1332,13 @@ EOBODY
   def create_route
     route_name = Settings.mailgun_routes_name
     unless route_exists?(route_name)
+      # RestClient.post("https://api:key-62-8e5xuuc0b1ojaxobl2n13mkuw4qg2@api.mailgun.net/v2/routes", priority: 0, description: 'New Route', expression: "match_recipient('jobs@mg.cloudwick.com')", action: ["forward('http://198.0.218.179/routes')"] + [ "stop()" ])
       response = RestClient.post(
         "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/routes",
         priority: 0,
         description: route_name,
         expression: "match_recipient('#{Settings.mailgun_email}')",
-        action: [ "forward('http://#{Settings.bind_ip}:#{Settings.bind_port}/campaign/reply')" ] + Settings.mailgun_routes_forward.map{ |mail| "forward(#{mail})" } + [ "stop()" ]
+        action: [ "forward('http://#{Settings.bind_ip}:#{Settings.bind_port}/campaign/reply')" ] + Settings.mailgun_routes_forward.map{ |mail| "forward('#{mail}')" } + [ "stop()" ]
       )
     end
   end
