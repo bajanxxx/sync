@@ -1243,6 +1243,7 @@ EOBODY
         )
       end
     end
+    status 200
   end
 
   # Handle email unsubscribes
