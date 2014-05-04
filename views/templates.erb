@@ -1,0 +1,166 @@
+<!-- Modal Definitions -->
+<div class="modal fade modal-wide" id="AddCampaignTemplate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Add Template</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <div class="form-group">
+            <label for="TemplateName">Template Name: </label>
+            <input type="text" class="form-control" id="TemplateName" placeholder="Enter name of the template">
+          </div>
+          <div class="form-group">
+            <label for="TemplateSubject">Template Subject: </label>
+            <input type="text" class="form-control" id="TemplateSubject" placeholder="Enter a subject for email">
+          </div>
+        </form>
+        <div id="summernote">Start adding content here...</div>
+        <p id="AddCampaignTemplateFormLabel" class="text-center"></p>
+        <hr />
+        <button id="SubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% templates.each do |template| %>
+<div class="modal fade modal-wide" id="EditCampaignTemplate-<%= template.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Update Template</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <div class="form-group">
+            <label for="TemplateName">Template Name: </label>
+            <input type="text" class="form-control" id="TemplateName-<%= template.id %>" value="<%= template.name %>" disabled>
+          </div>
+          <div class="form-group">
+            <label for="TemplateSubject">Template Subject: </label>
+            <input type="text" class="form-control" id="TemplateSubject-<%= template.id %>" value="<%= template.subject %>">
+          </div>
+        </form>
+        <div id="summernote-<%= template.id %>"><%= template.content %></div>
+        <p id="EditCampaignTemplateFormLabel-<%= template.id %>" class="text-center"></p>
+        <hr />
+        <button id="SubmitBtn-<%= template.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Update</button>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Manage Email Templates
+      <p class="pull-right">
+        <a id="AddNewEmailTemplate" class="btn btn-primary btn-md" data-toggle="modal" href="#AddCampaignTemplate" role="button">Add Email Template &raquo;</a>
+      </p>
+    </h2>
+  </div>
+  <% if !templates.empty? %>
+  <ul class="list-group">
+    <% templates.each do |template| %>
+    <li class="list-group-item">
+      <div class="pull-right button-group">
+        <button id="deletebtn<%= template.id %>" class="btn btn-xs btn-default">x</button>
+      </div>
+      <a id="EditMailTemplate" data-toggle="modal" href="#EditCampaignTemplate-<%= template.id %>">
+      <strong><%= template.name %></strong> (<%= template.subject %>)
+      </a>
+    </li>
+    <% end %>
+  </ul>
+  <% else %>
+  <h4 class="text-primary">No templates found here, add some uwing 'Add New'</h4>
+  <% end %>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('#summernote').summernote();
+
+  $('#SubmitBtn').click(function() {
+    var sHTML = $('#summernote').code();
+    var name = $('#TemplateName').val();
+    var subject = $('#TemplateSubject').val();
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/campaign/email_template",
+      data: {'name': name, 'subject': subject, 'body': sHTML},
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg)
+          $('#AddCampaignTemplateFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg)
+          $('#AddCampaignTemplateFormLabel').addClass('text-info').html(data.msg);
+          $('#AddCampaignTemplate').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        $('#AddCampaignTemplateFormLabel').addClass('text-danger').html('Something went wrong adding email template!!!');
+      }
+    });
+  });
+
+  <% templates.each do |template| %>
+  $('#summernote-<%= template.id %>').summernote();
+  $('#SubmitBtn-<%= template.id %>').click(function() {
+    var sHTML = $('#summernote-<%= template.id %>').code();
+    var name = $('#TemplateName-<%= template.id %>').val();
+    var subject = $('#TemplateSubject-<%= template.id %>').val();
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/campaign/email_template/<%= template.id %>/update_content",
+      data: {'name': name, 'subject': subject, 'body': sHTML},
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg)
+          $('#EditCampaignTemplateFormLabel-<%= template.id %>').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg)
+          $('#EditCampaignTemplateFormLabel-<%= template.id %>').addClass('text-info').html(data.msg);
+          $('#EditCampaignTemplate-<%= template.id %>').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        $('#EditCampaignTemplateFormLabel-<%= template.id %>').addClass('text-danger').html('Something went wrong adding email template!!!');
+      }
+    });
+  });
+
+  $('#deletebtn<%= template.id %>').hover(
+    function(){ // mouseenter
+      $("#deletebtn<%= template.id %>").removeClass('btn-default').addClass('btn-danger');
+    },
+    function(){ // mouseleave
+      $('#deletebtn<%= template.id %>').removeClass('btn-danger').addClass('btn-default');
+    }
+  );
+
+  $('#deletebtn<%= template.id %>').click(function(){
+    $.ajax({
+      type: "DELETE",
+      url: "/campaign/email_template/<%= template.id %>",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred");
+      }
+    });
+  });
+  <% end %>
+});
+</script>
