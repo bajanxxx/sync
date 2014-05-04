@@ -1130,6 +1130,14 @@ EOBODY
     end
   end
 
+  get '/campaign/templates' do
+    if @admin_user
+      erb :templates, :locals => { :templates => Template.all }
+    else
+      erb :admin_access_req
+    end
+  end
+
   post '/campaign/email_template' do
     template_name = params[:name]
     template_subject = params[:subject]
@@ -1164,8 +1172,36 @@ EOBODY
     { success: success, msg: message }.to_json
   end
 
+  post '/campaign/email_template/:id/update_content' do |id|
+    template_subject = params[:subject]
+    template_body = params[:body]
+    success    = true
+    message    = "Successfully updated email template"
+
+    if template_body.empty? || template_subject.empty?
+      success = false
+      message = "fields cannot be empty"
+    else
+      begin
+        template = Template.find_by(_id: id)
+        template.update_attributes(
+          subject: template_subject,
+          content: template_body
+        )
+      rescue Mongoid::Errors::DocumentNotFound # template not found
+        success = false
+        message = "Something went wrong, document not found!!!"
+      end
+    end
+    { success: success, msg: message }.to_json
+  end
+
   # Deletes email template and its associated campaign
-  delete '/campaign/email_template' do
+  delete '/campaign/email_template/:id' do |id|
+    template = Template.find_by(_id: id)
+    template.delete
+    Campaign.find_by(_id: template.name.downcase.gsub(' ', '_')).delete
+    delete_campaign(template.name.downcase.gsub(' ', '_'))
   end
 
   # Start an email campaign using the vendors list we have and keep track of replied, bounces, spam
@@ -1315,6 +1351,14 @@ EOBODY
         campaign.campaign_name = campaign_name
         campaign.campaign_id = campaign_id
       end
+    end
+  end
+
+  def delete_campaign(campaign_id)
+    if campaign_exists?(campaign_id)
+      response = RestClient.delete(
+        "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/campaigns/#{campaign_id}"
+      )
     end
   end
 
