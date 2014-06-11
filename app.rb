@@ -1411,7 +1411,7 @@ EOBODY
     template_body = template.content
     campaign_id = template.name.downcase.gsub(' ', '_')
     # Select customers to send emails out to
-    cusomters = if customer_vertical == 'all'
+    cusomters = if customer_vertical.downcase == 'all'
                   if replied_customers_only == 'true'
                     Customer.where(:email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:_id)
                   else
