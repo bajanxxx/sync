@@ -98,15 +98,26 @@
       </p>
     </h2>
   </div>
-</div>
 
-<script src="http://code.highcharts.com/highcharts.js"></script>
-<script src="http://code.highcharts.com/modules/exporting.js"></script>
+  <!-- CHARTS -->
+  <script src="http://code.highcharts.com/stock/highstock.js"></script>
+  <script src="http://code.highcharts.com/stock/modules/exporting.js"></script>
 
-<div class="row">
-  <% campaigns.each do |campaign| %>
-    <div id="container-<%= campaign.campaign_id %>" class="col-md-6" style="width: 50%; height: 400px; margin: 0 auto"></div>
-  <% end %>
+  <div class="row">
+    <div id="aggregate-container" style="width: 90%; margin: 0 auto"></div>
+  </div>
+
+  <style media="screen" type="text/css">
+    .addBorder {
+      border: 1px solid #ddd;
+    }
+  </style>
+
+  <div class="row" style="width: 90%; margin: 0 auto">
+    <% active_campaigns.each do |campaign| %>
+      <div id="container-<%= campaign.campaign_id %>" class="col-md-6 addBorder" style="width: 50%; margin: 0 auto"></div>
+    <% end %>
+  </div>
 </div>
 
 <script>
@@ -164,7 +175,7 @@ $(document).ready(function() {
   });
 
   // Charts KEWL
-  <% campaigns.each do |campaign| %>
+  <% active_campaigns.each do |campaign| %>
   $(function () {
     $('#container-<%= campaign.campaign_id %>').highcharts({
         chart: {
@@ -211,5 +222,39 @@ $(document).ready(function() {
     });
   });
   <% end %>
+
+  // aggregated chart
+  $(function() {
+    $('#aggregate-container').highcharts('StockChart', {
+      rangeSelector: {
+        inputEnabled: $('#container').width() > 480,
+        selected: 1
+      },
+      title: {
+        text: 'Cloudwick Campaiging Stats'
+      },
+      series: [{
+        name: 'sent message',
+        data: <%= all_campaign_stats %>,
+        type: 'area',
+        threshold: null,
+        tooltip: {
+          valueDecimals: 2
+        },
+        fillColor : {
+					linearGradient : {
+						x1: 0,
+						y1: 0,
+						x2: 0,
+						y2: 1
+					},
+					stops : [
+						[0, Highcharts.getOptions().colors[0]],
+						[1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+					]
+				}
+      }]
+    });
+  });
 });
 </script>

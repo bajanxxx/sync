@@ -1270,7 +1270,13 @@ EOBODY
       Campaign.all.each do |campaign|
         get_campaign_stats(campaign._id)
       end
-      erb :campaign, :locals => { :templates => Template.all, :campaigns => Campaign.all, :customer_groups => Customer.distinct(:industry).compact }
+      erb :campaign,
+          :locals => {
+            :templates => Template.all,
+            :active_campaigns => Campaign.where(active: true).all,
+            :all_campaign_stats => get_campaign_sent_events,
+            :customer_groups => Customer.distinct(:industry).compact
+          }
     else
       erb :admin_access_req
     end
@@ -1360,7 +1366,7 @@ EOBODY
   delete '/campaign/email_template/:id' do |id|
     template = Template.find_by(_id: id)
     template.delete
-    Campaign.find_by(_id: template.name.downcase.gsub(' ', '_')).delete
+    Campaign.where(_id: template.name.downcase.gsub(' ', '_')).update(active: false)
     delete_campaign(template.name.downcase.gsub(' ', '_'))
   end
 
@@ -1680,6 +1686,15 @@ EOBODY
       end
     end
     {}
+  end
+
+  def get_campaign_sent_events
+    data = []
+    response =  RestClient.get("https://api:key-62-8e5xuuc0b1ojaxobl2n13mkuw4qg2@api.mailgun.net/v2/mg.cloudwick.com/stats?event=sent")
+    JSON.parse(response.body, { symbolize_names: true })[:items].each do |event|
+      data << [ Date.parse(event[:created_at]).strftime('%Q').to_i, event[:total_count] ]
+    end
+    return data.sort_by{|k| k[0]}
   end
 
   def get_campaign_unsubscribers
