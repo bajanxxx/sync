@@ -53,7 +53,7 @@
           <form role="form">
             <div class="form-group">
               <label for="templateName">Select a email template to use: </label>
-              <select name="TemplateName" id="TemplateNameSelected" class="form-control">
+              <select name="CustomerTemplateName" id="CustomerTemplateNameSelected" class="form-control">
                 <% templates.each do |template| %>
                 <option><%= template.name %>|(<%= template.subject %>)</option>
                 <% end %>
@@ -138,7 +138,7 @@ $(document).ready(function() {
   });
 
   $('#SubmitCustomerCampaignBtn').click(function() {
-    var template_name = $('#TemplateNameSelected').val();
+    var template_name = $('#CustomerTemplateNameSelected').val();
     var customer_industry = $('#CustomerIndustry :selected').text();
     var replied_customers_only = $('#RepliedCustomersOnlyChecked').prop('checked');
     $.ajax({
