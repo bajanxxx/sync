@@ -45,7 +45,12 @@
             <input type="text" class="form-control" id="TemplateSubject-<%= template.id %>" value="<%= template.subject %>">
           </div>
         </form>
+        <% if template.html %> <!-- TODO if the contents contains html its messing up the layout -->
+        <p>HTML content are not allowed to be editable at this moment</p>
+        <div id="summernote-<%= template.id %>"></div>
+        <% else %>
         <div id="summernote-<%= template.id %>"><%= template.content %></div>
+        <% end %>
         <p id="EditCampaignTemplateFormLabel-<%= template.id %>" class="text-center"></p>
         <hr />
         <button id="SubmitBtn-<%= template.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Update</button>

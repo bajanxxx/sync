@@ -30,6 +30,7 @@ require_relative 'models/template'
 require_relative 'models/user'
 require_relative 'models/users'
 require_relative 'models/vendor'
+require_relative 'models/customer'
 
 # Load core stuff
 require_relative 'core/process_dice'
@@ -1058,7 +1059,6 @@ EOBODY
       begin
         Vendor.find_by(email: email)
       rescue Mongoid::Errors::DocumentNotFound
-        success = true
         Vendor.create(
           first_name: first_name,
           last_name: last_name,
@@ -1066,6 +1066,7 @@ EOBODY
           company: company,
           phone: phone
         )
+        success = true
       else
         success = false
         message = "Vendor already exists with email address: #{email}"
@@ -1113,6 +1114,151 @@ EOBODY
   end
 
   ###
+  ### Customers
+  ###
+  before '/customers' do
+    redirect '/login' if !@username
+  end
+
+  # Display vendors available
+  get '/customers' do
+    if @admin_user
+      coll = Customer.all.entries
+      erb :customers,
+          :locals => {
+            customers: coll
+          }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  # Add a new vendor
+  post '/customer/new' do
+    first_name = params[:FirstName]
+    last_name  = params[:LastName]
+    email      = params[:Email]
+    company    = params[:Company]
+    company_id = params[:UniqueCompanyID] || "00000"
+    is_business_unit_id_head = params[:BusinessUnitITHead] || "NA"
+    title         = params[:Title]
+    address_line1 = params[:AddressLine1] || "NA"
+    address_line2 = params[:AddressLine2] || "NA"
+    city          = params[:City] || "NA"
+    state         = params[:State] || "NA"
+    zip           = params[:Zip] || 00000
+    phone         = params[:Phone] || "NA"
+    extension     = params[:Ext] || "NA"
+    fax           = params[:Fax] || "NA"
+    industry      = params[:Industry] || "NA"
+    it_budget_million = params[:ITBudgetM] || 0.00
+    it_employees = params[:ITEmployees] || 0
+    revenue_billion = params[:RevenueB] || 0.00
+    fiscal_year_end = params[:FiscalYearEnd] || "NA"
+    duns = params[:DUNS] || "NA"
+
+    success    = true
+    message    = "Successfully added vendor with email: #{email}"
+
+    if first_name.empty? || last_name.empty? || email.empty? || company.empty? || title.empty?
+      success = false
+      message = "'firstname', 'lastname', 'email', 'company' and 'title' cannot be empty"
+    else
+      begin
+        Customer.find_by(email: email)
+      rescue Mongoid::Errors::DocumentNotFound
+        success = true
+        Customer.create(
+          company_id: company_id,
+          company: company,
+          first_name: first_name,
+          last_name: last_name,
+          is_business_unit_id_head: is_business_unit_id_head,
+          title: title,
+          address_line1: address_line1,
+          address_line2: address_line2,
+          city: city,
+          state: state,
+          zip: zip,
+          phone: phone,
+          extension: extension,
+          fax: fax,
+          email: email,
+          industry: industry,
+          it_budget_million: it_budget_million,
+          it_employees: it_employees,
+          revenue_billion: revenue_billion,
+          fiscal_year_end: fiscal_year_end,
+          duns: duns
+        )
+      else
+        success = false
+        message = "Customer already exists with email address: #{email}"
+      end
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  # Parse csv, tsv file and upload them to mongo
+  post '/customers/bulkadd' do
+    email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
+    parsed_records = 0
+    failed_records = 0
+    new_records_inserted = 0
+    duplicate_records = 0
+    csv = begin
+            CSV.parse(File.read(params[:file][:tempfile]), headers: true)
+          rescue ArgumentError # Hanfle UTF-8 errors
+            CSV.parse(File.open(params[:file][:tempfile], "r:ISO-8859-1"), headers: true)
+          end
+    csv.each do |customer|
+      if customer['Email']
+        if customer.fetch('Email') =~ email_regex
+          parsed_records += 1
+          begin
+            Customer.find_by(email: customer.fetch('Email'))
+            duplicate_records += 1
+          rescue Mongoid::Errors::DocumentNotFound
+            new_records_inserted += 1
+            Customer.create(
+              company_id: customer['UniqueCompanyID'],
+              company: customer['Company'],
+              first_name: customer['First Name'],
+              last_name: customer['Last Name'],
+              has_gatekeeper: customer['Has Gatekeeper'],
+              is_business_unit_id_head: customer['Business Unit I.T. Head'],
+              title: customer['Title'],
+              address_line1: customer['Address Line 1'],
+              address_line2: customer['Address Line 2'],
+              city: customer['City'],
+              state: customer['State'],
+              zip: customer['Zip'],
+              phone: customer['Phone'],
+              extension: customer['Ext'],
+              fax: customer['Fax'],
+              email: customer['Email'],
+              industry: customer['Industry'],
+              it_budget_million: customer['I.T. Budget($M)'],
+              it_employees: customer['I.T. Employees'],
+              revenue_billion: customer['Revenue($B)'],
+              fiscal_year_end: customer['Fiscal Year End'],
+              duns: customer['DUNS']
+            )
+          end
+        end
+      else
+        failed_records += 1
+      end
+    end
+    message = "Parsed: #{parsed_records}, invalid-records: #{failed_records},"\
+      " inserted-records: #{new_records_inserted}, duplicate-records: #{duplicate_records}."
+
+    flash[:info] = message
+    redirect back
+  end
+
+  ###
   ### Email Campaigning
   ###
   before '/campaign' do
@@ -1124,7 +1270,7 @@ EOBODY
       Campaign.all.each do |campaign|
         get_campaign_stats(campaign._id)
       end
-      erb :campaign, :locals => { :templates => Template.all, :campaigns => Campaign.all }
+      erb :campaign, :locals => { :templates => Template.all, :campaigns => Campaign.all, :customer_groups => Customer.distinct(:industry).compact }
     else
       erb :admin_access_req
     end
@@ -1156,12 +1302,20 @@ EOBODY
         # Create a new campaign for tacking all the events
         create_campaign(template_name, template_name.downcase.gsub(' ', '_'))
         # Create a new route to handle replies to this campaign
-        create_route
+        create_route('customer')
+        create_route('vendor')
+        # Check if the content is html
+        html_only = if template_body =~ /^s*<[^Hh>]*html/
+                      true
+                    else
+                      false
+                    end
         # Create the actual tempalte
         Template.create(
           name: template_name,
           subject: template_subject,
-          content: template_body
+          content: template_body,
+          html: html_only
         )
       else
         success = false
@@ -1184,9 +1338,15 @@ EOBODY
     else
       begin
         template = Template.find_by(_id: id)
+        html_only = if template_body =~ /^s*<[^Hh>]*html/
+                      true
+                    else
+                      false
+                    end
         template.update_attributes(
           subject: template_subject,
-          content: template_body
+          content: template_body,
+          html: html_only
         )
       rescue Mongoid::Errors::DocumentNotFound # template not found
         success = false
@@ -1205,7 +1365,7 @@ EOBODY
   end
 
   # Start an email campaign using the vendors list we have and keep track of replied, bounces, spam
-  post '/campaign/start' do
+  post '/campaign/vendor/start' do
     # {"name"=>"First Template|(Cloudwick Reaching Out)", "all_vendors"=>"true", "replied_vendors_only"=>"false"}
     template_name = params[:name].split('|').first
     all_vendors = params[:all_vendors]
@@ -1220,15 +1380,15 @@ EOBODY
     campaign_id = template.name.downcase.gsub(' ', '_')
     # Select vendors to send emails out to
     vendors = if all_vendors == 'true'
-                Vendor.only(:_id).all.entries.map(&:_id)
+                Vendor.where(unsubscribed: false, bounced: false).only(:email).all.entries.map(&:email)
               else
-                Vendor.where(email_replies_recieved.gt => 0).only(_id).map(&:_id)
+                Vendor.where(:email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:email)
               end
     # Fork a process which sends out emails and exits
     child_pid = Process.fork do
       vendors.each do |vendor_email|
-        send_mail(vendor_email, template_subject, template_body, campaign_id)
-        Vendor.find_by(_id: vendor_email).inc(:emails_sent, 1)
+        send_mail(vendor_email, template_subject, template_body, campaign_id, 'vendor')
+        Vendor.find_by(email: vendor_email).inc(:emails_sent, 1)
       end
       flash[:info] = "Sucessfully queued #{vendors.count} emails."
       Process.exit
@@ -1238,9 +1398,93 @@ EOBODY
     { success: success, msg: message }.to_json
   end
 
-  # Handle email replies sent using campaign
-  post '/campaign/reply' do
-    puts 'Email received, processing...'
+  post '/campaign/customer/start' do
+    # {"name"=>"Test|(Test)", "customer_industry"=>"Aerospace & Defense", "replied_customers_only"=>"false"}
+    template_name = params[:name].split('|').first
+    customer_vertical = params[:customer_industry]
+    replied_customers_only = params[:replied_customers_only]
+    success = true
+    message = "Starting Campaign..."
+    # Get template details
+    template = Template.find_by(name: template_name)
+    template_subject = template.subject
+    template_body = template.content
+    campaign_id = template.name.downcase.gsub(' ', '_')
+    # Select customers to send emails out to
+    customer_emails = if customer_vertical == 'all'
+                        if replied_customers_only == 'true'
+                          Customer.where(:email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:_id)
+                        else
+                          Customer.where(unsubscribed: false, bounced: false).only(:email).all.entries.map(&:email)
+                        end
+                      else
+                        if replied_customers_only == 'true'
+                          Customer.where(industry: customer_vertical, :email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:email)
+                        else
+                          Customer.where(industry: customer_vertical, unsubscribed: false, bounced: false).only(:email).map(&:email)
+                        end
+                      end
+    # Fork a process which sends out emails and exits
+    child_pid = Process.fork do
+      customer_emails.each do |customer_email|
+        send_mail(customer_emails, template_subject, template_body, campaign_id, 'customer')
+        Customer.find_by(email: customer_email).inc(:emails_sent, 1)
+      end
+      flash[:info] = "Sucessfully queued #{customer_emails.count} emails."
+      Process.exit
+    end
+    Process.detach child_pid
+    flash[:info] = "Starting campaign with customers: '#{vendors.count}' and template: '#{params[:name]}'"
+    { success: success, msg: message }.to_json
+  end
+
+  # Handle vendor email replies sent using campaign
+  post '/campaign/vendor/reply' do
+    puts "Email received from #{params['recipient']}, processing..."
+    # Get the campaign information that this reply belongs to
+    existing_campaigns = Campaign.only(:_id).all.entries.map(&:_id)
+    references = params['References'].scan(/<(.*?)>/).flatten
+    possible_campaign = existing_campaigns.map { |c| c if references.map{ |r| r.split('@').first }.include?(c) }.compact
+    campaign_id = if possible_campaign.empty?
+                    'Uncategozired'
+                  else
+                    possible_campaign.first
+                  end
+    email = Email.create(
+      recipient: params['recipient'],
+      sender: params['sender'],
+      subject: params['subject'],
+      from: params['From'],
+      received: params['Received'],
+      stripped_text: params['stripped-text'],
+      stripped_signature: params['stripped-signature'],
+      message_id: params['Message-Id'],
+      campaign_id: campaign_id,
+      attachments_count: params['attachment-count'] || 0
+    )
+    unless campaign_id == 'Uncategozired'
+      Campaign.find_by(_id: campaign_id).push(:replies, email.id)
+    end
+    # Upload attachments
+    attachment_count = params['attachment-count'].to_i
+    if attachment_count > 0
+      attachment_count.times do |index|
+        attachment_tmp_file = params["attachment-#{index+1}"][:tempfile]
+        attachment_filename = params["attachment-#{index+1}"][:filename]
+        attachment_id = upload_attachment(attachment_tmp_file, attachment_filename)
+        email.attachments.create(
+          _id: attachment_id,
+          filename: attachment_filename,
+          uploaded_date: DateTime.now
+        )
+      end
+    end
+    status 200
+  end
+
+  # Handle vendor email replies sent using campaign
+  post '/campaign/customer/reply' do
+    puts "Email received from #{params['recipient']}, processing..."
     # Get the campaign information that this reply belongs to
     existing_campaigns = Campaign.only(:_id).all.entries.map(&:_id)
     references = params['References'].scan(/<(.*?)>/).flatten
@@ -1284,18 +1528,44 @@ EOBODY
 
   # Handle email unsubscribes
   post '/campaign/unsubscribe' do
+    unsubscribers = get_campaign_unsubscribers
+    if unsubscribers
+      unsubscribers[:items].each do |unsubscriber|
+        unsubscriber_email = unsubscriber[:address]
+        begin
+          Vendor.find_by(email: unsubscriber_email).update(unsubscribed: true)
+        rescue Mongoid::Errors::DocumentNotFound
+        end
+        begin
+          Customer.find_by(email: unsubscriber_email).update(unsubscribed: true)
+        rescue Mongoid::Errors::DocumentNotFound
+        end
+      end
+    end
+    status 200
+  end
+
+  # Handle spam clicks
+  post '/campaign/complaints' do
     puts params
   end
 
   # Handle email bounce (delete's the respective email)
   post '/campaign/bounce' do
-    puts 'Recieved a bounce email'
-    recipient_email = parmas['recipient']
-    begin
-      Vendor.find_by(_id: recipient_email).delete
-    rescue Mongoid::Errors::DocumentNotFound
-      puts "Cannot find vendor email: #{parmas['recipient']}"
-    end
+    bounces = get_campaign_bounces
+    if bounces
+      bounces[:items].each do |bounce|
+        email = bounce[:address]
+        begin
+          Vendor.find_by(email: email).update(bounced: true)
+        rescue Mongoid::Errors::DocumentNotFound
+        end
+        begin
+          Customer.find_by(email: email).update(bounced: true)
+        rescue Mongoid::Errors::DocumentNotFound
+        end
+      end
+    status 200
   end
 
   # Fetch the events for a specified campaign
@@ -1320,19 +1590,19 @@ EOBODY
   end
 
   # Send email out using mailgun
-  def send_mail(to_address, subject, body, campaign_id, tag = 'Cloudwick Email Campaigning')
+  def send_mail(to_address, subject, body, campaign_id, type, tag = 'Cloudwick Email Campaigning')
+    send_mail = type == 'customer' ? Settings.mailgun_customer_email : Settings.mailgun_vendor_email
     RestClient.post "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/messages",
-      from: Settings.mailgun_email.split('@').first + "<" + Settings.mailgun_email + ">",
+      from: send_mail.split('@').first + "<" + send_mail + ">",
       to: to_address,
       subject: subject,
       html: body,
       'o:campaign' => campaign_id,
       'o:tag' => tag,
       'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}"
-      # TODO: remove me to send actual emails
-      # "o:testmode" => true
   end
 
+  # campaign_type could be vendors or customers
   def create_campaign(campaign_name, campaign_id)
     unless campaign_exists?(campaign_id)
       response = RestClient.post(
@@ -1377,7 +1647,7 @@ EOBODY
     if campaign_exists?(campaign_id)
       response = RestClient.get("https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/campaigns/#{campaign_id}/stats")
       data = JSON.parse(response.body, { symbolize_names: true })
-      puts data
+      # puts data
       if data
         campaign = Campaign.find_by(_id: campaign_id)
         campaign.update_attributes(
@@ -1395,16 +1665,38 @@ EOBODY
     {}
   end
 
-  def create_route
-    route_name = Settings.mailgun_routes_name
+  def get_campaign_unsubscribers
+    data = {}
+    response = RestClient.get("https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/unsubscribes")
+    data = JSON.parse(response.body, { symbolize_names: true })
+    return data
+  end
+
+  def get_campaign_bounces
+    data = {}
+    response = RestClient.get("https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/bounces")
+    data = JSON.parse(response.body, { symbolize_names: true })
+    return data
+  end
+
+  # type could be customer or vendor
+  def create_route(type)
+    route_name =  if type == 'customer'
+                    Settings.mailgun_customer_routes_name
+                  else
+                    Settings.mailgun_vendor_routes_name
+                  end
+    match_recipient = type == 'customer' ? Settings.mailgun_customer_email : Settings.mailgun_vendor_email
+    forward_emails  = type == 'customer' ? Settings.mailgun_customer_routes_forward : Settings.mailgun_vendor_routes_forward
+
     unless route_exists?(route_name)
       # RestClient.post("https://api:key-62-8e5xuuc0b1ojaxobl2n13mkuw4qg2@api.mailgun.net/v2/routes", priority: 0, description: 'New Route', expression: "match_recipient('jobs@mg.cloudwick.com')", action: ["forward('http://198.0.218.179/routes')"] + [ "stop()" ])
       response = RestClient.post(
         "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/routes",
         priority: 0,
         description: route_name,
-        expression: "match_recipient('#{Settings.mailgun_email}')",
-        action: [ "forward('http://#{Settings.bind_ip}:#{Settings.bind_port}/campaign/reply')" ] + Settings.mailgun_routes_forward.map{ |mail| "forward('#{mail}')" } + [ "stop()" ]
+        expression: "match_recipient('#{match_recipient}')",
+        action: [ "forward('http://#{Settings.bind_ip}:#{Settings.bind_port}/campaign/#{type}/reply')" ] + forward_emails.map{ |mail| "forward('#{mail}')" } + [ "stop()" ]
       )
     end
   end

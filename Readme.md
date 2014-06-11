@@ -61,6 +61,15 @@ cd /opt/job_portal
 bundle exec rackup -s thin >> /var/log/job_portal.log 2>&1 &
 ```
 
+**Creating indexes for collections** (Onetime)
+
+```
+rake mongoid:create_customer_indexes
+rake mongoid:create_job_indexes
+rake mongoid:create_vendor_indexes
+rake mongoid_search:index
+```
+
 Initialize the fetcher to get a decent amount of posts to work with, its not
 required to run the fetcher unless you want the data right away:
 
@@ -101,6 +110,12 @@ Create the following cron job's for the fetcher to run continuously & also to ba
 # mongo backup
 0 0 * * * /bin/bash /opt/job_portal/backup_mongo.sh -p "/mongo-backup-100 /mongo-backup-217" -d job_portal >> /var/log/job_portal_backup.log 2>&1
 ```
+
+Mail gun setup:
+--------------
+Creating bounce route:
+
+
 
 License and Authors
 -------------------

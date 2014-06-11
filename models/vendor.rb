@@ -10,5 +10,7 @@ class Vendor
   field :email_remainders_sent, type: Integer, default: 0
   field :email_replies_recieved, type: Integer, default: 0
   field :unsubscribed, type: Boolean, default: false
-  field :_id, type: String, default: -> { email }
+  field :bounced, type: Boolean, default: false
+
+  index({email: 1})
 end
