@@ -1275,7 +1275,8 @@ EOBODY
             :templates => Template.all,
             :active_campaigns => Campaign.where(active: true).all,
             :all_campaign_stats => get_campaign_sent_events,
-            :customer_groups => Customer.distinct(:industry).compact
+            :customer_groups => Customer.distinct(:industry).compact,
+            :customer => Customer
           }
     else
       erb :admin_access_req

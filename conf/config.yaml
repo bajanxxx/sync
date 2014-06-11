@@ -21,7 +21,7 @@ mailgun_domain: 'mg.cloudwick.com'
 #
 # Mail gun vendors
 #
-mailgun_vendor_email: 'jobs@mg.cloudwick.com'
+mailgun_vendor_email: 'vinay@mg.cloudwick.com'
 # forwards replies to specied emails and then also stores them in local mongo
 mailgun_vendor_routes_forward:
   - 'jobs@cloudwick.com'

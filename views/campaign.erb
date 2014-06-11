@@ -64,7 +64,7 @@
               <select id="CustomerIndustry" class="form-control">
                 <option value="all" selected="selected">All</option>
                 <% customer_groups.each do |group| %>
-                  <option id="<%= group %>" value="<%= group %>"><%= group %></option>
+                  <option id="<%= group %>" value="<%= group %>"><%= group %> (<%= customer.where(industry: group).count %>)</option>
                 <% end %>
               </select>
             </div>
