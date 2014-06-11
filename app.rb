@@ -1532,6 +1532,7 @@ EOBODY
     if unsubscribers
       unsubscribers[:items].each do |unsubscriber|
         unsubscriber_email = unsubscriber[:address]
+        puts "Got unsubscribe back from #{unsubscriber_email}"
         begin
           Vendor.find_by(email: unsubscriber_email).update(unsubscribed: true)
         rescue Mongoid::Errors::DocumentNotFound
@@ -1556,6 +1557,7 @@ EOBODY
     if bounces
       bounces[:items].each do |bounce|
         email = bounce[:address]
+        puts "Got bounce back from #{email}"
         begin
           Vendor.find_by(email: email).update(bounced: true)
         rescue Mongoid::Errors::DocumentNotFound
