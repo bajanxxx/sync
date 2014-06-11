@@ -1411,30 +1411,30 @@ EOBODY
     template_body = template.content
     campaign_id = template.name.downcase.gsub(' ', '_')
     # Select customers to send emails out to
-    customer_emails = if customer_vertical == 'all'
-                        if replied_customers_only == 'true'
-                          Customer.where(:email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:_id)
-                        else
-                          Customer.where(unsubscribed: false, bounced: false).only(:email).all.entries.map(&:email)
-                        end
-                      else
-                        if replied_customers_only == 'true'
-                          Customer.where(industry: customer_vertical, :email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:email)
-                        else
-                          Customer.where(industry: customer_vertical, unsubscribed: false, bounced: false).only(:email).map(&:email)
-                        end
-                      end
+    cusomters = if customer_vertical == 'all'
+                  if replied_customers_only == 'true'
+                    Customer.where(:email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:_id)
+                  else
+                    Customer.where(unsubscribed: false, bounced: false).only(:email).all.entries.map(&:email)
+                  end
+                else
+                  if replied_customers_only == 'true'
+                    Customer.where(industry: customer_vertical, :email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:email)
+                  else
+                    Customer.where(industry: customer_vertical, unsubscribed: false, bounced: false).only(:email).map(&:email)
+                  end
+                end
     # Fork a process which sends out emails and exits
     child_pid = Process.fork do
-      customer_emails.each do |customer_email|
-        send_mail(customer_emails, template_subject, template_body, campaign_id, 'customer')
+      cusomters.each do |customer_email|
+        send_mail(customer_email, template_subject, template_body, campaign_id, 'customer')
         Customer.find_by(email: customer_email).inc(:emails_sent, 1)
       end
-      flash[:info] = "Sucessfully queued #{customer_emails.count} emails."
+      flash[:info] = "Sucessfully queued #{cusomters.count} emails."
       Process.exit
     end
     Process.detach child_pid
-    flash[:info] = "Starting campaign with customers: '#{vendors.count}' and template: '#{params[:name]}'"
+    flash[:info] = "Starting campaign with customers: '#{cusomters.count}' and template: '#{params[:name]}'"
     { success: success, msg: message }.to_json
   end
 
