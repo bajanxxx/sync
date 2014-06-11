@@ -1387,8 +1387,9 @@ EOBODY
     # Fork a process which sends out emails and exits
     child_pid = Process.fork do
       vendors.each do |vendor_email|
-        send_mail(vendor_email, template_subject, template_body, campaign_id, 'vendor')
-        Vendor.find_by(email: vendor_email).inc(:emails_sent, 1)
+        vendor = Vendor.find_by(email: vendor_email)
+        send_mail(vendor_email, vendor.first_name, template_subject, template_body, campaign_id, 'vendor')
+        vendor.inc(:emails_sent, 1)
       end
       flash[:info] = "Sucessfully queued #{vendors.count} emails."
       Process.exit
@@ -1427,8 +1428,9 @@ EOBODY
     # Fork a process which sends out emails and exits
     child_pid = Process.fork do
       cusomters.each do |customer_email|
-        send_mail(customer_email, template_subject, template_body, campaign_id, 'customer')
-        Customer.find_by(email: customer_email).inc(:emails_sent, 1)
+        customer = Customer.find_by(email: customer_email)
+        send_mail(customer_email, customer.first_name, template_subject, template_body, campaign_id, 'customer')
+        customer.inc(:emails_sent, 1)
       end
       flash[:info] = "Sucessfully queued #{cusomters.count} emails."
       Process.exit
@@ -1593,13 +1595,25 @@ EOBODY
   end
 
   # Send email out using mailgun
-  def send_mail(to_address, subject, body, campaign_id, type, tag = 'Cloudwick Email Campaigning')
-    send_mail = type == 'customer' ? Settings.mailgun_customer_email : Settings.mailgun_vendor_email
+  def send_mail(to_address, username, subject, body, campaign_id, type, tag = 'Cloudwick Email Campaigning')
+    to_mail = type == 'customer' ? Settings.mailgun_customer_email : Settings.mailgun_vendor_email
+    full_name = to_mail.split('@').first.split('.')
+    firstname = full_name.first.capitalize
+    lastname  = if full_name.length > 1
+                  full_name.last.capitalize
+                else
+                  nil
+                end
+    display_name = if lastname
+                     firstname + ' ' + lastname
+                   else
+                     firstname
+                   end
     RestClient.post "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/messages",
-      from: send_mail.split('@').first + "<" + send_mail + ">",
+      from: display_name + "<" + to_mail + ">",
       to: to_address,
       subject: subject,
-      html: body,
+      html: body.sub(/USERNAME/, username),
       'o:campaign' => campaign_id,
       'o:tag' => tag,
       'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}"

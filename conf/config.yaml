@@ -29,7 +29,7 @@ mailgun_vendor_routes_name: 'Email Vendor Campaigning'
 #
 # Mail gun customers
 #
-mailgun_customer_email: 'markschreiber@cloudwick.com'
+mailgun_customer_email: 'mark.schreiber@mg.cloudwick.com'
 mailgun_customer_routes_forward:
   - 'markschreiber@cloudwick.com'
 mailgun_customer_routes_name: 'Email Customers Campaigning'
