@@ -1565,6 +1565,7 @@ EOBODY
         rescue Mongoid::Errors::DocumentNotFound
         end
       end
+    end
     status 200
   end
 
