@@ -1534,11 +1534,11 @@ EOBODY
         unsubscriber_email = unsubscriber[:address]
         puts "Got unsubscribe back from #{unsubscriber_email}"
         begin
-          Vendor.find_by(email: unsubscriber_email).update(unsubscribed: true)
+          Vendor.where(email: unsubscriber_email).update(unsubscribed: true)
         rescue Mongoid::Errors::DocumentNotFound
         end
         begin
-          Customer.find_by(email: unsubscriber_email).update(unsubscribed: true)
+          Customer.where(email: unsubscriber_email).update(unsubscribed: true)
         rescue Mongoid::Errors::DocumentNotFound
         end
       end
@@ -1559,11 +1559,11 @@ EOBODY
         email = bounce[:address]
         puts "Got bounce back from #{email}"
         begin
-          Vendor.find_by(email: email).update(bounced: true)
+          Vendor.where(email: email).update(bounced: true)
         rescue Mongoid::Errors::DocumentNotFound
         end
         begin
-          Customer.find_by(email: email).update(bounced: true)
+          Customer.where(email: email).update(bounced: true)
         rescue Mongoid::Errors::DocumentNotFound
         end
       end
