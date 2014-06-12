@@ -204,9 +204,9 @@
     </h2>
   </div>
 
-  <div class="center-block">
+  <div>
     <% if customers_data && customers_data.length > 1 %>
-      <table id="customers" class="table table-hover display">
+      <table id="customers" class="table table-hover display" width=100%>
       </table>
     <% else %>
     <h4 class="text-primary">No one's here create customers using 'Add New'</h4>
@@ -226,15 +226,17 @@ $(document).ready(function() {
 
   <% if customers_data && customers_data.length > 1 %>
   var dataSet = <%= customers_data %>;
-    $('#customers').dataTable({
-      "data": dataSet,
-      "columns": [
+    $('#customers').DataTable({
+      data: dataSet,
+      columns: [
         { "title": "First Name" },
         { "title": "Last Name" },
         { "title": "Company" },
         { "title": "Phone" },
         { "title": "Industry" }
-      ]
+      ],
+      deferRender: true,
+      processing: true
     });
   <% end %>
 
