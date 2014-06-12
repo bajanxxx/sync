@@ -1123,10 +1123,14 @@ EOBODY
   # Display vendors available
   get '/customers' do
     if @admin_user
-      coll = Customer.all.entries
+      data = []
+
+      Customer.only(:first_name, :last_name, :company, :phone, :industry).each do |c|
+        data << [ c.first_name, c.last_name, c.company, c.phone, c.industry || "NA" ]
+      end
       erb :customers,
           :locals => {
-            customers: coll
+            customers_data: data
           }
     else
       erb :admin_access_req

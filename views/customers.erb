@@ -205,36 +205,12 @@
   </div>
 
   <div class="center-block">
-  <% if customers && !customers.empty? %>
-    <table id="customers" class="table table-hover" cellspacing="0" width="100%">
-      <thead>
-        <tr>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>Company</th>
-          <th>Phone</th>
-          <th>Industry</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <% customers.each do |customer| %>
-          <tr>
-            <td><%= customer.first_name %></td>
-            <td><%= customer.last_name %></td>
-            <td><%= customer.company %></td>
-            <td><%= customer.phone %></td>
-            <td><%= customer.industry %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-    <div class="span6" style="float: none; margin: 0 auto;">
-      <ul id="customers"></ul>
-    </div>
-  <% else %>
-  <h4 class="text-primary">No one's here create customers using 'Add New'</h4>
-  <% end %>
+    <% if customers_data && customers_data.length > 1 %>
+      <table id="customers" class="table table-hover display">
+      </table>
+    <% else %>
+    <h4 class="text-primary">No one's here create customers using 'Add New'</h4>
+    <% end %>
   </div>
 </div>
 
@@ -242,71 +218,79 @@
 <script src="/js/jquery.dataTables.min.js"></script>
 <script src="/js/dataTables.bootstrap.js"></script>
 <script src="/js/dataTables.tableTools.min.js"></script>
+
 <script tpye='text/javascript'>
 $(document).ready(function() {
   $('input[type=file]').bootstrapFileInput();
   $('.file-inputs').bootstrapFileInput();
 
-  var table = $('#customers').DataTable({
-    paging: true,
-    scrollX : "100%",
-    autoWidth: false,
-    deferRender: true
-  });
+  <% if customers_data && customers_data.length > 1 %>
+  var dataSet = <%= customers_data %>;
+    $('#customers').dataTable({
+      "data": dataSet,
+      "columns": [
+        { "title": "First Name" },
+        { "title": "Last Name" },
+        { "title": "Company" },
+        { "title": "Phone" },
+        { "title": "Industry" }
+      ]
+    });
+  <% end %>
 
-  bootstrap_alert = function() {}
-  bootstrap_alert.warning = function(message) {
-    $('#alert_placeholder').html('<div class="alert alert-warning"><a class="close" data-dismiss="alert">×</a><span>'+message+'</span></div>');
-  }
-  bootstrap_alert.success = function(message) {
-    $('#alert_placeholder').html('<div class="alert alert-success"><a class="close" data-dismiss="alert">×</a><span>'+message+'</span></div>');
-  }
-  bootstrap_alert.error = function(message) {
-    $('#alert_placeholder').html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a><span>'+message+'</span></div>');
-  }
-
-  function getSelected() {
-    var returnArray = new Array();
-    var rows = table.rows('.info').data();
-    for (var i=0; i < rows.length; i++) {
-      returnArray.push(rows[i][0]);
-    }
-    return returnArray;
-  };
-
-  $('#customers tbody').on('click', 'tr', function() {
-     $(this).toggleClass('info');
-  });
-
-  $('#AddCustomersToGroup').click(function() {
-    var selectedRows = table.rows('.info').data().length;
-    if ( selectedRows > 0 ) {
-      console.log(selectedRows + ' rows selected');
-      var updateIds = getSelected();
-      $.ajax({
-        type: "POST",
-        dataType: "json",
-        url: "/customers/group/update",
-        data: {"ids": updateIds},
-        success: function(data) {
-          if(!data.success) {
-            console.log("Error: " + data.msg)
-            bootstrap_alert.warning(data.msg);
-            table.draw(false);
-          } else {
-            console.log("Success: " + data.msg)
-            bootstrap_alert.success(data.msg);
-            table.draw();
-          }
-        },
-        error: function(data) {
-          bootstrap_alert.error('Something went wrong updating customers(s)!!!');
-        }
-      });
-    } else {
-      bootstrap_alert.error("select atleast one customer to update the group");
-    }
-  });
+  // bootstrap_alert = function() {}
+  // bootstrap_alert.warning = function(message) {
+  //   $('#alert_placeholder').html('<div class="alert alert-warning"><a class="close" data-dismiss="alert">×</a><span>'+message+'</span></div>');
+  // }
+  // bootstrap_alert.success = function(message) {
+  //   $('#alert_placeholder').html('<div class="alert alert-success"><a class="close" data-dismiss="alert">×</a><span>'+message+'</span></div>');
+  // }
+  // bootstrap_alert.error = function(message) {
+  //   $('#alert_placeholder').html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a><span>'+message+'</span></div>');
+  // }
+  //
+  // function getSelected() {
+  //   var returnArray = new Array();
+  //   var rows = table.rows('.info').data();
+  //   for (var i=0; i < rows.length; i++) {
+  //     returnArray.push(rows[i][0]);
+  //   }
+  //   return returnArray;
+  // };
+  //
+  // $('#customers tbody').on('click', 'tr', function() {
+  //    $(this).toggleClass('info');
+  // });
+  //
+  // $('#AddCustomersToGroup').click(function() {
+  //   var selectedRows = table.rows('.info').data().length;
+  //   if ( selectedRows > 0 ) {
+  //     console.log(selectedRows + ' rows selected');
+  //     var updateIds = getSelected();
+  //     $.ajax({
+  //       type: "POST",
+  //       dataType: "json",
+  //       url: "/customers/group/update",
+  //       data: {"ids": updateIds},
+  //       success: function(data) {
+  //         if(!data.success) {
+  //           console.log("Error: " + data.msg)
+  //           bootstrap_alert.warning(data.msg);
+  //           table.draw(false);
+  //         } else {
+  //           console.log("Success: " + data.msg)
+  //           bootstrap_alert.success(data.msg);
+  //           table.draw();
+  //         }
+  //       },
+  //       error: function(data) {
+  //         bootstrap_alert.error('Something went wrong updating customers(s)!!!');
+  //       }
+  //     });
+  //   } else {
+  //     bootstrap_alert.error("select atleast one customer to update the group");
+  //   }
+  // });
 });
 
 // Add new Customer
