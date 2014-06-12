@@ -225,7 +225,7 @@ $(document).ready(function() {
   $('.file-inputs').bootstrapFileInput();
 
   <% if customers_data && customers_data.length > 1 %>
-  var dataSet = <%= customers_data %>;
+    var dataSet = <%= customers_data %>;
     $('#customers').DataTable({
       data: dataSet,
       columns: [

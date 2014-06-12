@@ -1016,27 +1016,31 @@ EOBODY
   # Display vendors available
   get '/vendors' do
     if @admin_user
-      coll = Vendor.all.entries
-      # coll = (1..1000).to_a
-      curr_page = if params[:page].nil?
-                    1
-                  else
-                    params[:page].to_i
-                  end
-      page_size = 10
-      num_pages = coll.size / page_size
-      batch_end = curr_page * page_size
-      batch_start = curr_page == 1 ? 0 : batch_end - page_size
-      curr_batch = coll[batch_start..batch_end-1]
-      # puts "curr_page: #{curr_page}, num_pages: #{num_pages}, page_size: #{page_size}"
-      erb :vendors,
-          :locals => {
-            num_pages: num_pages,
-            curr_batch: curr_batch,
-            curr_page: curr_page,
-            last_page: num_pages,
-            page_size: page_size
-          }
+      # coll = Vendor.all.entries
+      # curr_page = if params[:page].nil?
+      #               1
+      #             else
+      #               params[:page].to_i
+      #             end
+      # page_size = 10
+      # num_pages = coll.size / page_size
+      # batch_end = curr_page * page_size
+      # batch_start = curr_page == 1 ? 0 : batch_end - page_size
+      # curr_batch = coll[batch_start..batch_end-1]
+      # # puts "curr_page: #{curr_page}, num_pages: #{num_pages}, page_size: #{page_size}"
+      # erb :vendors,
+      #     :locals => {
+      #       num_pages: num_pages,
+      #       curr_batch: curr_batch,
+      #       curr_page: curr_page,
+      #       last_page: num_pages,
+      #       page_size: page_size
+      #     }
+      data = []
+      Vendor.only(:first_name, :last_name, :company, :phone, :email).each do |v|
+        data << [ v.first_name, v.last_name, v.company, v.phone || "NA", v.email ]
+      end
+      erb :vendors, :locals => { vendors_data: data }
     else
       erb :admin_access_req
     end

@@ -32,7 +32,7 @@
           <div class="form-group">
             <label class="control-label col-sm-3 col-md-3" for="Company">Company:</label>
             <div class="col-md-5 col-xm-6">
-              <input type="text" class="form-control" id="Company" name="Company" placeholder="Company" required="required" />
+              <input type="text" class="form-cont\rol" id="Company" name="Company" placeholder="Company" required="required" />
               <span class="help-block"></span>
             </div>
           </div>
@@ -86,72 +86,43 @@
       </p>
     </h2>
   </div>
-  <% if curr_batch && !curr_batch.empty? %>
-    <table class="table table-hover">
-      <tr>
-        <th>Email</th>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Company</th>
-      </tr>
-      <% curr_batch.each do |vendor| %>
-        <tr>
-          <td><%= vendor.email %></td>
-          <td><%= vendor.first_name %></td>
-          <td><%= vendor.last_name %></td>
-          <td><%= vendor.company %></td>
-        </tr>
-      <% end %>
-    </table>
-    <div class="span6" style="float: none; margin: 0 auto;">
-      <ul id="vendors"></ul>
-    </div>
-  <% else %>
-  <h4 class="text-primary">No one's here create vendors using 'Add New'</h4>
-  <% end %>
+
+  <div>
+    <% if vendors_data && vendors_data.length > 1 %>
+      <table id="vendors" class="table table-hover display" width=100%>
+      </table>
+    <% else %>
+      <h4 class="text-primary">No one's here create vendors using 'Add New'</h4>
+    <% end %>
+  </div>
 </div>
 
 <script src="/js/bootstrap.file-input.js"></script>
+<script src="/js/jquery.dataTables.min.js"></script>
+<script src="/js/dataTables.bootstrap.js"></script>
+<script src="/js/dataTables.tableTools.min.js"></script>
+
 <script tpye='text/javascript'>
 $(document).ready(function() {
   $('input[type=file]').bootstrapFileInput();
   $('.file-inputs').bootstrapFileInput();
+
+  <% if vendors_data && vendors_data.length > 1 %>
+    var dataset = <%= vendors_data %>;
+    $('#vendors').DataTable({
+      data: dataset,
+      columns: [
+        { "title": "First Name" },
+        { "title": "Last Name" },
+        { "title": "Company" },
+        { "title": "Phone" },
+        { "title": "Email" }
+      ],
+      deferRender: true,
+      processing: true
+    });
+  <% end %>
 });
-
-var options = {
-  size: "normal",
-  alignment: "center",
-  bootstrapMajorVersion: 3,
-  currentPage: <%= curr_page %>,
-  totalPages: <%= num_pages == 0 ? 1 : num_pages %>,
-  numberOfPages: <%= page_size %>,
-  pageUrl: function(type, page, current) {
-   return "?page="+page;
-  },
-  useBootstrapTooltip:true,
-  tooltipTitles: function (type, page, current) {
-    switch (type) {
-    case "first":
-        return "Go To First Page <i class='icon-fast-backward icon-white'></i>";
-    case "prev":
-        return "Go To Previous Page <i class='icon-backward icon-white'></i>";
-    case "next":
-        return "Go To Next Page <i class='icon-forward icon-white'></i>";
-    case "last":
-        return "Go To Last Page <i class='icon-fast-forward icon-white'></i>";
-    case "page":
-        return "Go to page " + page + " <i class='icon-file icon-white'></i>";
-    }
-  },
-  bootstrapTooltipOptions: {
-    html: true,
-    placement: 'bottom'
-  }
-}
-
-<% if num_pages > 1 %>
-$('#vendors').bootstrapPaginator(options);
-<% end %>
 
 // Add new Vendor
 $(AddNewVendor).click(function () {
