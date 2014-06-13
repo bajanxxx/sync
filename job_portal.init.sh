@@ -8,13 +8,16 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOG="/var/log/job_portal.log"
 PROCESS_NAME="rackup"
+ENVIRONMENT="production"
+BIND_IP="0.0.0.0"
+BIND_PORT="9292"
 
 function start () {
   if ps aux | grep -v grep | grep -v $0 | grep $PROCESS_NAME > /dev/null; then
     echo "Service ${PROCESS_NAME} is already running... skipping."
   else
-    echo "Starting ${PROCESS_NAME} ..."
-    cd $DIR && bundle exec rackup -s thin >> $LOG 2>&1 &
+    echo "Starting ${PROCESS_NAME} in ${ENVIRONMENT} environment..."
+    cd $DIR && bundle exec rackup -s thin -E ${ENVIRONMENT} -o ${BIND_IP} -p ${BIND_PORT} >> $LOG 2>&1 &
     echo "Starting ${PROCESS_NAME} ... [DONE]"
   fi
 }
