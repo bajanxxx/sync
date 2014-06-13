@@ -39,6 +39,7 @@ GEM
       mongoid (>= 3.0.0)
     moped (1.5.2)
     multi_json (1.9.3)
+    newrelic_rpm (3.8.1.221)
     nokogiri (1.6.1)
       mini_portile (~> 0.5.0)
     origin (1.1.0)
@@ -92,6 +93,7 @@ DEPENDENCIES
   mongo
   mongoid
   mongoid_search
+  newrelic_rpm
   nokogiri
   parallel
   pony

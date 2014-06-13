@@ -19,3 +19,5 @@ gem 'colored'
 gem 'nokogiri'
 gem 'rake'
 gem 'rest-client'
+
+gem 'newrelic_rpm'
