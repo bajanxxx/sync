@@ -2,6 +2,7 @@ require 'rubygems'
 require 'sinatra'
 require 'sinatra/base'
 require 'sinatra/flash'
+require 'newrelic_rpm'
 require 'mongo'
 require 'mongoid'
 require 'mongoid_search'
@@ -66,6 +67,7 @@ class JobPortal < Sinatra::Base
     enable :sessions
     register Sinatra::Flash
     set :raise_errors, true
+    set :environment, :production
   end
 
   #
