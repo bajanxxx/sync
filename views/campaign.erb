@@ -150,7 +150,7 @@ $(document).ready(function() {
 
   $('#SubmitCustomerCampaignBtn').click(function() {
     var template_name = $('#CustomerTemplateNameSelected').val();
-    var customer_industry = $('#CustomerIndustry :selected').text();
+    var customer_industry = $('#CustomerIndustry :selected').val();
     var replied_customers_only = $('#RepliedCustomersOnlyChecked').prop('checked');
     $.ajax({
       type: 'POST',
