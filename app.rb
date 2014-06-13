@@ -182,6 +182,10 @@ class JobPortal < Sinatra::Base
     erb :error, :locals => { error_msg: error_msg }
   end
 
+  get '/up' do
+    "Yup!!"
+  end
+
   #
   # => USERS AND SESSIONS
   #
