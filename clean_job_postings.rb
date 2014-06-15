@@ -27,7 +27,7 @@ end
 
 puts "Initializing validator @ #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
 
-Mongoid.load!(File.expand_path('./mongoid.yml', File.dirname(__FILE__)), :development)
+Mongoid.load!(File.expand_path('config/mongoid.yml', File.dirname(__FILE__)), :development)
 
 mutex = Mutex.new
 unavailable = Array.new

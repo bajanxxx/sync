@@ -1,7 +1,11 @@
-Job Portal
-----------
+Cloudwick Sync
+--------------
 
-Interface to make the life of our HR Teams better.
+Central portal which manages
+
+* Fetches jobs from several popular job portals like **DICE** and **INDEED**
+* Manages job applications for all the consultants
+* Central location for managing Cloudwick's Email Campaigning
 
 Get it
 ------
@@ -49,8 +53,14 @@ chmod +x mongo_install.sh
 
 Configure it:
 -------------
-You may have to configure `mongoid.yml` to specify where you are running the
+**Configuring Mongo**
+
+You may have to configure `config/mongoid.yml` to specify where you are running the
 mongo instance
+
+**Configuring MailGun (for sending/receiving emails)**
+
+Configure `config/config.yml` to specify Mail gun API keys and email addresses to use.
 
 Run it:
 ------
@@ -114,8 +124,6 @@ Create the following cron job's for the fetcher to run continuously & also to ba
 Mail gun setup:
 --------------
 Creating bounce route:
-
-
 
 License and Authors
 -------------------
