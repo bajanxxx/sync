@@ -20,19 +20,19 @@ end
 namespace :mongoid do
   desc 'Create indexes for job collection in mongo'
   task :create_job_indexes do
-    Mongoid.load!("./mongoid.yml", :development)
+    Mongoid.load!("config/mongoid.yml", :development)
     Job.create_indexes
   end
 
   desc 'Create indexes for customers collection in mongo'
   task :create_customer_indexes do
-    Mongoid.load!("./mongoid.yml", :development)
+    Mongoid.load!("config/mongoid.yml", :development)
     Customer.create_indexes
   end
 
   desc 'Create indexes for vendors collection in mongo'
   task :create_vendor_indexes do
-    Mongoid.load!("./mongoid.yml", :development)
+    Mongoid.load!("config/mongoid.yml", :development)
     Vendor.create_indexes
   end
 end

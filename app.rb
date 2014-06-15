@@ -12,6 +12,7 @@ require 'pony'
 require 'awesome_print'
 require 'rest-client'
 require 'csv'
+require 'logger'
 
 # Load the mongo models
 require_relative 'models/application'
@@ -60,9 +61,15 @@ class JobPortal < Sinatra::Base
   #
   # Pre-configure sinatra
   #
+  ::Logger.class_eval { alias :write :'<<' }
+  access_log = ::File.join(::File.dirname(::File.expand_path(__FILE__)),'log','access.log')
+  access_logger = ::Logger.new(access_log)
+  error_logger = ::File.new(::File.join(::File.dirname(::File.expand_path(__FILE__)),'log','error.log'),"a+")
+  error_logger.sync = true
 
   configure do
-    Mongoid.load!("./mongoid.yml", :development)
+    use ::Rack::CommonLogger, access_logger
+    Mongoid.load!("config/mongoid.yml", :development)
     enable :logging, :dump_errors
     enable :sessions
     register Sinatra::Flash
@@ -73,8 +80,8 @@ class JobPortal < Sinatra::Base
   #
   # => BEFORE CLAUSE (runs before every route being processed)
   #
-
   before do
+    env["rack.errors"] =  error_logger
     # Models
     @users        = UserDAO
     @sessions     = SessionDAO
@@ -102,7 +109,7 @@ class JobPortal < Sinatra::Base
                     end
                   end
     # Load email information
-    Settings.load!("conf/config.yaml")
+    Settings.load!("config/config.yml")
   end
 
   #
