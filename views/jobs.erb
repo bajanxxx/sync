@@ -18,7 +18,7 @@
           <div class="form-group">
             <label class="control-label col-sm-3 col-md-3" for="SearchString">Search String:</label>
             <div class="col-md-5 col-xm-6">
-              <input type="text" class="form-control" id="SearchString" name="SearchString" placeholder="Hadoop or Cassandra" value="" required="required" />
+              <input type="text" class="form-control" id="SearchString" name="SearchString" placeholder="hadoop or cassandra" value="" required="required" />
               <span class="help-block"></span>
             </div>
           </div>
@@ -196,6 +196,11 @@ $(AddNewJob).click(function () {
 
   form.validate();
 
+  $.validator.addMethod("regex", function(value, element, regexp) {
+    var re = new RegExp(regexp);
+    return this.optional(element) || re.test(value);
+  }, 'Please check your input.');
+
   url.rules("add", {
     required: true,
     rangelength: [8, 50],
@@ -206,10 +211,9 @@ $(AddNewJob).click(function () {
   });
   searchString.rules("add", {
     required: true,
-    rangelength: [3, 20],
+    regex: "hadoop|cassandra",
     messages: {
-      required: "Search string must be provided.",
-      rangelength: "Search string must be between 3 and 20 characters in length."
+      required: "Search string must be provided."
     }
   });
   jobTitle.rules("add", {
