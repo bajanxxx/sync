@@ -911,7 +911,7 @@ EOBODY
         date = DateTime.now.strftime("%Y-%m-%d")
         Job.find_or_create_by(url: params[:URL], date_posted: date) do |doc|
           doc.url         = params[:URL]
-          doc.search_term = params[:SearchString]
+          doc.search_term = params[:SearchString].downcase
           doc.date_posted = date
           doc.title       = params[:JobTitle]
           doc.company     = params[:Company]
@@ -927,7 +927,7 @@ EOBODY
         message = "Job already exists with url: #{params[:URL]}"
       end
     end
-    
+
     { success: success, msg: message }.to_json
   end
 
