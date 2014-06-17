@@ -891,8 +891,42 @@ EOBODY
     end
   end
 
-  # TODO: Manually create job postings by the user
-  post '/job/:id' do |id|
+  # Manually create job postings by the user
+  post '/job/new' do
+    puts params
+    success    = true
+    message    = "Successfully added job"
+
+    params.keys.each do |p|
+      if params[p].empty?
+        success = false
+        message = "Required fields are not present"
+      end
+    end
+
+    begin
+      Job.find_by(url: params[:URL])
+    rescue Mongoid::Errors::DocumentNotFound
+      date = DateTime.now.strftime("%Y-%m-%d")
+      Job.find_or_create_by(url: params[:URL], date_posted: date) do |doc|
+        doc.url         = params[:URL]
+        doc.search_term = params[:SearchString]
+        doc.date_posted = date
+        doc.title       = params[:JobTitle]
+        doc.company     = params[:Company]
+        doc.location    = params[:Location]
+        doc.skills      = params[:Skills]
+        doc.emails      = params[:Emails]
+        doc.phone_nums  = params[:Phones]
+        doc.desc        = params[:Desc]
+      end
+      success = true
+    else
+      success = false
+      message = "Job already exists with url: #{params[:URL]}"
+    end
+
+    { success: success, msg: message }.to_json
   end
 
   #
