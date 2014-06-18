@@ -70,6 +70,9 @@
             </div>
             <div class="form-group">
               <label>
+                <input id="NoDups" type="checkbox"> No Duplicates (send to who haven't sent out previously)
+              </label>
+              <label>
                 <input id="RepliedCustomersOnlyChecked" type="checkbox"> Send out Customers who replied back
               </label>
             </div>
@@ -151,12 +154,13 @@ $(document).ready(function() {
   $('#SubmitCustomerCampaignBtn').click(function() {
     var template_name = $('#CustomerTemplateNameSelected').val();
     var customer_industry = $('#CustomerIndustry :selected').val();
+    var nodups = $('NoDups').prop('checked');
     var replied_customers_only = $('#RepliedCustomersOnlyChecked').prop('checked');
     $.ajax({
       type: 'POST',
       dataType: "json",
       url: "/campaign/customer/start",
-      data: {'name': template_name, 'customer_industry': customer_industry, 'replied_customers_only': replied_customers_only},
+      data: {'name': template_name, 'customer_industry': customer_industry, 'replied_customers_only': replied_customers_only, 'nodups': nodups},
       success: function(data) {
         if(!data.success) {
           console.log("Error: " + data.msg);
