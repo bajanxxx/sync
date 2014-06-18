@@ -1451,7 +1451,7 @@ EOBODY
     # Fork a process which sends out emails and exits
     child_pid = Process.fork do
       vendors.each do |vendor_email|
-        vendor = Vendor.find_by(email: to_address)
+        vendor = Vendor.find_by(email: vendor_email)
         send_mail(vendor_email, vendor.first_name, template_subject, template_body, campaign_id, 'vendor')
       end
       flash[:info] = "Sucessfully queued #{vendors.count} emails."
@@ -1491,7 +1491,7 @@ EOBODY
     # Fork a process which sends out emails and exits
     child_pid = Process.fork do
       cusomters.each do |customer_email|
-        customer = Customer.find_by(email: to_address)
+        customer = Customer.find_by(email: customer_email)
         send_mail(customer_email, customer.first_name, template_subject, template_body, campaign_id, 'customer')
       end
       flash[:info] = "Sucessfully queued #{cusomters.count} emails."
