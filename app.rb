@@ -1509,7 +1509,11 @@ EOBODY
     puts "Email received from #{params['recipient']}, processing..."
     # Get the campaign information that this reply belongs to
     existing_campaigns = Campaign.only(:_id).all.entries.map(&:_id)
-    references = params['References'].scan(/<(.*?)>/).flatten
+    references =  if params['References']
+                    params['References'].scan(/<(.*?)>/).flatten
+                  else
+                    []
+                  end
     possible_campaign = existing_campaigns.map { |c| c if references.map{ |r| r.split('@').first }.include?(c) }.compact
     campaign_id = if possible_campaign.empty?
                     'Uncategozired'
@@ -1553,7 +1557,11 @@ EOBODY
     puts "Email received from #{params['recipient']}, processing..."
     # Get the campaign information that this reply belongs to
     existing_campaigns = Campaign.only(:_id).all.entries.map(&:_id)
-    references = params['References'].scan(/<(.*?)>/).flatten
+    references =  if params['References']
+                    params['References'].scan(/<(.*?)>/).flatten
+                  else
+                    []
+                  end
     possible_campaign = existing_campaigns.map { |c| c if references.map{ |r| r.split('@').first }.include?(c) }.compact
     campaign_id = if possible_campaign.empty?
                     'Uncategozired'
@@ -1673,11 +1681,20 @@ EOBODY
                    else
                      firstname
                    end
+    message = if body
+                 body.sub(/USERNAME/, username)
+              else
+                ''
+              end
+    if message.empty?
+
+    end
+
     RestClient.post "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/messages",
       from: display_name + "<" + to_mail + ">",
       to: to_address,
       subject: subject,
-      html: body.sub(/USERNAME/, username),
+      html: message,
       'o:campaign' => campaign_id,
       'o:tag' => tag,
       'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}"
