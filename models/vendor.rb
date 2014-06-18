@@ -11,6 +11,8 @@ class Vendor
   field :email_replies_recieved, type: Integer, default: 0
   field :unsubscribed, type: Boolean, default: false
   field :bounced, type: Boolean, default: false
+  field :skipped, type: Boolean, default: false
+  field :skipper_subjects, type: Array, default: []
 
   index({email: 1})
 end

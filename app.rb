@@ -1451,9 +1451,7 @@ EOBODY
     # Fork a process which sends out emails and exits
     child_pid = Process.fork do
       vendors.each do |vendor_email|
-        vendor = Vendor.find_by(email: vendor_email)
         send_mail(vendor_email, vendor.first_name, template_subject, template_body, campaign_id, 'vendor')
-        vendor.inc(:emails_sent, 1)
       end
       flash[:info] = "Sucessfully queued #{vendors.count} emails."
       Process.exit
@@ -1492,9 +1490,7 @@ EOBODY
     # Fork a process which sends out emails and exits
     child_pid = Process.fork do
       cusomters.each do |customer_email|
-        customer = Customer.find_by(email: customer_email)
         send_mail(customer_email, customer.first_name, template_subject, template_body, campaign_id, 'customer')
-        customer.inc(:emails_sent, 1)
       end
       flash[:info] = "Sucessfully queued #{cusomters.count} emails."
       Process.exit
@@ -1669,6 +1665,11 @@ EOBODY
   # Send email out using mailgun
   def send_mail(to_address, username, subject, body, campaign_id, type, tag = 'Cloudwick Email Campaigning')
     to_mail = type == 'customer' ? Settings.mailgun_customer_email : Settings.mailgun_vendor_email
+    skipper = if type == 'customer'
+                Customer.find_by(email: to_address)
+              else
+                Vendor.find_by(email: to_address)
+              end
     full_name = to_mail.split('@').first.split('.')
     firstname = full_name.first.capitalize
     lastname  = if full_name.length > 1
@@ -1687,17 +1688,21 @@ EOBODY
                 ''
               end
     if message.empty?
-
+      # body is empty skip this email and will update the status in the vendor/customer
+      # TODO: add a process to see if there are any skipped emails and send them out automatically
+      skipper.udpate_attribute(:skipped, true)
+      skipper.push(:skipper_subjects, subject)
+    else
+      RestClient.post "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/messages",
+        from: display_name + "<" + to_mail + ">",
+        to: to_address,
+        subject: subject,
+        html: message,
+        'o:campaign' => campaign_id,
+        'o:tag' => tag,
+        'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}"
+      skipper.inc(:emails_sent, 1)
     end
-
-    RestClient.post "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/messages",
-      from: display_name + "<" + to_mail + ">",
-      to: to_address,
-      subject: subject,
-      html: message,
-      'o:campaign' => campaign_id,
-      'o:tag' => tag,
-      'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}"
   end
 
   # campaign_type could be vendors or customers
