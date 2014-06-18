@@ -1464,6 +1464,7 @@ EOBODY
 
   post '/campaign/customer/start' do
     # {"name"=>"Test|(Test)", "customer_industry"=>"Aerospace & Defense", "replied_customers_only"=>"false"}
+    # puts params
     template_name = params[:name].split('|').first
     customer_vertical = params[:customer_industry]
     replied_customers_only = params[:replied_customers_only]

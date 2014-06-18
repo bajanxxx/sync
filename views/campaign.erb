@@ -154,7 +154,7 @@ $(document).ready(function() {
   $('#SubmitCustomerCampaignBtn').click(function() {
     var template_name = $('#CustomerTemplateNameSelected').val();
     var customer_industry = $('#CustomerIndustry :selected').val();
-    var nodups = $('NoDups').prop('checked');
+    var nodups = $('#NoDups').prop('checked');
     var replied_customers_only = $('#RepliedCustomersOnlyChecked').prop('checked');
     $.ajax({
       type: 'POST',
