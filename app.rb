@@ -1467,6 +1467,7 @@ EOBODY
     template_name = params[:name].split('|').first
     customer_vertical = params[:customer_industry]
     replied_customers_only = params[:replied_customers_only]
+    nodups = params[:nodups]
     success = true
     message = "Starting Campaign..."
     # Get template details
@@ -1477,13 +1478,17 @@ EOBODY
     # Select customers to send emails out to
     cusomters = if customer_vertical.downcase == 'all'
                   if replied_customers_only == 'true'
-                    Customer.where(:email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:_id)
+                    Customer.where(:email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:email)
+                  elsif nodups == 'true'
+                    Customer.where(:emails_sent.lt => 1, unsubscribed: false, bounced: false).only(:email).map(&:email)
                   else
                     Customer.where(unsubscribed: false, bounced: false).only(:email).all.entries.map(&:email)
                   end
                 else
                   if replied_customers_only == 'true'
                     Customer.where(industry: customer_vertical, :email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:email)
+                  elsif nodups == 'true'
+                      Customer.where(industry: customer_vertical, :emails_sent.lt => 1, unsubscribed: false, bounced: false).only(:email).map(&:email)
                   else
                     Customer.where(industry: customer_vertical, unsubscribed: false, bounced: false).only(:email).map(&:email)
                   end
@@ -1494,7 +1499,7 @@ EOBODY
         customer = Customer.find_by(email: customer_email)
         send_mail(customer_email, customer.first_name, template_subject, template_body, campaign_id, 'customer')
       end
-      flash[:info] = "Sucessfully queued #{cusomters.count} emails."
+      puts "Sucessfully queued #{cusomters.count} emails."
       Process.exit
     end
     Process.detach child_pid
