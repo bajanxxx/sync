@@ -98,6 +98,7 @@
   <ul class="nav nav-tabs nav-justified">
     <li class="active"><a data-toggle="tab" href="#dice">Dice</a></li>
     <li><a data-toggle="tab" href="#indeed">Indeed</a></li>
+    <li><a data-toggle="tab" href="#internal">Internal</a></li>
   </ul>
 
   <br/>
@@ -147,7 +148,30 @@
         </div>
       <% end %>
     </div>
+    <div id="internal" class="tab-pane">
+      <% internal_jobs.each do |search_term, consolidated| %>
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <strong><%= search_term %></strong>
+          </div>
+          <% consolidated.each do |jobs_info| %>
+          <ul class="list-group">
+            <li class="list-group-item">
+              <span class="badge"><%= jobs_info[:count] %></span>
+              <span class="badge alert-info">read: <%= jobs_info[:read] %></span>
+              <span class="badge alert-success">new: <%= jobs_info[:unread] %></span>
+              <% if jobs_info[:followup] > 0 %>
+              <span class="badge alert-danger">attn_req: <%= jobs_info[:followup] %></span>
+              <% end %>
+              <a href="/jobs/<%= jobs_info[:date_url] %>"><%= jobs_info[:date] %></a>
+            </li>
+          </ul>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
   </div>
+
 
   <% if !fetcher.nil? %>
   <div class="panel panel-default">

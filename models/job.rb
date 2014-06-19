@@ -5,7 +5,7 @@ class Job
   include Mongoid::Search
 
   field :search_term, type: String
-  field :source,      type: String # Specify what the source is DICE, INDEED
+  field :source,      type: String # Specify what the source is DICE, INDEED, INTERNAL
   field :url,         type: String
   field :date_posted, type: Date
   field :title,       type: String

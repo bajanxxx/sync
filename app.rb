@@ -713,6 +713,7 @@ EOBODY
     if @admin_user
       dice_jobs = {}
       indeed_jobs = {}
+      internal_jobs = {}
 
       Job.distinct(:search_term).sort.each do |search_term|
         dice_jobs[search_term] = []
@@ -760,9 +761,38 @@ EOBODY
             followup: imp_postings.count
           }
         end
+
+        internal_jobs[search_term] = []
+        Job.where(:search_term => search_term, :source => 'INTERNAL').distinct(:date_posted).sort.reverse[0..6].each do |date|
+          total_jobs = Job.where(:search_term => search_term, :source => 'INTERNAL', date_posted: date, hide: false).count
+          read_jobs  = Job.where(:search_term => search_term, :source => 'INTERNAL', date_posted: date, read: true, hide: false).count
+          unread_jobs = total_jobs - read_jobs
+          imp_postings = []
+          Job.where(:search_term => search_term, :source => 'INTERNAL', date_posted: date, hide: false).each do |job|
+            Application.where(job_url: Job.find(job.id).url).entries.each do |app|
+              if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
+                imp_postings << job
+              end
+            end
+          end
+          internal_jobs[search_term] << {
+            date_url: date.strftime('%Y-%m-%d'),
+            date:     date.strftime('%A, %b %d'),
+            count:    total_jobs,
+            read:     read_jobs,
+            unread:   unread_jobs,
+            followup: imp_postings.count
+          }
+        end
       end
 
-      erb :jobs, :locals => { :dice_jobs => dice_jobs, :indeed_jobs => indeed_jobs, :fetcher => Fetcher.last }
+      erb :jobs,
+          :locals => {
+            :dice_jobs => dice_jobs,
+            :indeed_jobs => indeed_jobs,
+            :internal_jobs => internal_jobs,
+            :fetcher => Fetcher.last
+          }
     else
       erb :admin_access_req
     end
@@ -775,7 +805,7 @@ EOBODY
       tracking = {}
       p2_search_params = %w(bigdata big-data nosql hbase hive pig storm kafka hadoop cassandra)
 
-      %w(DICE INDEED).each do |source|
+      %w(DICE INDEED INTERNAL).each do |source|
         Job.distinct(:search_term).sort.each do |search_term|
           read_jobs = Job.where(search_term: search_term, source: source, date_posted: date, read: true, hide: false)
           unread_jobs = Job.where(search_term: search_term, source: source, date_posted: date, read: false, hide: false)
@@ -893,7 +923,6 @@ EOBODY
 
   # Manually create job postings by the user
   post '/job/new' do
-    puts params
     success    = true
     message    = "Successfully added job"
 
@@ -910,6 +939,7 @@ EOBODY
       rescue Mongoid::Errors::DocumentNotFound
         date = DateTime.now.strftime("%Y-%m-%d")
         Job.find_or_create_by(url: params[:URL], date_posted: date) do |doc|
+          doc.source      = "INTERNAL"
           doc.url         = params[:URL]
           doc.search_term = params[:SearchString].downcase
           doc.date_posted = date
