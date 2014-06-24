@@ -1,3 +1,4 @@
-require './app'
+require 'sinatra'
+require File.expand_path '../app.rb', __FILE__
 
-run JobPortal.new
+run Sync

@@ -26,6 +26,20 @@
   </div>
 </div>
 
+<div class="modal fade" id="RenderCampaign" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Campaign Render</h4>
+      </div>
+      <div class="modal-body">
+        <!-- render iframe here -->
+      </div>
+    </div>
+  </div>
+</div>
+
 <% templates.each do |template| %>
 <div class="modal fade modal-wide" id="EditCampaignTemplate-<%= template.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -46,7 +60,8 @@
           </div>
         </form>
         <% if template.html %> <!-- TODO if the contents contains html its messing up the layout -->
-        <p>HTML content are not allowed to be editable at this moment</p>
+        <p>HTML content are not allowed to be editable at this moment, but here is a preview: </p>
+        <iframe id="htmlRender-<%= template.id %>" src="/campaign/templates/render/<%= template.id %>"  frameborder='0' height='200' width='80% '></iframe>
         <div id="summernote-<%= template.id %>"></div>
         <% else %>
         <div id="summernote-<%= template.id %>"><%= template.content %></div>
@@ -83,7 +98,7 @@
     <% end %>
   </ul>
   <% else %>
-  <h4 class="text-primary">No templates found here, add some uwing 'Add New'</h4>
+  <h4 class="text-primary">No templates found here, add some using 'Add New'</h4>
   <% end %>
 </div>
 

@@ -30,7 +30,8 @@ class Customer
   field :unsubscribed, type: Boolean, default: false
   field :bounced, type: Boolean, default: false
   field :skipped, type: Boolean, default: false
-  field :skipper_subjects, type: Array, default: []
+  field :skipped_templates, type: Array, default: []
+  field :sent_templates, type: Array, default: []
 
   index({industry: 1, email: 1})
 end

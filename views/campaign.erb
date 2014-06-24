@@ -94,11 +94,17 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2>Email Campaigning
-      <p class="pull-right">
-        <a id="AddNewEmailTemplate" class="btn btn-primary btn-md" data-toggle="modal" href="/campaign/templates" role="button">Manage Campaign Templates &raquo;</a>
-        <a id="SendVendorCampaignBtn" class="btn btn-primary btn-md" data-toggle="modal" href="#StartVendorCampaign" role="button">Vendor Campaign &raquo;</a>
-        <a id="SendCustomerCampaignBtn" class="btn btn-primary btn-md" data-toggle="modal" href="#StartCustomerCampaign" role="button">Customer Campaign &raquo;</a>
-      </p>
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+          Start Here <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li><a id="SendVendorCampaignBtn" data-toggle="modal" href="#StartVendorCampaign">Start Vendor Campaign</a></li>
+          <li><a id="SendCustomerCampaignBtn" data-toggle="modal" href="#StartCustomerCampaign">Start Customer Campaign</a></li>
+          <li class="divider"></li>
+          <li><a href="/campaign/templates">Manage Email Templates</a></li>
+        </ul>
+      </div>
     </h2>
   </div>
 
@@ -240,7 +246,7 @@ $(document).ready(function() {
       series: [{
         name: 'sent message',
         data: <%= all_campaign_stats %>,
-        type: 'areaspline',
+        type: 'area',
         threshold: null,
         tooltip: {
           valueDecimals: 2
