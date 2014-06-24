@@ -31,6 +31,6 @@ before_fork do |server, worker|
   end
 end
 
-after_fork do |server, worker|
-  worker.user('rails', 'rails') if Process.euid == 0 && rails_env == 'production'
-end
+# after_fork do |server, worker|
+#   worker.user('rails', 'rails') if Process.euid == 0 && rails_env == 'production'
+# end
