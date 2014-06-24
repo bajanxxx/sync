@@ -62,13 +62,41 @@ mongo instance
 
 Configure `config/config.yml` to specify Mail gun API keys and email addresses to use.
 
+**Configuring new relic for monitoring**
+
+Configure `config/newrelic.yml` to specify license_key.
+
+**Configuring nginx web server:**
+
+Copy `config/nginx.conf` to `/etc/nginx` and replace the path variables to reflect your environment.
+
 Run it:
 ------
-**Start a web server:**
+**Start unicorn application server:**
 
 ```
 cd /opt/job_portal
-bundle exec rackup -s thin >> /var/log/job_portal.log 2>&1 &
+RAILS_ENV='production' unicorn --config-file config/unicorn.rb --host 0.0.0.0 --port 9292 --env development --daemonize config.ru
+# bundle exec rackup -s thin >> /var/log/job_portal.log 2>&1 &
+```
+
+**Starting Nginx web server:**
+
+```
+/etc/init.d/nginx start
+```
+
+**Starting 4 delayed_job processes:**
+
+```
+RAILS_ENV=production bin/delayed_job -n 4 start
+```
+
+**stopping web server:**
+
+```
+cd /opt/job_portal
+cat tmp/pids/unicorn.pid | xargs kill -QUIT
 ```
 
 **Creating indexes for collections** (Onetime)
@@ -78,6 +106,7 @@ rake mongoid:create_customer_indexes
 rake mongoid:create_job_indexes
 rake mongoid:create_vendor_indexes
 rake mongoid_search:index
+rake jobs:create_indexes
 ```
 
 Initialize the fetcher to get a decent amount of posts to work with, its not
@@ -120,10 +149,6 @@ Create the following cron job's for the fetcher to run continuously & also to ba
 # mongo backup
 0 0 * * * /bin/bash /opt/job_portal/backup_mongo.sh -p "/mongo-backup-100 /mongo-backup-217" -d job_portal >> /var/log/job_portal_backup.log 2>&1
 ```
-
-Mail gun setup:
---------------
-Creating bounce route:
 
 License and Authors
 -------------------

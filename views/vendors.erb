@@ -88,7 +88,7 @@
   </div>
 
   <div>
-    <% if vendors_data && vendors_data.length > 1 %>
+    <% if vendors_data && vendors_data.length > 0 %>
       <table id="vendors" class="table table-hover display" width=100%>
       </table>
     <% else %>
@@ -107,7 +107,7 @@ $(document).ready(function() {
   $('input[type=file]').bootstrapFileInput();
   $('.file-inputs').bootstrapFileInput();
 
-  <% if vendors_data && vendors_data.length > 1 %>
+  <% if vendors_data && vendors_data.length > 0 %>
     var dataset = <%= vendors_data %>;
     $('#vendors').DataTable({
       data: dataset,

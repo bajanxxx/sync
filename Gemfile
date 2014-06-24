@@ -19,5 +19,7 @@ gem 'colored'
 gem 'nokogiri'
 gem 'rake'
 gem 'rest-client'
+gem 'delayed_job'
+gem 'delayed_job_mongoid'
 
 gem 'newrelic_rpm'

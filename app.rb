@@ -1,5 +1,3 @@
-require 'rubygems'
-require 'sinatra'
 require 'sinatra/base'
 require 'sinatra/flash'
 require 'newrelic_rpm'
@@ -13,6 +11,8 @@ require 'awesome_print'
 require 'rest-client'
 require 'csv'
 require 'logger'
+require 'delayed_job'
+require 'delayed_job_mongoid'
 
 # Load the mongo models
 require_relative 'models/application'
@@ -35,41 +35,83 @@ require_relative 'models/vendor'
 require_relative 'models/customer'
 
 # Load core stuff
-require_relative 'core/process_dice'
-require_relative 'core/settings'
+require_relative 'lib/process_dice'
+require_relative 'lib/settings'
+require_relative 'lib/vendor_campaign'
+require_relative 'lib/customer_campaign'
+
+# Delyed job handlers
+require_relative 'lib/dj/simple_task'
+require_relative 'lib/dj/custom_task'
+require_relative 'lib/dj/campaign_mail'
 
 #
 # Monkey Patch Sinatra flash to bootstrap alert
 #
 module Sinatra
   module Flash
+    # Monkey path Style class
     module Style
-      def styled_flash(key=:flash)
+      def styled_flash(key = :flash)
         return '' if flash(key).empty?
-        id = (key == :flash ? "flash" : "flash_#{key}")
+        id = (key == :flash ? 'flash' : "flash_#{key}")
         close = '<a class="close" data-dismiss="alert" href="#">×</a>'
-        messages = flash(key).collect do |message|
-          "  <div class='alert alert-#{message[0]}'>#{close}\n #{message[1]}</div>\n"
+        messages = flash(key).map do |message|
+          "  <div class='alert alert-#{message[0]}'>#{close}\n " \
+          "#{message[1]}</div>\n"
         end
-        "<div id='#{id}'>\n" + messages.join + "</div>"
+        "<div id='#{id}'>\n" + messages.join + '</div>'
       end
     end
   end
 end
 
-class JobPortal < Sinatra::Base
+# This is used by DJ to guess where tmp/pids is located (default)
+RAILS_ROOT = File.expand_path('..', __FILE__)
+Log = Logger.new(File.expand_path('../log/app.log', __FILE__))
+# DelayedJob wants us to be on rails, so it looks for stuff
+# in the rails namespace -- so we emulate it a bit
+module Rails
+  class << self
+    attr_accessor :logger
+
+    def root
+      RAILS_ROOT
+    end
+  end
+end
+Rails.logger = Log
+
+#
+# Configure DelayedJob
+#
+Delayed::Worker.destroy_failed_jobs = false
+
+#
+# Main Application logic for handling http routes
+#
+class Sync < Sinatra::Base
   #
   # Pre-configure sinatra
   #
   ::Logger.class_eval { alias :write :'<<' }
-  access_log = ::File.join(::File.dirname(::File.expand_path(__FILE__)),'log','access.log')
+  access_log = ::File.join(
+                  ::File.dirname(::File.expand_path(__FILE__)),
+                  'log',
+                  'access.log'
+                )
   access_logger = ::Logger.new(access_log)
-  error_logger = ::File.new(::File.join(::File.dirname(::File.expand_path(__FILE__)),'log','error.log'),"a+")
+  error_logger = ::File.new(
+                  ::File.join(
+                    ::File.dirname(::File.expand_path(__FILE__)),
+                    'log',
+                    'error.log'),
+                  'a+')
   error_logger.sync = true
 
   configure do
     use ::Rack::CommonLogger, access_logger
-    Mongoid.load!("config/mongoid.yml", :development)
+    Mongoid.load!('config/mongoid.yml', :development)
     enable :logging, :dump_errors
     enable :sessions
     register Sinatra::Flash
@@ -81,14 +123,11 @@ class JobPortal < Sinatra::Base
   # => BEFORE CLAUSE (runs before every route being processed)
   #
   before do
-    env["rack.errors"] =  error_logger
-    # Models
+    env['rack.errors'] =  error_logger
     @users        = UserDAO
     @sessions     = SessionDAO
-    # Session Timeout
-    @@expiration_date = Time.now + (60 * 2)
-    # user browser cookies
-    cookie = request.cookies['user_session'] || nil
+    @expiration_date = Time.now + (60 * 2) # Session Timeout
+    cookie = request.cookies['user_session'] || nil # user browser cookies
     @username   = begin
                     Session.find_by(_id: cookie).username
                   rescue Mongoid::Errors::DocumentNotFound
@@ -103,23 +142,26 @@ class JobPortal < Sinatra::Base
                   end
     @admin_name = if @admin_user
                     begin
-                      User.find_by(_id: @username).email.split('@').first.capitalize
+                      User.find_by(_id: @username)
+                        .email
+                        .split('@')
+                        .first
+                        .capitalize
                     rescue Mongoid::Errors::DocumentNotFound
                       'ADMIN'
                     end
                   end
-    # Load email information
-    Settings.load!("config/config.yml")
+    # Load settings file
+    Settings.load!('config/config.yml')
   end
 
   #
   # => ROOT
   #
-
   get '/' do
     # for logged in users show follow up jobs and applied jobs of 10 each
     consultant = begin
-                  Consultant.find_by(email: @username).id
+                   Consultant.find_by(email: @username).id
                  rescue Mongoid::Errors::DocumentNotFound
                    ''
                  end
@@ -127,7 +169,9 @@ class JobPortal < Sinatra::Base
       if @admin_user
         jobs_to_render = []
         jobs_to_render_interviews = []
-        follow_up_jobs = Application.where(:status.in => ['FOLLOW_UP', 'APPLIED']).select {|a| a.hide == false }
+        follow_up_jobs = Application.where(
+                           :status.in => %w(FOLLOW_UP APPLIED)
+                         ).select { |a| a.hide == false }
         follow_up_jobs && follow_up_jobs.each do |application|
           jobs_to_render << Job.where(url: application.job_url, hide: false)
         end
@@ -218,7 +262,7 @@ class JobPortal < Sinatra::Base
       response.set_cookie(
           'user_session',
           :value => session_id,
-          # :expires => @@expiration_date,
+          # :expires => @expiration_date,
           :path => '/'
         )
       redirect '/'
@@ -266,7 +310,7 @@ class JobPortal < Sinatra::Base
       response.set_cookie(
           'user_session',
           :value => session_id,
-          # :expires => @@expiration_date,
+          # :expires => @expiration_date,
           :path => '/'
         )
       redirect '/'
@@ -1378,6 +1422,10 @@ EOBODY
     end
   end
 
+  get '/campaign/templates/render/:id' do |id|
+    Template.find(id).content
+  end
+
   post '/campaign/email_template' do
     template_name = params[:name]
     template_subject = params[:subject]
@@ -1467,74 +1515,24 @@ EOBODY
     success    = true
     message    = "Starting Campaign..."
 
-    # Get template details
-    template = Template.find_by(name: template_name)
-    template_subject = template.subject
-    template_body = template.content
-    campaign_id = template.name.downcase.gsub(' ', '_')
-    # Select vendors to send emails out to
-    vendors = if all_vendors == 'true'
-                Vendor.where(unsubscribed: false, bounced: false).only(:email).all.entries.map(&:email)
-              else
-                Vendor.where(:email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:email)
-              end
-    # Fork a process which sends out emails and exits
-    child_pid = Process.fork do
-      vendors.each do |vendor_email|
-        vendor = Vendor.find_by(email: vendor_email)
-        send_mail(vendor_email, vendor.first_name, template_subject, template_body, campaign_id, 'vendor')
-      end
-      flash[:info] = "Sucessfully queued #{vendors.count} emails."
-      Process.exit
-    end
-    Process.detach child_pid
-    flash[:info] = "Starting campaign with vendors: '#{vendors.count}' and template: '#{params[:name]}'"
+    message = VendorCampaign.new(template_name, all_vendors, replied_vendors_only).start
+
+    flash[:info] = "Starting campaign '#{params[:name]}'. #{message}"
     { success: success, msg: message }.to_json
   end
 
   post '/campaign/customer/start' do
     # {"name"=>"Test|(Test)", "customer_industry"=>"Aerospace & Defense", "replied_customers_only"=>"false"}
-    # puts params
     template_name = params[:name].split('|').first
     customer_vertical = params[:customer_industry]
     replied_customers_only = params[:replied_customers_only]
     nodups = params[:nodups]
     success = true
     message = "Starting Campaign..."
-    # Get template details
-    template = Template.find_by(name: template_name)
-    template_subject = template.subject
-    template_body = template.content
-    campaign_id = template.name.downcase.gsub(' ', '_')
-    # Select customers to send emails out to
-    cusomters = if customer_vertical.downcase == 'all'
-                  if replied_customers_only == 'true'
-                    Customer.where(:email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:email)
-                  elsif nodups == 'true'
-                    Customer.where(:emails_sent.lt => 1, unsubscribed: false, bounced: false).only(:email).map(&:email)
-                  else
-                    Customer.where(unsubscribed: false, bounced: false).only(:email).all.entries.map(&:email)
-                  end
-                else
-                  if replied_customers_only == 'true'
-                    Customer.where(industry: customer_vertical, :email_replies_recieved.gt => 0, unsubscribed: false, bounced: false).only(:email).map(&:email)
-                  elsif nodups == 'true'
-                      Customer.where(industry: customer_vertical, :emails_sent.lt => 1, unsubscribed: false, bounced: false).only(:email).map(&:email)
-                  else
-                    Customer.where(industry: customer_vertical, unsubscribed: false, bounced: false).only(:email).map(&:email)
-                  end
-                end
-    # Fork a process which sends out emails and exits
-    child_pid = Process.fork do
-      cusomters.each do |customer_email|
-        customer = Customer.find_by(email: customer_email)
-        send_mail(customer_email, customer.first_name, template_subject, template_body, campaign_id, 'customer')
-      end
-      puts "Sucessfully queued #{cusomters.count} emails."
-      Process.exit
-    end
-    Process.detach child_pid
-    flash[:info] = "Starting campaign with customers: '#{cusomters.count}' and template: '#{params[:name]}'"
+
+    message = CustomerCampaign.new(template_name, customer_vertical, replied_customers_only, nodups).start
+
+    flash[:info] = "Starting campaign '#{params[:name]}'. #{message}"
     { success: success, msg: message }.to_json
   end
 
@@ -1682,6 +1680,20 @@ EOBODY
   # Fetch the events for a specified campaign
   post '/campaign/events' do
     puts params
+  end
+
+  #
+  # => Test routes
+  #
+  get '/djtest' do
+    # SimpleTask.new.doit_in_5secs
+    Delayed::Job.enqueue(
+      CustomTask.new('lorem ipsum...'),
+      queue: 'custom_tasks',
+      priority: 5,
+      run_at: 5.seconds.from_now
+    )
+    puts "dj test route"
   end
 
   #
