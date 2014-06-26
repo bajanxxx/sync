@@ -38,6 +38,12 @@ namespace :mongoid do
     Mongoid.load!("config/mongoid.yml", :development)
     Vendor.create_indexes
   end
+
+  desc 'Create indexes for tracking collection in monog'
+  task :create_tracking_indexes => :environment do
+    Mongoid.load!("config/mongoid.yml", :development)
+    Tracking.create_indexes
+  end
 end
 
 namespace :jobs do
