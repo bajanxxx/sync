@@ -39,4 +39,4 @@ mailgun_customer_routes_name: 'Email Customers Campaigning'
 # public ip address / hostname where the job_portal server is running for
 # forwarding the replies and events to
 bind_ip: '198.0.218.179'
-bind_port: 9292
+bind_port: 80

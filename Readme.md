@@ -89,10 +89,10 @@ RAILS_ENV='production' unicorn --config-file config/unicorn.rb --host 0.0.0.0 --
 **Starting 4 delayed_job processes:**
 
 ```
-RAILS_ENV=production bin/delayed_job -n 4 start
+RAILS_ENV=production bin/delayed_job.rb -n 4 start
 ```
 
-**stopping web server:**
+**stopping unicorn server:**
 
 ```
 cd /opt/job_portal
