@@ -1699,7 +1699,7 @@ EOBODY
       client_type: params['client-type'],
       event: params['event'],
       timestamp: params['timestamp'],
-      campaign_id: parmas['campaign-id'] || ""
+      campaign_id: params['campaign-id'] || ""
     )
     status 200
   end
@@ -1720,7 +1720,7 @@ EOBODY
       client_type: params['client-type'],
       event: params['event'],
       timestamp: params['timestamp'],
-      campaign_id: parmas['campaign-id'] || ""
+      campaign_id: params['campaign-id'] || ""
     )
     status 200
   end
