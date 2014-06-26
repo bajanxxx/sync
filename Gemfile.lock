@@ -14,16 +14,15 @@ GEM
       bson (~> 1.10.0)
     builder (3.0.4)
     colored (1.2)
-    daemons (1.1.9)
     delayed_job (4.0.1)
       activesupport (>= 3.0, < 4.2)
     delayed_job_mongoid (2.1.0)
       delayed_job (>= 3.0, < 5)
       mongoid (>= 3.0, < 5)
-    eventmachine (1.0.3)
     fast-stemmer (1.0.2)
     i18n (0.6.9)
     json (1.8.1)
+    kgio (2.9.2)
     macaddr (1.7.1)
       systemu (~> 2.6.2)
     mail (2.2.7)
@@ -59,6 +58,7 @@ GEM
       rack
     rack-test (0.6.2)
       rack (>= 1.0)
+    raindrops (0.13.0)
     rake (10.3.1)
     rest-client (1.6.7)
       mime-types (>= 1.16)
@@ -76,14 +76,14 @@ GEM
     sinatra-flash (0.3.0)
       sinatra (>= 1.0.0)
     systemu (2.6.4)
-    thin (1.6.2)
-      daemons (>= 1.0.9)
-      eventmachine (>= 1.0.0)
-      rack (>= 1.0.0)
     tilt (1.4.1)
     treetop (1.5.3)
       polyglot (~> 0.3)
     tzinfo (0.3.39)
+    unicorn (4.8.3)
+      kgio (~> 2.6)
+      rack
+      raindrops (~> 0.7)
     uuid (2.3.7)
       macaddr (~> 1.0)
 
@@ -110,5 +110,5 @@ DEPENDENCIES
   sinatra
   sinatra-contrib
   sinatra-flash
-  thin
+  unicorn
   uuid

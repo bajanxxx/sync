@@ -70,6 +70,7 @@ end
 # This is used by DJ to guess where tmp/pids is located (default)
 RAILS_ROOT = File.expand_path('..', __FILE__)
 Log = Logger.new(File.expand_path('../log/app.log', __FILE__))
+I18n.enforce_available_locales = false
 # DelayedJob wants us to be on rails, so it looks for stuff
 # in the rails namespace -- so we emulate it a bit
 module Rails
