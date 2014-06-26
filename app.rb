@@ -1687,7 +1687,6 @@ EOBODY
   # Handle opens
   post '/campaign/opens' do
     puts "Processing email open from #{params['recipient']}"
-    puts params
     Tracking.create(
       recipient: params['recipient'],
       domain: params['domain'],
