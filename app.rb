@@ -1687,12 +1687,14 @@ EOBODY
   # Handle opens
   post '/campaign/opens' do
     puts "Processing email open from #{params['recipient']}"
+    puts params
     Tracking.create(
       recipient: params['recipient'],
       domain: params['domain'],
       device_type: params['device-type'],
       country: params['country'],
       region: params['region'],
+      city: params['city'],
       client_name: params['client-name'],
       user_agent: params['user-agent'],
       client_os: params['client-os'],
@@ -1714,6 +1716,7 @@ EOBODY
       device_type: params['device-type'],
       country: params['country'],
       region: params['region'],
+      city: params['city'],
       client_name: params['client-name'],
       user_agent: params['user-agent'],
       client_os: params['client-os'],
