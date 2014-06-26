@@ -7,6 +7,7 @@ class Tracking
   field :device_type, type: String
   field :country, type: String
   field :region, type: String
+  field :city, type: String
   field :client_name, type: String
   field :user_agent, type: String
   field :client_os, type: String
