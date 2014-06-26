@@ -33,6 +33,7 @@ require_relative 'models/user'
 require_relative 'models/users'
 require_relative 'models/vendor'
 require_relative 'models/customer'
+require_relative 'models/tracking'
 
 # Load core stuff
 require_relative 'lib/process_dice'
@@ -1682,6 +1683,48 @@ EOBODY
     puts params
   end
 
+  # Handle opens
+  post '/campaign/opens' do
+    puts "Processing email open from #{params['recipient']}"
+    Tracking.create(
+      recipient: params['recipient'],
+      domain: params['domain'],
+      device_type: params['device-type'],
+      country: params['country'],
+      region: params['region'],
+      client_name: params['client-name'],
+      user_agent: params['user-agent'],
+      client_os: params['client-os'],
+      ip: params['ip'],
+      client_type: params['client-type'],
+      event: params['event'],
+      timestamp: params['timestamp'],
+      campaign_id: parmas['campaign-id'] || ""
+    )
+    status 200
+  end
+
+  # Handle clicks
+  post '/campaign/clicks' do
+    puts "Processing email click from #{params['recipient']}"
+    Tracking.create(
+      recipient: params['recipient'],
+      domain: params['domain'],
+      device_type: params['device-type'],
+      country: params['country'],
+      region: params['region'],
+      client_name: params['client-name'],
+      user_agent: params['user-agent'],
+      client_os: params['client-os'],
+      ip: params['ip'],
+      client_type: params['client-type'],
+      event: params['event'],
+      timestamp: params['timestamp'],
+      campaign_id: parmas['campaign-id'] || ""
+    )
+    status 200
+  end
+
   #
   # => Test routes
   #
@@ -1820,7 +1863,7 @@ EOBODY
 
   def get_campaign_sent_events
     data = []
-    response =  RestClient.get("https://api:key-62-8e5xuuc0b1ojaxobl2n13mkuw4qg2@api.mailgun.net/v2/mg.cloudwick.com/stats?event=sent")
+    response =  RestClient.get("https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/stats?event=sent")
     JSON.parse(response.body, { symbolize_names: true })[:items].each do |event|
       data << [ Date.parse(event[:created_at]).strftime('%Q').to_i, event[:total_count] ]
     end
