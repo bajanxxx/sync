@@ -1844,20 +1844,20 @@ EOBODY
   def get_campaign_stats(campaign_id)
     data = {}
     if campaign_exists?(campaign_id)
-      response = RestClient.get("https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/campaigns/#{campaign_id}/stats")
+      response = RestClient.get("https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/campaigns/#{campaign_id}")
       data = JSON.parse(response.body, { symbolize_names: true })
       # puts data
       if data
         campaign = Campaign.find_by(_id: campaign_id)
         campaign.update_attributes(
-          total_complained: data[:total][:complained],
-          total_clicked: data[:total][:clicked],
-          total_opened: data[:total][:opened],
-          total_unsubscribed: data[:total][:unsubscribed],
-          total_sent: data[:total][:sent],
-          total_delivered: data[:total][:delivered],
-          total_dropped: data[:total][:dropped],
-          unique_opens: data[:unique][:opened][:recipient]
+          total_complained: data[:complained_count],
+          total_clicked: data[:clicked_count],
+          total_opened: data[:opened_count],
+          total_unsubscribed: data[:unsubscribed_count],
+          total_sent: data[:submitted_count],
+          total_delivered: data[:delivered_count],
+          total_dropped: data[:dropped_count],
+          # unique_opens: data[:unique][:opened][:recipient]
         )
       end
     end
