@@ -105,9 +105,9 @@ cat tmp/pids/unicorn.pid | xargs kill -QUIT
 rake mongoid:create_customer_indexes
 rake mongoid:create_job_indexes
 rake mongoid:create_vendor_indexes
+rake mongoid:create_tracking_indexes
 rake mongoid_search:index
 rake jobs:create_indexes
-rake job:create_tracking_indexes
 ```
 
 Initialize the fetcher to get a decent amount of posts to work with, its not
