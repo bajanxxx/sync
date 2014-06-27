@@ -217,7 +217,7 @@ $(document).ready(function() {
             name: 'Email count',
             data: [
                 ['Delivered', <%= campaign.total_delivered %>],
-                ['Unique Opens', <%= campaign.unique_opens %>],
+                ['Opens', <%= campaign.total_opened %>],
                 ['Bounced', <%= campaign.total_bounced %>],
                 {
                     name: 'Replied',
