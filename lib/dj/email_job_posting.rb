@@ -1,6 +1,5 @@
 # Sends out email using pony api
-class EmailJobPosting < Struct.new(:admin, :job, :user, :notes)
-  Settings.load!(File.expand_path("../../../config/config.yml", __FILE__))
+class EmailJobPosting < Struct.new(:settings, :admin, :job, :user, :notes)
   def perform
     email_body = <<EOBODY
       <p>Hi,</p>
@@ -27,22 +26,22 @@ class EmailJobPosting < Struct.new(:admin, :job, :user, :notes)
       <br/>
       <p><strong>Notes</strong>: #{notes}</p>
       <p><strong>Important</strong>: <font color="red"> Update your resume as per the job requirement. Try to include all the technologies.</font></p>
-      <p>Thanks,<br/>Shiva.</p>
+      <p>Thanks,<br/>#{admin}.</p>
 EOBODY
     Pony.mail(
-      from: Settings.email.split('@').first + "<" + Settings.email + ">",
+      from: settings[:email].split('@').first + "<" + settings[:email] + ">",
       to: user.email,
-      cc: Settings.cc,
+      cc: settings[:cc],
       subject: "Apply/Check this job: #{job.title}(#{job.location})",
       headers: { 'Content-Type' => 'text/html' },
       body: email_body,
       via: :smtp,
       via_options: {
-        address: Settings.smtp_address,
-        port: Settings.smtp_port,
+        address: settings[:smtp_address],
+        port: settings[:smtp_port],
         enable_starttls_auto: true,
-        user_name: Settings.email,
-        password: Settings.password,
+        user_name: settings[:email],
+        password: settings[:password],
         authentication: :plain,
         domain: 'localhost.localdoamin'
       }
