@@ -46,6 +46,8 @@ EOBODY
         domain: 'localhost.localdoamin'
       }
     )
+    job.add_to_set(:trigger, 'SEND_CONSULTANT')
+    job.update_attribute(:read, true)
   end
 
   def success
@@ -54,8 +56,6 @@ EOBODY
       application.add_to_set(:comments, 'Forwarded to consultant')
       application.add_to_set(:status, 'AWAITING_UPDATE_FROM_USER')
     end
-    job.add_to_set(:trigger, 'SEND_CONSULTANT')
-    job.update_attribute(:read, true)
   end
 
   def error
