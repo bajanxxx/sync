@@ -157,6 +157,7 @@ class Sync < Sinatra::Base
                   end
     # Load settings file
     Settings.load!('config/config.yml')
+    @settings = Settings._settings
   end
 
   #
@@ -422,7 +423,7 @@ class Sync < Sinatra::Base
     user = Consultant.find_by(email: email)
 
     Delayed::Job.enqueue(
-      EmailJobPosting.new(@admin_name, job, user, notes),
+      EmailJobPosting.new(@settings, @admin_name, job, user, notes),
       queue: 'consultant_emails',
       priority: 5,
       run_at: 5.seconds.from_now
@@ -437,7 +438,7 @@ class Sync < Sinatra::Base
     job = Job.find_by(url: job_url)
 
     Delayed::Job.enqueue(
-      EmailJobPostingRemainder.new(@admin_name, job, email),
+      EmailJobPostingRemainder.new(@settings, @admin_name, job, email),
       queue: 'consultant_emails',
       priority: 5,
       run_at: 5.seconds.from_now

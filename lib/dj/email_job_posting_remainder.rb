@@ -1,5 +1,4 @@
-class EmailJobPostingRemainder < Struct.new(:admin, :job, :email)
-  Settings.load!(File.expand_path("../../../config/config.yml", __FILE__))
+class EmailJobPostingRemainder < Struct.new(:settings, :admin, :job, :email)
   def perform
     email_body = <<EOBODY
       <p>Hi,</p>
@@ -26,22 +25,22 @@ class EmailJobPostingRemainder < Struct.new(:admin, :job, :email)
       </table>
       <br/>
       <p><strong>Important</strong>: <font color="red"> Update the status of the posting in the <strong>job_portal</strong>.</font></p>
-      <p>Thanks,<br/>Shiva.</p>
+      <p>Thanks,<br/>#{admin}.</p>
 EOBODY
     Pony.mail(
-      from: Settings.email.split('@').first + "<" + Settings.email + ">",
+      from: settings[:email].split('@').first + "<" + settings[:email] + ">",
       to: email,
-      cc: Settings.cc,
+      cc: settings[:cc],
       subject: "Remainder for job posting: #{job.title}(#{job.location})",
       headers: { 'Content-Type' => 'text/html' },
       body: email_body,
       via: :smtp,
       via_options: {
-        address: Settings.smtp_address,
-        port: Settings.smtp_port,
+        address: settings[:smtp_address],
+        port: settings[:smtp_port],
         enable_starttls_auto: true,
-        user_name: Settings.email,
-        password: Settings.password,
+        user_name: settings[:email],
+        password: settings[:password],
         authentication: :plain,
         domain: 'localhost.localdoamin'
       }
