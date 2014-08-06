@@ -45,6 +45,8 @@ require_relative 'lib/customer_campaign'
 require_relative 'lib/dj/simple_task'
 require_relative 'lib/dj/custom_task'
 require_relative 'lib/dj/campaign_mail'
+require_relative 'lib/dj/email_job_posting'
+require_relative 'lib/dj/email_job_posting_remainder'
 
 #
 # Monkey Patch Sinatra flash to bootstrap alert
@@ -418,64 +420,14 @@ class Sync < Sinatra::Base
     notes = params[:notes]
     # Add consultant to list of 'applications' in the 'consultant' document to keep track of
     user = Consultant.find_by(email: email)
-    user.applications.find_or_create_by(job_url: job.url) do |application|
-      # application.add_to_set(:job_id)
-      application.add_to_set(:comments, 'Forwareded to consultant')
-      application.add_to_set(:status, 'AWAITING_UPDATE_FROM_USER')
-    end
-    # Compose an email to specified consultant
-    # p Settings.email
-    # p Settings.password
-    # p Settings.smtp_address
-    # p Settings.smtp_port
-    email_body = <<EOBODY
-      <p>Hi,</p>
-      <p><strong>#{@admin_name}</strong> sent the following link: <a href="#{job.url}">#{job.title}</a> for the job posting. Please take a look at this posting.</p>
-      <p>Job Details:</p>
-      <table width="100%" border="0" cellspacing="0" cellpading="0">
-        <tr>
-          <td align="left" width="20%" valign="top"><strong>Job Title</strong></td>
-          <td align="left" width="20%" valign="top">#{job.title}</td>
-        <tr>
-        <tr>
-          <td align="left" width="20%" valign="top"><strong>Job Location</strong></td>
-          <td align="left" width="20%" valign="top">#{job.location}</td>
-        <tr>
-        <tr>
-          <td align="left" width="20%" valign="top"><strong>Job Posted</strong></td>
-          <td align="left" width="20%" valign="top">#{job.date_posted}</td>
-        <tr>
-        <tr>
-          <td align="left" width="20%" valign="top"><strong>Job Skills</strong></td>
-          <td align="left" width="20%" valign="top">#{job.skills}</td>
-        <tr>
-      </table>
-      <br/>
-      <p><strong>Notes</strong>: #{notes}</p>
-      <p><strong>Important</strong>: <font color="red"> Update your resume as per the job requirement. Try to include all the technologies.</font></p>
-      <p>Thanks,<br/>Shiva.</p>
-EOBODY
-    Pony.mail(
-      :from => Settings.email.split('@').first + "<" + Settings.email + ">",
-      :to => email,
-      :cc => Settings.cc,
-      :subject => "Apply/Check this job: #{job.title}(#{job.location})",
-      :headers => { 'Content-Type' => 'text/html' },
-      :body => email_body,
-      :via => :smtp,
-      :via_options => {
-        :address              => Settings.smtp_address,
-        :port                 => Settings.smtp_port,
-        :enable_starttls_auto => true,
-        :user_name            => Settings.email,
-        :password             => Settings.password,
-        :authentication       => :plain,
-        :domain               => 'localhost.localdomain'
-      }
+
+    Delayed::Job.enqueue(
+      EmailJobPosting.new(@admin_name, job, user, notes),
+      queue: 'consultant_emails',
+      priority: 5,
+      run_at: 5.seconds.from_now
     )
-    # Same old add trigger
-    job.add_to_set(:trigger, 'SEND_CONSULTANT')
-    job.update_attribute(:read, true) # also mark the job as read
+
     flash[:info] = "Post marked as 'sent to consultant' & 'read' (#{job.title})"
     redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
   end
@@ -483,51 +435,14 @@ EOBODY
   post '/consultant/send_reminder/:email' do |email|
     job_url = params[:job_url]
     job = Job.find_by(url: job_url)
-    email_body = <<EOBODY
-      <p>Hi,</p>
-      <p>This is a reminder from <strong>#{@admin_name}</strong> regarding job posting: <a href="#{job.url}">#{job.title}</a> you have been tracking in cloudwick's job portal.</p>
-      <p>Follow up with the vendor and let me know the status.</p>
-      <p>Job Details:</p>
-      <table width="100%" border="0" cellspacing="0" cellpading="0">
-        <tr>
-          <td align="left" width="20%" valign="top"><strong>Job Title</strong></td>
-          <td align="left" width="20%" valign="top">#{job.title}</td>
-        <tr>
-        <tr>
-          <td align="left" width="20%" valign="top"><strong>Job Location</strong></td>
-          <td align="left" width="20%" valign="top">#{job.location}</td>
-        <tr>
-        <tr>
-          <td align="left" width="20%" valign="top"><strong>Job Posted</strong></td>
-          <td align="left" width="20%" valign="top">#{job.date_posted}</td>
-        <tr>
-        <tr>
-          <td align="left" width="20%" valign="top"><strong>Job Skills</strong></td>
-          <td align="left" width="20%" valign="top">#{job.skills}</td>
-        <tr>
-      </table>
-      <br/>
-      <p><strong>Important</strong>: <font color="red"> Update the status of the posting in the <strong>job_portal</strong>.</font></p>
-      <p>Thanks,<br/>Shiva.</p>
-EOBODY
-    Pony.mail(
-      :from => Settings.email.split('@').first + "<" + Settings.email + ">",
-      :to => email,
-      :cc => Settings.cc,
-      :subject => "Reminder for job posting: #{job.title}(#{job.location})",
-      :headers => { 'Content-Type' => 'text/html' },
-      :body => email_body,
-      :via => :smtp,
-      :via_options => {
-        :address              => Settings.smtp_address,
-        :port                 => Settings.smtp_port,
-        :enable_starttls_auto => true,
-        :user_name            => Settings.email,
-        :password             => Settings.password,
-        :authentication       => :plain,
-        :domain               => 'localhost.localdomain'
-      }
+
+    Delayed::Job.enqueue(
+      EmailJobPostingRemainder.new(@admin_name, job, email),
+      queue: 'consultant_emails',
+      priority: 5,
+      run_at: 5.seconds.from_now
     )
+
     flash[:info] = "Sent reminder to constultant email: #{email}"
   end
 
