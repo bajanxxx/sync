@@ -426,8 +426,10 @@ class Sync < Sinatra::Base
       EmailJobPosting.new(@settings, @admin_name, job, user, notes),
       queue: 'consultant_emails',
       priority: 5,
-      run_at: 5.seconds.from_now
+      run_at: 1.seconds.from_now
     )
+
+    job.update_attribute(:read, true)
 
     flash[:info] = "Post marked as 'sent to consultant' & 'read' (#{job.title})"
     redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
