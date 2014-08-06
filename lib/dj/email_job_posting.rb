@@ -47,7 +47,6 @@ EOBODY
       }
     )
     job.add_to_set(:trigger, 'SEND_CONSULTANT')
-    job.update_attribute(:read, true)
   end
 
   def success
