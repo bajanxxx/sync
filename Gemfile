@@ -21,5 +21,7 @@ gem 'rake'
 gem 'rest-client'
 gem 'delayed_job'
 gem 'delayed_job_mongoid'
+gem 'mini_magick'
+gem 'prawn'
 
 gem 'newrelic_rpm'

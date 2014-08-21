@@ -13,6 +13,13 @@ require 'csv'
 require 'logger'
 require 'delayed_job'
 require 'delayed_job_mongoid'
+require 'cgi'
+require 'mini_magick'
+require 'erb'
+require 'ostruct'
+require 'tempfile'
+require 'fileutils'
+require 'net/http'
 
 # Load the mongo models
 require_relative 'models/application'
@@ -34,6 +41,10 @@ require_relative 'models/users'
 require_relative 'models/vendor'
 require_relative 'models/customer'
 require_relative 'models/tracking'
+require_relative 'models/document_template'
+require_relative 'models/document_signature'
+require_relative 'models/document_layout'
+require_relative 'models/document_request'
 
 # Load core stuff
 require_relative 'lib/process_dice'
@@ -47,6 +58,13 @@ require_relative 'lib/dj/custom_task'
 require_relative 'lib/dj/campaign_mail'
 require_relative 'lib/dj/email_job_posting'
 require_relative 'lib/dj/email_job_posting_remainder'
+require_relative 'lib/dj/generate_document'
+require_relative 'lib/dj/email_request_status'
+
+# Prawn PDF Generators
+require_relative 'lib/prawn/leave_letter'
+require_relative 'lib/prawn/offer_letter'
+require_relative 'lib/prawn/employment_letter'
 
 #
 # Monkey Patch Sinatra flash to bootstrap alert
@@ -158,6 +176,12 @@ class Sync < Sinatra::Base
     # Load settings file
     Settings.load!('config/config.yml')
     @settings = Settings._settings
+    @db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+    @grid = Mongo::Grid.new(@db)
+  end
+
+  after do
+    @db.connection.close if !@db.nil?
   end
 
   #
@@ -1647,6 +1671,457 @@ class Sync < Sinatra::Base
   end
 
   #
+  # => Documents Management
+  #
+  before '/documents' do
+    redirect '/login' if !@username
+  end
+
+  get '/documents' do
+    if @admin_user
+      erb :documents,
+          :locals => {
+            :templates => DocumentTemplate.all,
+            :signatures => DocumentSignature.all,
+            :layouts => DocumentLayout.all,
+            :pending_requests => DocumentRequest.where(status: 'pending'),
+            :approved_requests => DocumentRequest.where(status: 'approved'),
+            :disapproved_requests => DocumentRequest.where(status: 'disapproved'),
+          }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  get '/documents/templates' do
+    if @admin_user
+      # (signature_images ||= []) << DocumentSignature.all.each do |signature|
+      #   @grid.get(BSON::ObjectId(signature.id)).read
+      # end
+      erb :doc_templates,
+          :locals => {
+            :templates => DocumentTemplate.all,
+            :signatures => DocumentSignature.all,
+            :layouts => DocumentLayout.all
+          }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  post '/documents/templates' do
+    puts params
+    puts CGI.unescapeHTML(params["body"])
+    template_name = params[:name]
+    template_body = params[:body]
+    template_type = if params[:oltype] == 'true'
+                      'OFFERLETTER'
+                    elsif params[:lltype] == 'true'
+                      'LEAVELETTER'
+                    end
+    success    = true
+    message    = "Successfully added email template with name: #{template_name}"
+
+    #{"name"=>"Test", "body"=>"Start adding content here...", "oltype"=>"true", "lltype"=>"false"}
+    if template_name.empty? || template_body.empty? || template_type.empty?
+      success = false
+      message = "fields cannot be empty"
+    else
+      begin
+        DocumentTemplate.find_by(name: template_name)
+      rescue Mongoid::Errors::DocumentNotFound # template not found
+        success = true
+        # Create the actual tempalte
+        DocumentTemplate.create(
+          name: template_name,
+          type: template_type,
+          content: template_body,
+        )
+      else
+        success = false
+        message = "Template already exists with name: #{template_name}"
+      end
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  post '/documents/templates/:id/update_template' do |id|
+    # data: {'name': name, 'type': type, 'body': sHTML},
+    template_type = params[:type]
+    template_body = params[:body]
+    success    = true
+    message    = "Successfully updated template"
+
+    if template_body.empty? || template_type.empty?
+      success = false
+      message = "fields cannot be empty"
+    else
+      begin
+        template = DocumentTemplate.find_by(_id: id)
+        template.update_attributes(
+          type: template_type,
+          content: template_body
+        )
+      rescue Mongoid::Errors::DocumentNotFound # template not found
+        success = false
+        message = "Something went wrong, document not found!!!"
+      end
+    end
+    { success: success, msg: message }.to_json
+  end
+
+  # Deletes email template and its associated campaign
+  delete '/documents/templates/:id' do |id|
+    DocumentTemplate.find_by(_id: id).delete
+  end
+
+  post '/documents/signatures/add' do
+    signature_file = params[:file][:tempfile]
+    file_name = params[:file][:filename]
+    file_type = params[:file][:type]
+    signature_id = upload_file(signature_file, file_name)
+    if signature_id
+      DocumentSignature.create(
+        file_id: signature_id,
+        filename: file_name,
+        uploaded_date: DateTime.now,
+        type: file_type
+      )
+      flash[:info] = "Uploaded sucessfully #{signature_id}"
+    else
+      flash[:warning] = "Failed uploading signature. Signature with #{file_name} already exists!."
+    end
+    redirect back
+  end
+
+  post '/documents/layouts/add' do
+    layout_file = params[:file][:tempfile]
+    file_name = params[:file][:filename]
+    file_type = params[:file][:type]
+    layout_id = upload_file(layout_file, file_name)
+    if layout_id
+      DocumentLayout.create(
+        file_id: layout_id,
+        filename: file_name,
+        uploaded_date: DateTime.now,
+        type: file_type
+      )
+      flash[:info] = "Uploaded sucessfully #{layout_id}"
+    else
+      flash[:warning] = "Failed uploading layout. Layout with #{file_name} already exists!."
+    end
+    redirect back
+  end
+
+  # Render image with specified dimensions (size like 100x100)
+  # this route resoleve to /documents/signatures/id/render
+  # also resolves to /documents/signatures/id/render/200x200
+  get '/documents/signatures/:id/render/?:size?' do |id, size|
+    image_prps = DocumentSignature.find_by(file_id: id)
+    image_file = @grid.get(BSON::ObjectId(id)).read
+    image = MiniMagick::Image.read(image_file)
+    image.resize(size || '100x100')
+    send_file(image.path, type: image_prps.type, disposition: 'inline')
+  end
+
+  get '/documents/layouts/:id/render/?:size?' do |id, size|
+    image_prps = DocumentLayout.find_by(file_id: id)
+    image_file = @grid.get(BSON::ObjectId(id)).read
+    image = MiniMagick::Image.read(image_file)
+    image.resize(size || '100x100')
+    send_file(image.path, type: image_prps.type, disposition: 'inline')
+  end
+
+  post '/documents/leaveletter/send' do
+    email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
+    cname = params[:name]
+    email = params[:email]
+    company = params[:company]
+    start_date = params[:sdate]
+    end_date = params[:edate]
+    dated = params[:dated]
+    tname = params[:tname]
+    sname = params[:sname]
+    lname = params[:layout]
+    rid = params[:rid] # open present if this a request from consultant
+
+    # Build an erb template and replace variables
+    namespace = OpenStruct.new(name: cname, start_date: start_date, end_date: end_date)
+    template_content = DocumentTemplate.find_by(name: tname).content
+    erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+    template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+
+    signature_id = DocumentSignature.find_by(filename: sname).file_id
+    layout_id = DocumentLayout.find_by(filename: lname).file_id
+
+    success    = true
+    message    = "Successfully sent leaveletter to #{email}"
+    begin
+      if Date.strptime(start_date, "%m/%d/%Y") > Date.strptime(end_date, "%m/%d/%Y")
+        success = false
+        message = "start date should be less than end date"
+      elsif email !~ email_regex
+        success = false
+        message = "email not formatted properly"
+      else
+        Delayed::Job.enqueue(
+          GenerateDocument.new(email, @settings, 'LEAVELETTER', @admin_name,
+            @grid.get(BSON::ObjectId(signature_id)),
+            @grid.get(BSON::ObjectId(layout_id)),
+            { cname: cname,
+              company: company,
+              signature_id: signature_id,
+              layout_id: layout_id,
+              start_date: start_date,
+              end_date: end_date,
+              dated: dated,
+              template: template }
+          ),
+          queue: 'consultant_document_requests',
+          priority: 10,
+          run_at: 1.seconds.from_now
+        )
+        # If this a request being approved mark as approved and by whom
+        if rid
+          DocumentRequest.find(rid).update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
+        end
+        success = true
+        message = "OK"
+      end
+    rescue ArgumentError
+      success = false
+      message = "Cannot parse date format (expected format: mm/dd/yyyy)"
+    end
+    flash[:info] = message
+    { success: success, msg: message }.to_json
+  end
+
+  post '/documents/offerletter/send' do
+    email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
+    cname = params[:name]
+    email = params[:email]
+    company = params[:company]
+    start_date = params[:sdate]
+    dated = params[:dated]
+    tname = params[:tname]
+    sname = params[:sname]
+    lname = params[:layout]
+    rid = params[:rid] # open present if this a request from consultant
+
+    # Build an erb template and replace variables
+    namespace = OpenStruct.new(name: cname, start_date: start_date)
+    template_content = DocumentTemplate.find_by(name: tname).content
+    erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+    template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+
+    signature_id = DocumentSignature.find_by(filename: sname).file_id
+    layout_id = DocumentLayout.find_by(filename: lname).file_id
+
+    success    = true
+    message    = "Successfully sent offerletter to #{email}"
+    begin
+      if email !~ email_regex
+        success = false
+        message = "email not formatted properly"
+      else
+        Delayed::Job.enqueue(
+          GenerateDocument.new(email, @settings, 'OFFERLETTER', @admin_name,
+            @grid.get(BSON::ObjectId(signature_id)),
+            @grid.get(BSON::ObjectId(layout_id)),
+            { cname: cname,
+              company: company,
+              signature_id: signature_id,
+              layout_id: layout_id,
+              start_date: start_date,
+              dated: dated,
+              template: template }
+          ),
+          queue: 'consultant_document_requests',
+          priority: 10,
+          run_at: 1.seconds.from_now
+        )
+        # If this a request being approved mark as approved and by whom
+        if rid
+          DocumentRequest.find(rid).update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
+        end
+        success = true
+        message = "OK"
+      end
+    rescue ArgumentError
+      success = false
+      message = "Cannot parse date format (expected format: mm/dd/yyyy)"
+    end
+    flash[:info] = message
+    { success: success, msg: message }.to_json
+  end
+
+  post '/documents/employmentletter/send' do
+    email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
+    cname = params[:name]
+    email = params[:email]
+    company = params[:company]
+    start_date = params[:sdate]
+    dated = params[:dated]
+    tname = params[:tname]
+    sname = params[:sname]
+    lname = params[:layout]
+    rid = params[:rid] # open present if this a request from consultant
+
+    # Build an erb template and replace variables
+    namespace = OpenStruct.new(name: cname, start_date: start_date)
+    template_content = DocumentTemplate.find_by(name: tname).content
+    erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+    template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+
+    signature_id = DocumentSignature.find_by(filename: sname).file_id
+    layout_id = DocumentLayout.find_by(filename: lname).file_id
+
+    success    = true
+    message    = "Successfully sent employmentletter to #{email}"
+    begin
+      if email !~ email_regex
+        success = false
+        message = "email not formatted properly"
+      else
+        Delayed::Job.enqueue(
+          GenerateDocument.new(email, @settings, 'EMPLOYMENTLETTER', @admin_name,
+            @grid.get(BSON::ObjectId(signature_id)),
+            @grid.get(BSON::ObjectId(layout_id)),
+            { cname: cname,
+              company: company,
+              signature_id: signature_id,
+              layout_id: layout_id,
+              start_date: start_date,
+              dated: dated,
+              template: template }
+          ),
+          queue: 'consultant_document_requests',
+          priority: 10,
+          run_at: 1.seconds.from_now
+        )
+        # If this a request being approved mark as approved and by whom
+        if rid
+          DocumentRequest.find(rid).update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
+        end
+        success = true
+        message = "OK"
+      end
+    rescue ArgumentError
+      success = false
+      message = "Cannot parse date format (expected format: mm/dd/yyyy)"
+    end
+    flash[:info] = message
+    { success: success, msg: message }.to_json
+  end
+
+  post '/documents/requests/deny/:id' do |rid|
+    dr = DocumentRequest.find(rid)
+    dr.update_attributes(status: 'disapproved', disapproved_by: @admin_name, disapproved_at: DateTime.now)
+    Delayed::Job.enqueue(
+      EmailRequestStatus.new(@settings, @admin_name, dr),
+      queue: 'consultant_document_requests',
+      priority: 10,
+      run_at: 1.seconds.from_now
+    )
+    flash[:info] = 'Sucessfully disapproved and updated the user status of the request'
+    redirect "/documents"
+  end
+
+  #
+  # => Consultant request managements (Routes open for all)
+  #
+
+  get '/requests/documents' do
+    erb :doc_requests, :locals => {:error_msg => ''}
+  end
+
+  post '/requests/documents' do
+    fullname = params[:fullname]
+    email = params[:email]
+    company = params[:company]
+    document_type = params[:documenttype]
+    llstartdate = params[:llstartdate]
+    llenddate = params[:llenddate]
+    lldatedas = params[:lldatedas]
+    olstartdate = params[:olstartdate]
+    oldatedas = params[:oldatedas]
+    elstartdate = params[:elstartdate]
+    eldatedas = params[:eldatedas]
+
+    recaptcha_challenge_field = params[:recaptcha_challenge_field]
+    recaptcha_response_field = params[:recaptcha_response_field]
+
+    error_msg = ''
+
+    if email !~ /[a-zA-Z0-9._%+-]+@cloudwick.com/
+      error_msg = 'Email is not formatted properly, enter only cloudwick email address.'
+    end
+
+    if !%w(leaveletter offerletter employmentletter).include?(document_type)
+      error_msg = 'Select document type'
+    else
+      case document_type
+      when 'leaveletter'
+        if llstartdate.empty? || llenddate.empty? || lldatedas.empty?
+          error_msg = 'Must provide start, end and dated as dates for a leave letter'
+        elsif Date.strptime(llstartdate, "%m/%d/%Y") > Date.strptime(llenddate, "%m/%d/%Y")
+          error_msg = 'Start date of leaveletter should be before end date'
+        end
+      when 'offerletter'
+        if olstartdate.empty? || oldatedas.empty?
+          error_msg = 'Must provide startdate end dated as dates for offer letter'
+        end
+      when 'employmentletter'
+        if elstartdate.empty? || eldatedas.empty?
+          error_msg = 'Must provide startdate end dated as dates for employment letter'
+        end
+      end
+    end
+
+    if !check_captcha(request.ip, recaptcha_challenge_field, recaptcha_response_field)
+      error_msg = 'Invalid Captcha'
+    end
+
+    if error_msg == ''
+      # Generate Requests
+      case document_type
+      when 'leaveletter'
+        DocumentRequest.create(
+          consultant_name: fullname,
+          consultant_email: email,
+          document_type: document_type.upcase,
+          start_date: llstartdate,
+          end_date: llenddate,
+          dated: lldatedas,
+          company: company
+        )
+      when 'offerletter'
+        DocumentRequest.create(
+          consultant_name: fullname,
+          consultant_email: email,
+          document_type: document_type.upcase,
+          start_date: olstartdate,
+          dated: oldatedas,
+          company: company
+        )
+      when 'employmentletter'
+        DocumentRequest.create(
+          consultant_name: fullname,
+          consultant_email: email,
+          document_type: document_type.upcase,
+          start_date: elstartdate,
+          dated: eldatedas,
+          company: company
+        )
+      end
+      erb :doc_requests_success, locals: {email: email}
+    else
+      erb :doc_requests, :locals => {:error_msg => error_msg}
+    end
+  end
+
+  #
   # => Test routes
   #
   get '/djtest' do
@@ -1674,6 +2149,26 @@ class Sync < Sinatra::Base
     false
   rescue TypeError
     false
+  end
+
+  def check_captcha(ip, challenge, response)
+    res = Net::HTTP.post_form(
+      URI.parse('http://www.google.com/recaptcha/api/verify'),
+      {
+        'privatekey' => '6Lfb3fgSAAAAAHg1kT0WO6vOQylWC_SyjqqdcGuQ',
+        'remoteip'   => ip,
+        'challenge'  => challenge,
+        'response'   => response
+      }
+    )
+
+    success, error_key = res.body.lines.map(&:chomp)
+
+    if success == 'true'
+      return true
+    else
+      return false
+    end
   end
 
   # Send email out using mailgun
@@ -1837,6 +2332,46 @@ class Sync < Sinatra::Base
     return exists
   end
 
+  # Upload a file to mongo
+  def upload_file(file_path, file_name)
+    db = nil
+    begin
+      db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+      grid = Mongo::Grid.new(db)
+
+      # Check if a file exists with the name specified
+      files_db = db['fs.files']
+      unless files_db.find_one({filename: file_name})
+        return grid.put(
+          File.open(file_path),
+          filename: file_name
+        ).to_s
+      else
+        # file already exists
+        return nil
+      end
+    rescue
+      return nil
+    ensure
+      db.connection.close if !db.nil?
+    end
+  end
+
+  # download a file, returns a grid fs object
+  def download_file(file_id)
+    db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+    grid = Mongo::Grid.new(db)
+
+    # Get the file out the db
+    return grid.get(BSON::ObjectId(file_id))
+    # return grid.get(resume_id)
+  rescue Exception => ex
+    p ex
+    return nil
+  ensure
+    db.connection.close if !db.nil?
+  end
+
   # Upload's a new resume using GridFS and returns id of the document
   # Onlt creates a document if there is no file exists with the same name
   def upload_resume(file_path, file_name)
@@ -1909,6 +2444,47 @@ class Sync < Sinatra::Base
 
     # Get the file out the db
     return grid.get(BSON::ObjectId(attachment_id))
+  rescue Exception => ex
+    p ex
+    return nil
+  ensure
+    db.connection.close if !db.nil?
+  end
+
+  # Upload document signatures
+  def upload_document_signature(file_path, file_name)
+    db = nil
+    begin
+      db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+      grid = Mongo::Grid.new(db)
+
+      # Check if a file already exists with the name specified
+      files_db = db['fs.files']
+      unless files_db.find_one({:filename => file_name})
+        return grid.put(
+          File.open(file_path),
+          filename: file_name,
+          # content_type: file_type,
+          # metadata: { 'description' => description }
+        )
+      else
+        # p 'File already exists'
+        return nil
+      end
+    rescue
+      return nil
+    ensure
+      db.connection.close if !db.nil?
+    end
+  end
+
+  def download_document_signature(signature_id)
+    db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+    grid = Mongo::Grid.new(db)
+
+    # Get the file out the db
+    return grid.get(BSON::ObjectId(signature_id))
+    # return grid.get(resume_id)
   rescue Exception => ex
     p ex
     return nil
