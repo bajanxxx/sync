@@ -66,6 +66,62 @@
 			.modal-wide .modal-dialog {
   			width: 80%; /* or whatever you wish */
 			}
+
+			/* Bootstrap style callouts */
+			/* Base styles (regardless of theme) */
+			.bs-callout {
+			    margin: 20px 0;
+			    padding: 15px 30px 15px 15px;
+			    border-left: 5px solid #eee;
+			}
+
+			.bs-callout h4 {
+			    margin-top: 0;
+			}
+
+			.bs-callout p:last-child {
+			    margin-bottom: 0;
+			}
+
+			.bs-callout code,
+			.bs-callout .highlight {
+			    background-color: #fff;
+			}
+
+			/* Themes for different contexts */
+			.bs-callout-danger {
+			    background-color: #fcf2f2;
+			    border-color: #dFb5b4;
+			}
+
+			.bs-callout-warning {
+			    background-color: #fefbed;
+			    border-color: #f1e7bc;
+			}
+
+			.bs-callout-info {
+			    background-color: #f0f7fd;
+			    border-color: #d0e3f0;
+			}
+
+			.bs-callout-danger h4,
+			.bs-callout-danger a.alert-link {
+			    color: #B94A48;
+			}
+
+			.bs-callout-warning h4,
+			.bs-callout-warning a.alert-link {
+			    color: #C09853;
+			}
+
+			.bs-callout-info h4,
+			.bs-callout-info a.alert-link {
+			    color: #3A87AD;
+			}
+
+			.bs-callout a.alert-link {
+			    font-weight: bold;
+			}
 		</style>
 		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -93,6 +149,7 @@
 						<li><a href="/vendors">Vendors</a></li>
 						<li><a href="/customers">Customers</a></li>
 						<li><a href="/campaign">Campaign</a></li>
+						<li><a href="/documents">Docs</a></li>
 	        </ul>
 					<ul class="nav navbar-nav pull-right">
 						<form action="/search" method="post" class="navbar-form navbar-left" role="search">
@@ -126,10 +183,8 @@
 
 		<div id="footer">
       <div class="container">
-        <p class="text-muted">® 2014 Cloudwick Inc.</p>
+        <p class="text-muted text-center">Sync | ©2014 <a href='http://www.cloudwick.com'>Cloudwick</a>, Inc. All rights reserved | <a href='http://www.linkedin.com/in/ashrithm/'>Ashrith Mekala</p>
       </div>
     </div>
-
-<!-- 	<footer class="footer">Ashrih ® Cloudwick Inc 2014</footer> -->
   </body>
 </html>
