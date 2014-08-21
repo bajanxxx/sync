@@ -6,6 +6,7 @@ Central portal which manages
 * Fetches jobs from several popular job portals like **DICE** and **INDEED**
 * Manages job applications for all the consultants
 * Central location for managing Cloudwick's Email Campaigning
+* Document Request Management
 
 Get it
 ------
@@ -38,6 +39,10 @@ rvm rubygems current
 cd /opt/job_portal
 rvm @global do bundle install
 ```
+
+**Install External Dependencies:**
+
+* [ImageMagick](http://www.imagemagick.org/script/binary-releases.php#unix)
 
 Install MongoDB:
 ----------------
