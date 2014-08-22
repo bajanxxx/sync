@@ -20,6 +20,7 @@ require 'ostruct'
 require 'tempfile'
 require 'fileutils'
 require 'net/http'
+require 'twilio-ruby'
 
 # Load the mongo models
 require_relative 'models/application'
