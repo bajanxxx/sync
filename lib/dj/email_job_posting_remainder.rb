@@ -28,7 +28,7 @@ class EmailJobPostingRemainder < Struct.new(:settings, :admin, :job, :email)
       <p>Thanks,<br/>#{admin}.</p>
 EOBODY
     Pony.mail(
-      from: settings[:email].split('@').first + "<" + settings[:email] + ">",
+      from: 'Cloudwick Sync' + "<" + settings[:email] + ">",
       to: email,
       cc: settings[:cc],
       subject: "Remainder for job posting: #{job.title}(#{job.location})",

@@ -29,7 +29,7 @@ class EmailJobPosting < Struct.new(:settings, :admin, :job, :user, :notes)
       <p>Thanks,<br/>#{admin}.</p>
 EOBODY
     Pony.mail(
-      from: settings[:email].split('@').first + "<" + settings[:email] + ">",
+      from: 'Cloudwick Sync' + "<" + settings[:email] + ">",
       to: user.email,
       cc: settings[:cc],
       subject: "Apply/Check this job: #{job.title}(#{job.location})",

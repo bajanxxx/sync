@@ -23,7 +23,7 @@ class EmailDocumentRequest < Struct.new(:settings, :admin, :request)
       <p>Thanks for using <strong>Cloudwick Sync.</strong></p>
 EOBODY
     Pony.mail(
-      from: settings[:email].split('@').first + "<" + settings[:email] + ">",
+      from: 'Cloudwick Sync' + "<" + settings[:email] + ">",
       to: settings[:admin_group],
       subject: "Sync: Document Request Notification from #{request.consultant_name}",
       headers: { 'Content-Type' => 'text/html' },
