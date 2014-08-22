@@ -35,17 +35,17 @@ class LeaveLetter
   end
 
   def get_scale
-    image_file = MiniMagick::Image.new(StringIO.new(@layout.read))
+    image_file = MiniMagick::Image.read(StringIO.new(@layout))
     pdf_width = PDF::Core::PageGeometry::SIZES["A4"][0]
     pdf_height = PDF::Core::PageGeometry::SIZES["A4"][1]
-    [ pdf_width.fdiv(image[:width]), pdf_height.fdiv(image[:height]) ].max
+    [ pdf_width.fdiv(image_file[:width]), pdf_height.fdiv(image_file[:height]) ].max
   end
 
   def build!
     Prawn::Document.generate(@tmp_file,
       page_layout: :portrait,
       page_size: 'A4',
-      background: StringIO.new(@layout.read),
+      background: StringIO.new(@layout),
       background_scale: get_scale,
       margin: 75,
       info: {
@@ -94,7 +94,7 @@ class LeaveLetter
         pdf.move_down 20
         pdf.text "Sincerely,"
 
-        pdf.image StringIO.new(@signature.read), width: 100, height: 50
+        pdf.image StringIO.new(@signature), width: 100, height: 50
 
         pdf.move_down 20
         pdf.font("Helvetica", size: 10) do
