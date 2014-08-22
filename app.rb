@@ -1870,8 +1870,8 @@ class Sync < Sinatra::Base
       else
         Delayed::Job.enqueue(
           GenerateDocument.new(email, @settings, 'LEAVELETTER', @admin_name,
-            @grid.get(BSON::ObjectId(signature_id)),
-            @grid.get(BSON::ObjectId(layout_id)),
+            @grid.get(BSON::ObjectId(signature_id)).read,
+            @grid.get(BSON::ObjectId(layout_id)).read,
             { cname: cname,
               company: company,
               signature_id: signature_id,
