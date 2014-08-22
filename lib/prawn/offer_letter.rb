@@ -1,4 +1,5 @@
 require 'prawn'
+require 'mini_magick'
 
 class OfferLetter
   def initialize(name, company, signature, layout, start_date, end_date, dated, template, tmp_file)
@@ -32,10 +33,20 @@ class OfferLetter
     @tmp_file = tmp_file
   end
 
+  def get_scale
+    image_file = MiniMagick::Image.read(StringIO.new(@layout))
+    pdf_width = PDF::Core::PageGeometry::SIZES["A4"][0]
+    pdf_height = PDF::Core::PageGeometry::SIZES["A4"][1]
+    [ pdf_width.fdiv(image_file[:width]), pdf_height.fdiv(image_file[:height]) ].max
+  end
+
   def build!
     Prawn::Document.generate(@tmp_file,
       page_layout: :portrait,
       margin: 75,
+      page_size: 'A4',
+      background: StringIO.new(@layout),
+      background_scale: get_scale,
       info: {
         Title: 'Offer Letter',
         Author: 'Cloudwick Sync',
@@ -44,56 +55,51 @@ class OfferLetter
         CreationDate: Time.now.strftime('%B %d, %Y')
       }) do |pdf|
 
-      # background image
-      pdf.image StringIO.new(@layout.read),
-          :at  => [0, pdf.bounds.absolute_top],
-          :fit => [pdf.bounds.absolute_right, pdf.bounds.absolute_top]
+      pdf.repeat :all do
+       # header
+       pdf.bounding_box [pdf.bounds.left, pdf.bounds.top], :width  => pdf.bounds.width do
+         pdf.font "Helvetica"
+         pdf.text "Offer Letter for #{@name}", :align => :center, :size => 25
+         pdf.stroke_horizontal_rule
+       end
 
-      # header
-      pdf.bounding_box [pdf.bounds.left, pdf.bounds.top], :width  => pdf.bounds.width do
-          pdf.font "Helvetica"
-          pdf.text "Leave Letter for #{@name}", :align => :center, :size => 25
-          pdf.stroke_horizontal_rule
-      end
+       # footer
+       pdf.bounding_box [pdf.bounds.left, pdf.bounds.bottom + 25], :width  => pdf.bounds.width do
+         pdf.font "Helvetica"
+         pdf.stroke_horizontal_rule
+         pdf.move_down(5)
+         pdf.text @footer, :size => 8, align: :center, style: :bold, :color => "007700"
+       end
+     end
 
-      pdf.move_down 50
-      pdf.text "Dated #{@dated_date}", style: :bold, align: :right
+     # body
+     pdf.bounding_box([pdf.bounds.left, pdf.bounds.top - 50], :width  => pdf.bounds.width, :height => pdf.bounds.height - 100) do
+       pdf.move_down 50
+       pdf.text "Dated #{@dated_date}", style: :bold, align: :right
 
-      pdf.move_down 20
-      pdf.text "To Whom It May Concern,", style: :bold
+       pdf.move_down 20
+       pdf.text "To Whom It May Concern,", style: :bold
 
-      pdf.move_down 20
-      pdf.text "RE: Leave approval letter for Mr. #{@name}", style: :bold
+       pdf.move_down 20
+       pdf.text "RE: Offer approval letter for Mr. #{@name}", style: :bold
 
-      pdf.move_down 20
-      pdf.text "Dear Sir/Madam,"
+       pdf.move_down 20
+       pdf.text "Dear Sir/Madam,"
 
-      pdf.move_down 20
-      # body = <<-END.gsub(/\s+/, ' ')
-      #   Mr. #{@name} has been granted leave from #{@start_date} to
-      #   #{@end_date}. He will continue same job duties after coming back from
-      #   vacation.
-      # END
-      body = @template
-      pdf.text body, leading: 10, indent_paragraphs: 60
+       pdf.move_down 20
+       body = @template
+       pdf.text body, leading: 10, indent_paragraphs: 60
 
-      pdf.move_down 20
-      pdf.text "Sincerely,"
+       pdf.move_down 20
+       pdf.text "Sincerely,"
 
-      pdf.image StringIO.new(@signature.read), width: 100, height: 50
+       pdf.image StringIO.new(@signature), width: 100, height: 50
 
-      pdf.move_down 20
-      pdf.font("Helvetica", size: 10) do
-        pdf.text "Maninder Chhabra\nCEO\n#{@company}\n#{@address}\nEmail: #{@email}\nCorp Site: #{@url}", inline_format: true
-      end
-
-      # footer
-      pdf.bounding_box [pdf.bounds.left, pdf.bounds.bottom + 25], :width  => pdf.bounds.width do
-          pdf.font "Helvetica"
-          pdf.stroke_horizontal_rule
-          pdf.move_down(5)
-          pdf.text @footer, :size => 8, align: :center, style: :bold, :color => "007700"
-      end
-    end
+       pdf.move_down 20
+       pdf.font("Helvetica", size: 10) do
+         pdf.text "Maninder Chhabra\nCEO\n#{@company}\n#{@address}\nEmail: #{@email}\nCorp Site: #{@url}", inline_format: true
+       end
+     end
+   end
   end
 end
