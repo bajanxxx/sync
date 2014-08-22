@@ -60,6 +60,7 @@ require_relative 'lib/dj/email_job_posting'
 require_relative 'lib/dj/email_job_posting_remainder'
 require_relative 'lib/dj/generate_document'
 require_relative 'lib/dj/email_request_status'
+require_relative 'lib/dj/email_document_request'
 
 # Prawn PDF Generators
 require_relative 'lib/prawn/leave_letter'
@@ -178,6 +179,7 @@ class Sync < Sinatra::Base
     @settings = Settings._settings
     @db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
     @grid = Mongo::Grid.new(@db)
+    @twilio = Twilio::REST::Client.new(@settings[:twilio_account_sid], @settings[:twilio_auth_token])
   end
 
   after do
@@ -2053,6 +2055,7 @@ class Sync < Sinatra::Base
     recaptcha_response_field = params[:recaptcha_response_field]
 
     error_msg = ''
+    dr = nil
 
     if email !~ /[a-zA-Z0-9._%+-]+@cloudwick.com/
       error_msg = 'Email is not formatted properly, enter only cloudwick email address.'
@@ -2087,7 +2090,7 @@ class Sync < Sinatra::Base
       # Generate Requests
       case document_type
       when 'leaveletter'
-        DocumentRequest.create(
+        dr = DocumentRequest.create(
           consultant_name: fullname,
           consultant_email: email,
           document_type: document_type.upcase,
@@ -2097,7 +2100,7 @@ class Sync < Sinatra::Base
           company: company
         )
       when 'offerletter'
-        DocumentRequest.create(
+        dr = DocumentRequest.create(
           consultant_name: fullname,
           consultant_email: email,
           document_type: document_type.upcase,
@@ -2106,13 +2109,28 @@ class Sync < Sinatra::Base
           company: company
         )
       when 'employmentletter'
-        DocumentRequest.create(
+        dr = DocumentRequest.create(
           consultant_name: fullname,
           consultant_email: email,
           document_type: document_type.upcase,
           start_date: elstartdate,
           dated: eldatedas,
           company: company
+        )
+      end
+      # Send email to the admin group
+      Delayed::Job.enqueue(
+        EmailDocumentRequest.new(@settings, @admin_name, dr),
+        queue: 'consultant_document_requests',
+        priority: 10,
+        run_at: 1.seconds.from_now
+      )
+      # Send an sms to the admin
+      @settings[:admin_phone].each do |to_phone|
+        @twilio.account.messages.create(
+          from: @settings[:twilio_phone],
+          to: to_phone,
+          body: "SYNC: #{fullname} sent document request (#{document_type})"
         )
       end
       erb :doc_requests_success, locals: {email: email}

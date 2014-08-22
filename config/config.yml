@@ -4,6 +4,9 @@
 #
 email: admin@cloudwick.com
 cc: jobs@cloudwick.com
+admin_group: syncadmin@cloudwick.com
+admin_phone:
+  - +12013141533
 password: balentine380
 smtp_address: smtp.gmail.com
 smtp_port: 587
@@ -33,6 +36,12 @@ mailgun_customer_email: 'mark.schreiber@mg.cloudwick.com'
 mailgun_customer_routes_forward:
   - 'markschreiber@cloudwick.com'
 mailgun_customer_routes_name: 'Email Customers Campaigning'
+#
+# Twilio configuration
+#
+twilio_account_sid: 'AC23cc89e655af3650bc5f8d25021e9106'
+twilio_auth_token: 'c70384f4cc30004651d13eb82e0e967a'
+twilio_phone: '+16506145955'
 #
 # Portal configuration
 #

@@ -16,7 +16,7 @@ Get it
 
 ```
 cd /opt
-git clone https://[username]@github.com/cloudwicklabs/job_portal.git
+git clone https://[username]@github.com/cloudwicklabs/sync.git
 ```
 
 Install Dependencies:
@@ -36,7 +36,7 @@ rvm rubygems current
 **Install Gem Dependencies:**
 
 ```
-cd /opt/job_portal
+cd /opt/sync
 rvm @global do bundle install
 ```
 
@@ -80,9 +80,9 @@ Run it:
 **Start unicorn application server:**
 
 ```
-cd /opt/job_portal
+cd /opt/sync
 RAILS_ENV='production' unicorn --config-file config/unicorn.rb --host 0.0.0.0 --port 9292 --env development --daemonize config.ru
-# bundle exec rackup -s thin >> /var/log/job_portal.log 2>&1 &
+# bundle exec rackup -s thin >> /var/log/sync.log 2>&1 &
 ```
 
 **Starting Nginx web server:**
@@ -97,11 +97,17 @@ RAILS_ENV='production' unicorn --config-file config/unicorn.rb --host 0.0.0.0 --
 RAILS_ENV=production bin/delayed_job.rb -n 4 start
 ```
 
-**stopping unicorn server:**
+**stopping and restarting all processes**
 
 ```
-cd /opt/job_portal
+cd /opt/sync
 cat tmp/pids/unicorn.pid | xargs kill -QUIT
+RAILS_ENV=production bin/delayed_job.rb -n 4 stop
+/etc/init.d/nginx stop
+
+RAILS_ENV='production' unicorn --config-file config/unicorn.rb --host 0.0.0.0 --port 9292 --env development --daemonize config.ru
+RAILS_ENV=production bin/delayed_job.rb -n 4 start
+/etc/init.d/nginx start
 ```
 
 **Creating indexes for collections** (Onetime)
@@ -119,21 +125,21 @@ Initialize the fetcher to get a decent amount of posts to work with, its not
 required to run the fetcher unless you want the data right away:
 
 ```
-ruby /opt/job_portal/fetch_job_postings.rb \
+ruby /opt/sync/fetch_job_postings.rb \
   --search hadoop \
   --age-of-postings 5 \
   --traverse-depth 30 \
   --page-search CON_CORP
-ruby /opt/job_portal/fetch_job_postings.rb \
+ruby /opt/sync/fetch_job_postings.rb \
   --search cassandra \
   --age-of-postings 5 \
   --traverse-depth 30 \
   --page-search CON_CORP
-ruby /opt/job_portal/fetch_indeed_postings.rb \
+ruby /opt/sync/fetch_indeed_postings.rb \
   --search hadoop \
   --age-of-postings 5 \
   --limit 1000
-ruby /opt/job_portal/fetch_indeed_postings.rb \
+ruby /opt/sync/fetch_indeed_postings.rb \
   --search cassandra \
   --age-of-postings 5 \
   --limit 1000
@@ -143,17 +149,17 @@ Create the following cron job's for the fetcher to run continuously & also to ba
 
 ```
 # dice
-0 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_job_postings.rb --search hadoop --age-of-postings 1 --traverse-depth 25 --page-search CON_CORP >> /var/log/job_portal_fetcher.log 2>&1
-0 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_job_postings.rb --search hadoop --age-of-postings 1 --traverse-depth 1 --page-search CON_CORP >> /var/log/job_portal_fetcher.log 2>&1
-0 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_job_postings.rb --search cassandra --age-of-postings 1 --traverse-depth 25 --page-search CON_CORP >> /var/log/job_portal_fetcher.log 2>&1
-0 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_job_postings.rb --search cassandra --age-of-postings 1 --traverse-depth 1 --page-search CON_CORP >> /var/log/job_portal_fetcher.log 2>&1
+0 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search hadoop --age-of-postings 1 --traverse-depth 25 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
+0 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search hadoop --age-of-postings 1 --traverse-depth 1 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
+0 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search cassandra --age-of-postings 1 --traverse-depth 25 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
+0 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search cassandra --age-of-postings 1 --traverse-depth 1 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
 # indeed
-10 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_indeed_postings.rb --search hadoop --age-of-postings 1 --limit 1000 >> /var/log/job_portal_fetcher.log 2>&1
-10 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_indeed_postings.rb --search hadoop --age-of-postings 1 --limit 100 >> /var/log/job_portal_fetcher.log 2>&1
-10 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_indeed_postings.rb --search cassandra --age-of-postings 1 --limit 1000 >> /var/log/job_portal_fetcher.log 2>&1
-10 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/job_portal/fetch_indeed_postings.rb --search cassandra --age-of-postings 1 --limit 100 >> /var/log/job_portal_fetcher.log 2>&1
+10 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_indeed_postings.rb --search hadoop --age-of-postings 1 --limit 1000 >> /var/log/sync_fetcher.log 2>&1
+10 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_indeed_postings.rb --search hadoop --age-of-postings 1 --limit 100 >> /var/log/sync_fetcher.log 2>&1
+10 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_indeed_postings.rb --search cassandra --age-of-postings 1 --limit 1000 >> /var/log/sync_fetcher.log 2>&1
+10 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_indeed_postings.rb --search cassandra --age-of-postings 1 --limit 100 >> /var/log/sync_fetcher.log 2>&1
 # mongo backup
-0 0 * * * /bin/bash /opt/job_portal/backup_mongo.sh -p "/mongo-backup-100 /mongo-backup-217" -d job_portal >> /var/log/job_portal_backup.log 2>&1
+0 0 * * * /bin/bash /opt/sync/backup_mongo.sh -p "/mongo-backup-100 /mongo-backup-217" -d sync >> /var/log/sync_backup.log 2>&1
 ```
 
 License and Authors

@@ -23,5 +23,6 @@ gem 'delayed_job'
 gem 'delayed_job_mongoid'
 gem 'mini_magick'
 gem 'prawn'
+gem 'twilio-ruby'
 
 gem 'newrelic_rpm'
