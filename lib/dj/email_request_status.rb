@@ -23,7 +23,7 @@ class EmailRequestStatus < Struct.new(:settings, :admin, :request)
       <p>Thanks for using <strong>Cloudwick Sync.</strong></p>
 EOBODY
     Pony.mail(
-      from: settings[:email].split('@').first + "<" + settings[:email] + ">",
+      from: 'Cloudwick Sync' + "<" + settings[:email] + ">",
       to: request.consultant_email,
       cc: settings[:cc],
       subject: "Status of the document request (#{request.document_type}) you made",
