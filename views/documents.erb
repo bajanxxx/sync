@@ -570,6 +570,7 @@ $('#SubmitCreateLLBtn').click(function() {
         console.log("Sucess: " + data.msg)
         $('#CreateLeaveLetterFormLabel').addClass('text-info').html(data.msg);
         $('#CreateLeaveLetter').modal('hide');
+        location.reload();
       }
     },
     error: function(data) {
@@ -603,6 +604,7 @@ $('#SubmitCreateOLBtn').click(function() {
         console.log("Sucess: " + data.msg)
         $('#CreateOfferLetterFormLabel').addClass('text-info').html(data.msg);
         $('#CreateOfferLetter').modal('hide');
+        location.reload();
       }
     },
     error: function(data) {
@@ -636,6 +638,7 @@ $('#SubmitCreateELBtn').click(function() {
         console.log("Sucess: " + data.msg)
         $('#CreateEmploymentLetterFormLabel').addClass('text-info').html(data.msg);
         $('#CreateEmploymentLetter').modal('hide');
+        location.reload();
       }
     },
     error: function(data) {
@@ -673,6 +676,7 @@ $('#SubmitCreateLLBtn-<%= request.id %>').click(function() {
         console.log("Sucess: " + data.msg)
         $('#CreateLeaveLetterFormLabel-<%= request.id %>').addClass('text-info').html(data.msg);
         $('#CreateLeaveLetter-<%= request.id %>').modal('hide');
+        location.reload();
       }
     },
     error: function(data) {
@@ -708,6 +712,7 @@ $('#SubmitCreateOLBtn-<%= request.id %>').click(function() {
         console.log("Sucess: " + data.msg)
         $('#CreateOfferLetterFormLabel-<%= request.id %>').addClass('text-info').html(data.msg);
         $('#CreatOfferLetter-<%= request.id %>').modal('hide');
+        location.reload();
       }
     },
     error: function(data) {
@@ -743,6 +748,7 @@ $('#SubmitCreateELBtn-<%= request.id %>').click(function() {
         console.log("Sucess: " + data.msg)
         $('#CreateEmploymentLetterFormLabel-<%= request.id %>').addClass('text-info').html(data.msg);
         $('#CreatEmploymentLetter-<%= request.id %>').modal('hide');
+        location.reload();
       }
     },
     error: function(data) {
