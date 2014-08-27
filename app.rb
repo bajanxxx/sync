@@ -552,6 +552,14 @@ class Sync < Sinatra::Base
     end
   end
 
+  # TODO
+  get '/consultants/addinfo' do
+  end
+
+  # TODO
+  post '/consultants/addinfo' do
+  end
+
   ###
   ### => APPLICATIONS
   ###
@@ -1890,7 +1898,7 @@ class Sync < Sinatra::Base
           DocumentRequest.find(rid).update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
         end
         success = true
-        message = "OK"
+        message = "Sucessfully sent leaveletter to #{cname}"
       end
     rescue ArgumentError
       success = false
@@ -1949,7 +1957,7 @@ class Sync < Sinatra::Base
           DocumentRequest.find(rid).update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
         end
         success = true
-        message = "OK"
+        message = "Sucessfully sent offerletter to #{cname}"
       end
     rescue ArgumentError
       success = false
@@ -2008,7 +2016,7 @@ class Sync < Sinatra::Base
           DocumentRequest.find(rid).update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
         end
         success = true
-        message = "OK"
+        message = "Sucessfully sent employment letter to #{cname}"
       end
     rescue ArgumentError
       success = false
