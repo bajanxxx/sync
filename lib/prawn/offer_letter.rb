@@ -55,26 +55,25 @@ class OfferLetter
         CreationDate: Time.now.strftime('%B %d, %Y')
       }) do |pdf|
 
-      pdf.repeat :all do
-       # header
-       pdf.bounding_box [pdf.bounds.left, pdf.bounds.top], :width  => pdf.bounds.width do
-         pdf.font "Helvetica"
-         pdf.text "Offer Letter for #{@name}", :align => :center, :size => 25
-         pdf.stroke_horizontal_rule
-       end
-
-       # footer
-       pdf.bounding_box [pdf.bounds.left, pdf.bounds.bottom + 25], :width  => pdf.bounds.width do
-         pdf.font "Helvetica"
-         pdf.stroke_horizontal_rule
-         pdf.move_down(5)
-         pdf.text @footer, :size => 8, align: :center, style: :bold, :color => "007700"
-       end
-     end
+    #   pdf.repeat :all do
+    #    # header
+    #    pdf.bounding_box [pdf.bounds.left, pdf.bounds.top], :width  => pdf.bounds.width do
+    #      pdf.font "Helvetica"
+    #      pdf.text "Offer Letter for #{@name}", :align => :center, :size => 25
+    #      pdf.stroke_horizontal_rule
+    #    end
+     #
+    #    # footer
+    #    pdf.bounding_box [pdf.bounds.left, pdf.bounds.bottom + 25], :width  => pdf.bounds.width do
+    #      pdf.font "Helvetica"
+    #      pdf.stroke_horizontal_rule
+    #      pdf.move_down(5)
+    #      pdf.text @footer, :size => 8, align: :center, style: :bold, :color => "007700"
+    #    end
+    #  end
 
      # body
-     pdf.bounding_box([pdf.bounds.left, pdf.bounds.top - 50], :width  => pdf.bounds.width, :height => pdf.bounds.height - 100) do
-       pdf.move_down 50
+     pdf.bounding_box([pdf.bounds.left, pdf.bounds.top - 75], :width  => pdf.bounds.width, :height => pdf.bounds.height - 125) do
        pdf.text "Dated #{@dated_date}", style: :bold, align: :right
 
        pdf.move_down 20
@@ -88,7 +87,7 @@ class OfferLetter
 
        pdf.move_down 20
        body = @template
-       pdf.text body, leading: 10, indent_paragraphs: 60
+       pdf.text body, leading: 10, indent_paragraphs: 60, align: :justify
 
        pdf.move_down 20
        pdf.text "Sincerely,"
