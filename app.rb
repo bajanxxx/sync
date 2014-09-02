@@ -552,14 +552,6 @@ class Sync < Sinatra::Base
     end
   end
 
-  # TODO
-  get '/consultants/addinfo' do
-  end
-
-  # TODO
-  post '/consultants/addinfo' do
-  end
-
   ###
   ### => APPLICATIONS
   ###
@@ -2042,6 +2034,19 @@ class Sync < Sinatra::Base
   #
   # => Consultant request managements (Routes open for all)
   #
+
+  get '/requests/addproject' do
+    erb :add_project
+  end
+
+  post '/requests/addproject' do
+    content_type :text
+    success = true
+    message = "Sucessfully submitted form"
+
+    p params
+    { success: success, msg: message }.to_json
+  end
 
   get '/requests/documents' do
     erb :doc_requests, :locals => {:error_msg => ''}
