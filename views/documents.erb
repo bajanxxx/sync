@@ -492,7 +492,7 @@
         <% else %>
         <button type="button" data-toggle="modal" data-target="#CreateEmploymentLetter-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok"></span></button>
         <% end %>
-        <a href="#"><%= request.consultant_name %> has requested <%= request.document_type %></a>
+        <span><%= request.consultant_name %> has requested <%= request.document_type %></span>
       </li>
       <% end %>
     </ul>
@@ -511,9 +511,9 @@
     <ul class="list-group">
       <% approved_requests.each do |request| %>
       <li class="list-group-item">
-        <span class="badge alert-info">Approve At: <%= request.approved_at %></a></span>
-        <span class="badge alert-success">Approve By: <%= request.approved_by %></a></span>
-        <a href="#"><%= request.consultant_name %> has requested <%= request.document_type %></a>
+        <span class="badge alert-info">Approved At: <%= request.approved_at %></a></span>
+        <span class="badge alert-success">Approved By: <%= request.approved_by %></a></span>
+        <span><%= request.consultant_name %> has requested <%= request.document_type %></span>
       </li>
       <% end %>
     </ul>
@@ -532,9 +532,9 @@
     <ul class="list-group">
       <% disapproved_requests.each do |request| %>
       <li class="list-group-item">
-        <span class="badge alert-info">DisApprove At: <%= request.disapproved_at %></a></span>
-        <span class="badge alert-success">DisApprove By: <%= request.disapproved_by %></a></span>
-        <a href="#"><%= request.consultant_name %> has requested <%= request.document_type %></a>
+        <span class="badge alert-info">DisApproved At: <%= request.disapproved_at %></a></span>
+        <span class="badge alert-success">DisApproved By: <%= request.disapproved_by %></a></span>
+        <span><%= request.consultant_name %> has requested <%= request.document_type %></span>
       </li>
       <% end %>
     </ul>

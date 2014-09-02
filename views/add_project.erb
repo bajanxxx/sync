@@ -1,0 +1,695 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Consultant Info</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h3 class="panel-title">Fill out the form to update information</h3>
+        </div>
+        <div class="panel-body">
+          <form role="form" id="primary" method="post" action="/requests/addproject" enctype="multipart/form-data">
+            <!-- basics -->
+            <fieldset class="well the-fieldset">
+              <legend class="the-legend"><strong><span class="text-primary">Basics</span></strong></legend>
+              <!-- name -->
+              <div class="form-group">
+                <label class="control-label" for="consultantname">Name</label>
+                <div class="">
+                  <input id="consultantname" name="consultantname" type="text" placeholder="name of the consultant" class="form-control input-md">
+                </div>
+              </div>
+              <!-- email -->
+              <div class="form-group">
+                <label class="control-label" for="email">Email</label>
+                <div class="">
+                  <div class="input-group">
+                    <input id="email" name="email" class="form-control" placeholder="email" type="text">
+                    <span class="input-group-addon">@cloudwick.com</span>
+                  </div>
+                </div>
+              </div>
+              <!-- current company -->
+              <div class="form-group">
+                <label class="control-label" for="currentcompany">Current Client</label>
+                <div class="">
+                  <input id="currentcompany" name="currentcompany" class="form-control" placeholder="company you are  currently working at" type="text">
+                </div>
+              </div>
+            </fieldset> <!-- end basics -->
+
+            <!-- qualifications -->
+            <fieldset class="well the-fieldset">
+              <legend class="the-legend"><strong><span class="text-primary">Qualifications</span></strong></legend>
+              <!-- certifications -->
+              <div class="form-group">
+                <label class="control-label" for="certifications">Certifications</label>
+                <div class="">
+                  <input id="certifications" name="certifications" class="form-control select2" multiple data-placeholder="Enter certifications you have" style="width:100%">
+                </div>
+              </div>
+              <!-- trainings -->
+              <div class="form-group">
+                <label class="control-label" for="trainings">Trainings</label>
+                <div class="">
+                  <input id="trainings" name="trainings" class="form-control select2" multiple data-placeholder="Enter trainings you have" style="width:100%">
+                </div>
+              </div>
+            </fieldset> <!-- end qualifications -->
+
+            <!-- projects -->
+            <div class="projects">
+              <fieldset class="well the-fieldset">
+                <legend class="the-legend"><strong><span class="text-primary">Project Details</span></strong></legend>
+                <div id="parentprojectwrapper">
+                  <% 5.times do |projectindex| %>
+                  <% if projectindex == 0 %>
+                  <div id="projectwrapper<%= projectindex %>">
+                  <% else %>
+                  <div id="projectwrapper<%= projectindex %>" style="display:none;">
+                  <% end %>
+                    <fieldset class="well-white well the-fieldset">
+                      <legend class="the-legend">
+                        <strong>Project Information</strong>
+                        <% unless projectindex == 0 %>
+                        <a href="#" id="p<%= projectindex %>removeproject" class="btn btn-danger btn-xs pull-right"><span class="glyphicon glyphicon-remove"></span></a>
+                        <% end %>
+                      </legend>
+                      <!-- title -->
+                      <div class="form-group">
+                        <label class="control-label" for="p<%= projectindex %>jobtitle">Job Title</label>
+                        <div class="">
+                          <input id="p<%= projectindex %>jobtitle" name="p<%= projectindex %>jobtitle" class="form-control" placeholder="title at the company" type="text">
+                        </div>
+                      </div>
+                      <!-- client -->
+                      <div class="form-group">
+                        <label class="control-label" for="p0client">Client</label>
+                        <div class="">
+                          <input id="p<%= projectindex %>client" name="p<%= projectindex %>client" class="form-control" placeholder="name of the client" type="text">
+                        </div>
+                      </div>
+                      <!-- Software Used -->
+                      <div class="form-group">
+                        <label class="control-label" for="p<%= projectindex %>softwareused">Software Used</label>
+                        <div class="">
+                          <input id="p<%= projectindex %>softwareused" name="p<%= projectindex %>softwareused" class="form-control select2" multiple data-placeholder="softwares used" style="width:100%">
+                        </div>
+                      </div>
+                      <!-- Management Tools Used -->
+                      <div class="form-group">
+                        <label class="control-label" for="p<%= projectindex %>managementtoolsused">Management Tools Used</label>
+                        <div class="">
+                          <input id="p<%= projectindex %>managementtoolsused" name="p<%= projectindex %>managementtoolsused" class="form-control select2" multiple data-placeholder="management tools used" style="width:100%">
+                        </div>
+                      </div>
+                      <!-- Commercial Used -->
+                      <div class="form-group">
+                        <label class="control-label" for="p<%= projectindex %>commercialsupport">Commercial Support Used</label>
+                        <div class="">
+                          <input id="p<%= projectindex %>commercialsupport" name="p<%= projectindex %>commercialsupport" class="form-control select2" multiple data-placeholder="commercials support used" style="width:100%">
+                        </div>
+                      </div>
+                      <!-- illustration upload -->
+                      <div class="form-group">
+                        <label class="control-label">Illustration Upload</label>
+                        <div class="">
+                          <input type="file" id="p<%= projectindex %>illustrations" class="form-control" name="p<%= projectindex %>illustrations[]" title="Select illustrations related to project" data-filename-placement="inside" multiple/>
+                        </div>
+                      </div>
+                      <!-- documents upload -->
+                      <div class="form-group">
+                        <label class="control-label">Documents Upload</label>
+                        <div class="">
+                          <input type="file" id="p<%= projectindex %>docuemnts" class="form-control" name="p<%= projectindex %>documents[]" title="Select documents related to project" data-filename-placement="inside" multiple/>
+                        </div>
+                      </div>
+
+                      <div id="p<%= projectindex %>usecasewrapper">
+                        <% 5.times do |usecaseindex| %>
+                        <% if usecaseindex == 0 %>
+                        <div id="p<%= projectindex %>usecase<%= usecaseindex %>">
+                        <% else %>
+                        <div id="p<%= projectindex %>usecase<%= usecaseindex %>" style="display:none;">
+                        <% end %>
+                          <fieldset class="well">
+                            <legend class="the-legend">
+                              <strong>Specify Project's Usecase</strong>
+                              <% unless usecaseindex == 0 %>
+                              <a href="#" id="p<%= projectindex %>removeusecase<%= usecaseindex %>" class="btn btn-danger btn-xs pull-right"><span class="glyphicon glyphicon-remove"></span></a>
+                              <% end %>
+                            </legend>
+                            <!-- use case description -->
+                            <div class="form-group">
+                              <label class="control-label" for="p<%= projectindex %>uc<%= usecaseindex %>description">Usecase Description</label>
+                              <div class="">
+                                <textarea id="p<%= projectindex %>uc<%= usecaseindex %>description" name="p<%= projectindex %>uc<%= usecaseindex %>description" class="form-control" placeholder="What is the client business purpose for this technology/solution.  How is the technology/solution being used by the client"></textarea>
+                              </div>
+                            </div>
+                            <!-- requirements wrapper -->
+                            <div id="p<%= projectindex %>uc<%= usecaseindex %>requirementwrapper">
+                              <% 5.times do |requirementindex| %>
+                              <% if requirementindex == 0 %>
+                              <div id="p<%= projectindex %>uc<%= usecaseindex %>requirement<%= requirementindex %>">
+                              <% else %>
+                              <div id="p<%= projectindex %>uc<%= usecaseindex %>requirement<%= requirementindex %>" style="display:none;">
+                              <% end %>
+                                <fieldset class="well-white well the-fieldset">
+                                  <legend class="the-legend">
+                                    <strong>Usecase Requirements</strong>
+                                    <% unless requirementindex == 0 %>
+                                    <a href="#" id="p<%= projectindex %>uc<%= usecaseindex %>removerequirement<%= requirementindex %>" class="btn btn-danger btn-xs pull-right"><span class="glyphicon glyphicon-remove"></span></a>
+                                    <% end %>
+                                  </legend>
+                                  <!-- requirement -->
+                                  <div class="form-group">
+                                    <label class="control-label" for="p<%= projectindex %>uc<%= usecaseindex %>requirementdesc<%= requirementindex %>">Requirement</label>
+                                    <div class="">
+                                      <textarea id="p<%= projectindex %>uc<%= usecaseindex %>requirementdesc<%= requirementindex %>" name="p<%= projectindex %>uc<%= usecaseindex %>requirementdesc<%= requirementindex %>" class="form-control" placeholder="Specify the requiment in the usecase that you were trying to solve"></textarea>
+                                    </div>
+                                  </div>
+                                  <!-- approch -->
+                                  <div class="form-group">
+                                    <label class="control-label" for="p<%= projectindex %>uc<%= usecaseindex %>approch<%= requirementindex %>">Approch</label>
+                                    <div class="">
+                                      <textarea id="p<%= projectindex %>uc<%= usecaseindex %>approch<%= requirementindex %>" name="p<%= projectindex %>uc<%= usecaseindex %>approch<%= requirementindex %>" class="form-control" placeholder="How I delivered the requirement"></textarea>
+                                    </div>
+                                  </div>
+                                  <!-- effort -->
+                                  <div class="form-group">
+                                    <label class="control-label" for="p<%= projectindex %>uc<%= usecaseindex %>effort<%= requirementindex %>">Effort</label>
+                                    <div class="">
+                                      <textarea id="p<%= projectindex %>uc<%= usecaseindex %>effort<%= requirementindex %>" name="p<%= projectindex %>uc<%= usecaseindex %>effort<%= requirementindex %>" class="form-control" placeholder="How much time it took"></textarea>
+                                    </div>
+                                  </div>
+                                  <!-- resources -->
+                                  <div class="form-group">
+                                    <label class="control-label" for="p<%= projectindex %>uc<%= usecaseindex %>resources<%= requirementindex %>">Resources</label>
+                                    <div class="">
+                                      <textarea id="p<%= projectindex %>uc<%= usecaseindex %>resources<%= requirementindex %>" name="p<%= projectindex %>uc<%= usecaseindex %>resources<%= requirementindex %>" class="form-control" placeholder="Where did you got info and help if any"></textarea>
+                                    </div>
+                                  </div>
+                                  <!-- tools -->
+                                  <div class="form-group">
+                                    <label class="control-label" for="p<%= projectindex %>uc<%= usecaseindex %>tools<%= requirementindex %>">Tools</label>
+                                    <div class="">
+                                      <input id="p<%= projectindex %>uc<%= usecaseindex %>tools<%= requirementindex %>" name="p<%= projectindex %>uc<%= usecaseindex %>tools<%= requirementindex %>" class="form-control select2" multiple data-placeholder="What kind of tools have you used" style="width:100%">
+                                    </div>
+                                  </div>
+                                  <!-- insights -->
+                                  <div class="form-group">
+                                    <label class="control-label" for="p<%= projectindex %>uc<%= usecaseindex %>insights<%= requirementindex %>">Insights</label>
+                                    <div class="">
+                                      <textarea id="p<%= projectindex %>uc<%= usecaseindex %>insights<%= requirementindex %>" name="p<%= projectindex %>uc<%= usecaseindex %>insights<%= requirementindex %>" class="form-control" placeholder="Lessons you have learned"></textarea>
+                                    </div>
+                                  </div>
+                                </fieldset> <!-- requirement wrapper fieldset -->
+                              </div> <!-- requirement <%= requirementindex %> end -->
+                              <% unless requirementindex == 0 %>
+                              <button type="button" id="p<%= projectindex %>uc<%= usecaseindex %>addrequirement<%= requirementindex %>" class="btn btn-default btn-xs">Add requirement <%= requirementindex + 1 %></button>
+                              <% end %>
+                              <script type="text/javascript">
+                                $("#p<%= projectindex %>uc<%= usecaseindex %>tools<%= requirementindex %>").select2({tags:["hive", "pig", "sqoop", "oozie", "flume", "mapreduce"]});
+                                $('#p<%= projectindex %>uc<%= usecaseindex %>addrequirement<%= requirementindex %>').on("click", function(){
+                                  document.getElementById("p<%= projectindex %>uc<%= usecaseindex %>requirement<%= requirementindex %>").style.display="inline";
+                                  document.getElementById("p<%= projectindex %>uc<%= usecaseindex %>addrequirement<%= requirementindex %>").style.display="none";
+                                  return false;
+                                });
+                                $('#p<%= projectindex %>uc<%= usecaseindex %>removerequirement<%= requirementindex %>').on("click", function() {
+                                  document.getElementById("p<%= projectindex %>uc<%= usecaseindex %>requirement<%= requirementindex %>").style.display="none";
+                                  document.getElementById("p<%= projectindex %>uc<%= usecaseindex %>addrequirement<%= requirementindex %>").style.display="inline";
+                                  return false;
+                                });
+                              </script>
+                              <% end %>
+                            </div> <!-- end requirement wrapper -->
+                          </fieldset> <!-- project usecase fieldset end -->
+                        </div>
+                        <% unless usecaseindex == 0 %>
+                        <button type="button" id="p<%= projectindex %>addusecase<%= usecaseindex %>" class="btn btn-default btn-xs">Add usecase <%= usecaseindex + 1 %></button>
+                        <% end %>
+                        <script type="text/javascript">
+                          $('#p<%= projectindex %>addusecase<%= usecaseindex %>').on("click", function(){
+                            document.getElementById("p<%= projectindex %>usecase<%= usecaseindex %>").style.display="inline";
+                            document.getElementById("p<%= projectindex %>addusecase<%= usecaseindex %>").style.display="none";
+                            return false;
+                          });
+                          $('#p<%= projectindex %>removeusecase<%= usecaseindex %>').on("click", function() {
+                            document.getElementById("p<%= projectindex %>usecase<%= usecaseindex %>").style.display="none";
+                            document.getElementById("p<%= projectindex %>addusecase<%= usecaseindex %>").style.display="inline";
+                            return false;
+                          });
+                        </script>
+                        <% end %>
+                      </div>
+                    </fieldset> <!-- end projectwrapper fieldset -->
+                  </div>
+                  <!-- <label class="control-field"> -->
+                  <% unless projectindex == 0 %>
+                  <button type="button" id="p<%= projectindex %>addproject" class="btn btn-info btn-xs">Add project <%= projectindex + 1 %></button>
+                  <% end %>
+                  <script type="text/javascript">
+                    $("#p<%= projectindex %>softwareused").select2({tags:["hadoop", "hbase", "cassandra", "mongodb", "spark", "kafka", "storm"]});
+                    $("#p<%= projectindex %>managementtoolsused").select2({tags:["cm", "ambari", "puppet", "chef", "ansible", "salt", "nagios", "ganglia", "zabbix", "logstash", "splunk"]});
+                    $("#p<%= projectindex %>commercialsupport").select2({tags:["Cloudera", "HortonWorks", "DataStax", "MapR", "10Gen", "ElasticSearch", "DataBricks"]});
+
+                    $('#p<%= projectindex %>addproject').on("click", function() {
+                      document.getElementById('projectwrapper<%= projectindex %>').style.display="inline";
+                      document.getElementById('p<%= projectindex %>addproject').style.display="none";
+                      return false;
+                    });
+                    $('#p<%= projectindex %>removeproject').on("click", function() {
+                      document.getElementById('projectwrapper<%= projectindex %>').style.display="none";
+                      document.getElementById('p<%= projectindex %>addproject').style.display="inline";
+                      return false;
+                    });
+                  </script>
+                  <!-- </label> -->
+                  <% end %>
+                  <span>(<em>Currently you could add 5 projects at maximum</em>)</span>
+                </fieldset> <!-- end project fieldset -->
+              </div> <!-- end project wrapper -->
+              <!-- captcha -->
+              <fieldset class="well the-fieldset">
+                <legend class="the-legend"><strong><span class="text-primary">Are you human ?</span></strong></legend>
+                <div class="form-group">
+                  <!-- <label class="control-label" id="captchaOperation"></label> -->
+                  <div class="">
+                    <input id="captcha" name="captcha" class="form-control" placeholder="" type="text">
+                  </div>
+                </div>
+              </fieldset>
+
+              <div class="form-group">
+                <div class="row-fluid">
+                  <div class="span3"></div>
+                  <div class="span6 text-center">
+                    <button type="submit" class="btn btn-primary" id="SubmitBtn">Submit form</button>
+                    <button type="button" class="btn btn-primary" id="validateBtn">Manual validate</button>
+                    <button type="button" class="btn btn-warning" id="resetBtn">Reset form</button>
+                  </div>
+                  <div class="span3"></div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2"></div>
+  </div>
+</div>
+
+<style type="text/css">
+#primary .form-control-feedback {
+    /* To make the feedback icon visible */
+    z-index: 100;
+}
+</style>
+
+<script src="/js/bootstrap.file-input.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+  // make sure we are the top of the page on reload
+  $(this).scrollTop(0);
+
+  // enable bootstrap file input for all input type's of file
+  $('input[type=file]').bootstrapFileInput();
+  $('.file-inputs').bootstrapFileInput();
+
+  // Generate a simple captcha
+  function randomNumber(min, max) {
+      return Math.floor(Math.random() * (max - min + 1) + min);
+  };
+  var captchaFirst = randomNumber(1, 100);
+  var captchaSecond = randomNumber(1, 200);
+  $('#captcha').attr('placeholder', "How much is " + [captchaFirst, '+', captchaSecond].join(' '));
+  // $('#captchaOperation').html([randomNumber(1, 100), '+', randomNumber(1, 200), '='].join(' '));
+
+  $('#primary')
+    .find('[name="certifications"]')
+      .select2({
+        data:[
+              { text: 'Cloudera Certified Professional: Data Scientist', id:  'ccpds' },
+              { text: 'Cloudera Certified Developer for Apache Hadoop', id:  'ccdh' },
+              { text: 'Cloudera Certified Administrator for Apache Hadoop', id: 'ccah' },
+              { text: 'Cloudera Certified Specialist in Apache HBase', id: 'ccshb' },
+              { text: 'HortonWorks Certified Apache Hadoop Java Develper', id: 'hcjd' },
+              { text: 'HortonWorks Certified Apache Hadoop Develper', id: 'hchd' },
+              { text: 'HortonWorks Certified Apache Hadoop Admin', id: 'hcha' },
+              { text: 'DataStasx Certified Cassandra 1.2 Developer', id: 'dsccd' },
+              { text: 'MongoDB Certified DBA Associate', id: 'c100dba' },
+              { text: 'MongoDB Certified Developer Associate', id: 'c100dev' }
+          ],
+          multiple: true
+      })
+      // Revalidate the certifications when it is changed
+      .change(function(e) {
+        $('#primary').bootstrapValidator('revalidateField', 'certifications');
+      })
+      .end()
+    .find('[name="trainings"]')
+      .select2({
+        tags: ['Mongodb Developer', 'Mongodb Admin']
+      })
+      .change(function(e) {
+        $('#primary').bootstrapValidator('revalidateField', 'trainings');
+      })
+      .end()
+    .find('[name="p0softwareused"]')
+      .change(function(e){
+        $('#primary').bootstrapValidator('revalidateField', 'p0softwareused');
+      })
+      .end()
+    .find('[name="p0managementtoolsused"]')
+      .change(function(e){
+        $('#primary').bootstrapValidator('revalidateField', 'p0managementtoolsused');
+      })
+      .end()
+    .find('[name="p0uc0tools0"]')
+      .change(function(e){
+        $('#primary').bootstrapValidator('revalidateField', 'p0uc0tools0');
+      })
+      .end()
+    .find('[name="p0commercialsupport"]')
+      .change(function(e){
+        $('#primary').bootstrapValidator('revalidateField', 'p0commercialsupport');
+      })
+      .end()
+    .bootstrapValidator({
+      feedbackIcons: {
+        valid: 'glyphicon glyphicon-ok',
+        invalid: 'glyphicon glyphicon-remove',
+        validating: 'glyphicon glyphicon-refresh'
+      },
+      fields: {
+        consultantname: {
+          message: 'The name is not valid',
+          validators: {
+            notEmpty: {
+                message: 'The name is required and cannot be empty'
+            },
+            stringLength: {
+                min: 6,
+                max: 30,
+                message: 'The name must be more than 6 and less than 30 characters long'
+            },
+          }
+        },
+        email: {
+          message: 'The email is not valid',
+          validators: {
+            notEmpty: {
+                message: 'The email is required and cannot be empty'
+            },
+            stringLength: {
+                min: 6,
+                max: 30,
+                message: 'The email must be more than 6 and less than 30 characters long'
+            },
+            regexp: {
+                regexp: /^[a-zA-Z0-9_.-]+$/,
+                message: 'The email can only consist of alphabetical, number, period, underscore and hyphen'
+            },
+          }
+        },
+        currentcompany: {
+          message: 'The name of the company is not valid',
+          validators: {
+            notEmpty: {
+                message: 'The name of the company is required and cannot be empty'
+            },
+            stringLength: {
+                min: 6,
+                max: 30,
+                message: 'The name of the company must be more than 6 and less than 30 characters long'
+            }
+          }
+        },
+        // qualifications
+        certifications: {
+          validators: {
+            callback: {
+              message: 'Please choose atleast 1 certification you have completed',
+              callback: function(value, validator) {
+                // Get the selected options
+                var options = validator.getFieldElements('certifications').val();
+                return (options !== null && options.split(',').length >= 1 && options.split(',').length <= 10);
+              }
+            }
+          }
+        },
+        trainings: {
+          validators: {
+            notEmpty: {
+              message: 'Enter atleast 1 training that you have completed'
+            },
+            callback: {
+              message: 'Please choose atleast 1 training you have completed',
+              callback: function(value, validator) {
+                var options = validator.getFieldElements('trainings').val(),
+                    options2 = options.split(',');
+                return (options2 !== null && options2.length >= 1 && options2.length <= 10);
+              }
+            }
+          }
+        },
+        // project 0 fields
+        p0jobtitle: {
+          message: 'Enter a job title for project',
+          validators: {
+            notEmpty: {
+              message: 'The name of the job title is required and cannot be empty'
+            },
+            stringLength: {
+                min: 5,
+                max: 30,
+                message: 'The name of the job title must be more than 5 and less than 30 characters long'
+            }
+          }
+        },
+        p0client: {
+          message: 'Enter a client name for project',
+          validators: {
+            notEmpty: {
+              message: 'The name of the client is required and cannot be empty'
+            },
+            stringLength: {
+                min: 5,
+                max: 30,
+                message: 'The name of the client must be more than 5 and less than 30 characters long'
+            }
+          }
+        },
+        p0softwareused: {
+          validators: {
+            callback: {
+              message: 'Please choose atleast 2 software technologies you have used in the project',
+              callback: function(value, validator) {
+                var options = validator.getFieldElements('p0softwareused').val(),
+                    options2 = options.split(',');
+                return (options2 !== null && options2.length >= 2 && options2.length <= 10);
+              }
+            }
+          }
+        },
+        p0managementtoolsused: {
+          validators: {
+            notEmpty: {
+              message: 'Enter atleast 1 management tool that have used in the usecase'
+            },
+            callback: {
+              message: 'Please choose atleast 1 management tools you have used in the project',
+              callback: function(value, validator) {
+                var options = validator.getFieldElements('p0managementtoolsused').val(),
+                    options2 = options.split(',');
+                return (options2 !== null && options2.length >= 1 && options2.length <= 10);
+              }
+            }
+          }
+        },
+        p0commercialsupport: {
+          validators: {
+            notEmpty: {
+              message: 'Enter atleast 1 commercial support that have used in the usecase'
+            },
+            callback: {
+              message: 'Please choose atleast 1 commercial support you have used in the project',
+              callback: function(value, validator) {
+                var options = validator.getFieldElements('p0commercialsupport').val(),
+                    options2 = options.split(',');
+                return (options2 !== null && options2.length >= 1 && options2.length <= 10);
+              }
+            }
+          }
+        },
+        p0uc0description: {
+          message: 'Enter a description for the usecase',
+          validators: {
+            notEmpty: {
+              message: 'Usecase description for the project cannot be empty'
+            },
+            stringLength: {
+                min: 25,
+                max: 1000,
+                message: 'Usecase description could be more than 25 and less than 1000 characters long'
+            }
+          }
+        },
+        p0uc0requirementdesc0: {
+          //message: 'Enter a description for the requirement',
+          validators: {
+            notEmpty: {
+              message: 'Usecase requirement description for the project cannot be empty'
+            },
+            stringLength: {
+                min: 25,
+                max: 1000,
+                message: 'Usecase requirement description could be more than 25 and less than 1000 characters long'
+            }
+          }
+        },
+        p0uc0approch0: {
+          //message: 'Enter a description for the requirement',
+          validators: {
+            notEmpty: {
+              message: 'Usecase requiremnt approch for the project cannot be empty'
+            },
+            stringLength: {
+                min: 25,
+                max: 1000,
+                message: 'Usecase requiremnt approch could be more than 25 and less than 1000 characters long'
+            }
+          }
+        },
+        p0uc0effort0: {
+          //message: 'Enter a description for the requirement',
+          validators: {
+            notEmpty: {
+              message: 'Usecase requiremnt effort for the project cannot be empty'
+            },
+            stringLength: {
+                min: 25,
+                max: 1000,
+                message: 'Usecase requiremnt approch could be more than 25 and less than 1000 characters long'
+            }
+          }
+        },
+        p0uc0resources0: {
+          //message: 'Enter a description for the requirement',
+          validators: {
+            notEmpty: {
+              message: 'Usecase requiremnt resources for the project cannot be empty'
+            },
+            stringLength: {
+                min: 25,
+                max: 1000,
+                message: 'Usecase requiremnt resources could be more than 25 and less than 1000 characters long'
+            }
+          }
+        },
+        p0uc0insights0: {
+          //message: 'Enter a description for the requirement',
+          validators: {
+            notEmpty: {
+              message: 'Usecase requiremnt insights for the project cannot be empty'
+            },
+            stringLength: {
+                min: 25,
+                max: 1000,
+                message: 'Usecase requiremnt insights could be more than 25 and less than 1000 characters long'
+            }
+          }
+        },
+        p0uc0tools0: {
+          validators: {
+            callback: {
+              message: 'Please choose atleast 2 tools you have used in the project',
+              callback: function(value, validator) {
+                var options = validator.getFieldElements('p0uc0tools0').val(),
+                    options2 = options.split(',');
+                return (options2 !== null && options2.length >= 2 && options2.length <= 10);
+              }
+            }
+          }
+        },
+        captcha: {
+          validators: {
+            callback: {
+              message: 'Wrong answer',
+              callback: function(value, validator) {
+                var sum = captchaFirst + captchaSecond;
+                return value == sum;
+              }
+            }
+          }
+        },
+        'p0illustrations[]': {
+          validators: {
+            file: {
+              extension: 'jpeg,png',
+              type: 'image/jpeg,image/png',
+              maxSize: 2048 * 1024,   // 2 MB
+              message: 'Currently we only accept jpeg & png formats with size limit of 2MB'
+            }
+          }
+        },
+        'p0documents[]': {
+          validators: {
+            file: {
+              extension: 'pdf',
+              type: 'application/pdf',
+              maxSize: 5120 * 1024,   // 5 MB
+              message: 'Currently we only accept pdf files with size limit of 5MB'
+            }
+          }
+        },
+      } // end fields
+    })
+    // custom handling the submit
+    .on('success.form.bv', function(e) {
+      e.preventDefault(); // Prevent form submission
+
+      // Get the form instance
+      var $form = $(e.target);
+      // var data = new FormData($form);
+
+      // Get the BootstrapValidator instance
+      var bv = $form.data('bootstrapValidator');
+
+      // Use Ajax to submit form data
+      $.ajax({
+        type: "POST",
+        url: $form.attr('action'),
+        data: new FormData($form[0]),
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType:'json', // return type from server
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg);
+          } else {
+            console.log("Sucess: " + data.msg);
+            location.reload();
+          }
+        },
+        error: function(data) {
+          console.log("Error: " + data);
+        }
+      });
+    });
+
+    // Validate the form manually
+    $('#validateBtn').click(function() {
+        $('#primary').bootstrapValidator('validate');
+    });
+
+    $('#resetBtn').click(function() {
+        $('#primary').data('bootstrapValidator').resetForm(true);
+    });
+});
+
+</script>
