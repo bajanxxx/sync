@@ -21,6 +21,8 @@ require 'tempfile'
 require 'fileutils'
 require 'net/http'
 require 'twilio-ruby'
+require 'omniauth'
+require 'omniauth-google-oauth2'
 
 # Load the mongo models
 require_relative 'models/application'
@@ -29,6 +31,13 @@ require_relative 'models/attachments'
 require_relative 'models/campaign'
 require_relative 'models/consultant'
 require_relative 'models/consultants'
+require_relative 'models/detail'
+require_relative 'models/project'
+require_relative 'models/usecase'
+require_relative 'models/requirement'
+require_relative 'models/cluster_configuration'
+require_relative 'models/illustration'
+require_relative 'models/project_document'
 require_relative 'models/email'
 require_relative 'models/fetcher'
 require_relative 'models/job'
@@ -133,14 +142,62 @@ class Sync < Sinatra::Base
                   'a+')
   error_logger.sync = true
 
+  # This code block will run once in any environment
   configure do
     use ::Rack::CommonLogger, access_logger
+
+    # Load mongoid
     Mongoid.load!('config/mongoid.yml', :development)
+    # Load settings file
+    Settings.load!('config/config.yml')
+
     enable :logging, :dump_errors
     enable :sessions
+    # When it's not set sinatra generates random one on application start and
+    # shotgun restarts application before every request.
+    set :session_secret, 'super secret' # with out this session's get reset
+
     register Sinatra::Flash
     set :raise_errors, true
     set :environment, :production
+
+    # Load OmniAuth
+    use OmniAuth::Builder do
+      # For additional provider examples please look at 'omni_auth.rb'
+      provider :google_oauth2, Settings.google_key, Settings.google_secret, {
+        prompt: 'select_account',
+        image_aspect_ratio: 'square',
+        image_size: 200,
+        provider_ignores_state: true
+      }
+    end
+  end
+
+  helpers do
+    # define a current_user method, so we can be sure if an user is authenticated
+    def current_user
+      !session[:uid].nil?
+    end
+
+    # check if the user has logged in
+    def username
+      begin
+        Session.find_by(_id: session[:uid]).username
+      rescue Mongoid::Errors::DocumentNotFound
+        nil
+      end
+    end
+
+    # check if the current user is admin user
+    def admin_user
+      if username
+        begin
+          User.find_by(_id: username).admin
+        rescue Mongoid::Errors::DocumentNotFound
+          false
+        end
+      end
+    end
   end
 
   #
@@ -148,22 +205,10 @@ class Sync < Sinatra::Base
   #
   before do
     env['rack.errors'] =  error_logger
-    @users        = UserDAO
-    @sessions     = SessionDAO
-    @expiration_date = Time.now + (60 * 2) # Session Timeout
-    cookie = request.cookies['user_session'] || nil # user browser cookies
-    @username   = begin
-                    Session.find_by(_id: cookie).username
-                  rescue Mongoid::Errors::DocumentNotFound
-                    nil
-                  end
-    @admin_user = if @username
-                    begin
-                      User.find_by(_id: @username).admin
-                    rescue Mongoid::Errors::DocumentNotFound
-                      false
-                    end
-                  end
+    @settings   = Settings._settings
+    @sessions   = SessionDAO
+    @username   = username
+    @admin_user = admin_user
     @admin_name = if @admin_user
                     begin
                       User.find_by(_id: @username)
@@ -175,21 +220,84 @@ class Sync < Sinatra::Base
                       'ADMIN'
                     end
                   end
-    # Load settings file
-    Settings.load!('config/config.yml')
-    @settings = Settings._settings
-    @db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
-    @grid = Mongo::Grid.new(@db)
-    @twilio = Twilio::REST::Client.new(@settings[:twilio_account_sid], @settings[:twilio_auth_token])
+    @db         = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+    @grid       = Mongo::Grid.new(@db)
+    @twilio     = Twilio::REST::Client.new(
+                    @settings[:twilio_account_sid],
+                    @settings[:twilio_auth_token]
+                  )
+
+    # we do not want to redirect to twitter when the path info starts
+    # with /auth/
+    # pass if request.path_info =~ /^\/auth\//
+    # pass if request.path_info =~ /\/not_valid_email/
+
+    # /auth/google_oauth2 is captured by omniauth:
+    # when the path info matches /auth/google_oauth2, omniauth will redirect to google api
+    # unless current_user
+    #   ap session[:uid]
+    #   ap 'current user not logged in'
+    #   redirect to('/auth/google_oauth2')
+    # else
+    #   ap 'user is already logged in'
+    # end
   end
 
   after do
+    # make sure we close any open database connection
     @db.connection.close if !@db.nil?
   end
 
   #
-  # => ROOT
+  # => Routes
   #
+  get '/auth/:provider/callback' do
+    @auth = env['omniauth.auth']
+    ap @auth.info.urls['Google']
+    if @auth.info['email'].split("@")[1] == "cloudwick.com"
+      # signed in as cloudwick user
+      # create session for the user
+      user_email = @auth.info['email']
+      session_uid = @auth['uid']
+
+      # make sure user exists in the user collection
+      begin
+        User.find_by(email: user_email)
+      rescue Mongoid::Errors::DocumentNotFound
+        User.create(email: user_email)
+      end
+
+      # also create/update consultant document
+      begin
+        Consultant.find_by(email: user_email).update_attributes(
+          first_name: @auth.info['first_name'],
+          last_name: @auth.info['last_name'],
+          image_url: @auth.info['image'],
+          google_profile: @auth.info.urls['Google']
+        )
+      rescue Mongoid::Errors::DocumentNotFound
+        Consultant.create(
+          first_name: @auth.info['first_name'],
+          last_name: @auth.info['last_name'],
+          email: user_email,
+          image_url: @auth.info['image'],
+          google_profile: @auth.info.urls['Google']
+        )
+      end
+
+      # create a session for the user in the collection
+      session_id = @sessions.start_session(user_email, session_uid)
+      redirect '/internal_error' unless session_id
+      # set the cookie
+      session[:uid] = session_uid
+      session[:email] = user_email
+    else
+      halt erb(:login, :locals => {:login_error => 'cloudwick_email'})
+    end
+    # this is the main endpoint to your application
+    redirect to('/')
+  end
+
   get '/' do
     # for logged in users show follow up jobs and applied jobs of 10 each
     consultant = begin
@@ -248,7 +356,14 @@ class Sync < Sinatra::Base
       elsif @username == consultant
         redirect "/consultant/view/#{@username}"
       else
-        erb :admin_access_req
+        <<-HTML
+        <div class="container theme-showcase" role="main">
+          <div class="bs-callout bs-callout-info">
+            <p class="lead">You don't have a page yet created by admin. Please contanct <a href="mailto:syncadmin@cloudwick.com?subject=Account Creation">
+Admin</a> </p>
+          </div>
+        </div>
+        HTML
       end
     else
       erb :index
@@ -281,27 +396,26 @@ class Sync < Sinatra::Base
     end
   end
 
-  post '/login' do
-    username = params[:username]
-    password = params[:password]
-    # puts "user submitted '#{username}' with pass: '#{password}'"
-    user_record = @users.validate_login(username, password)
-
-    if user_record
-      # puts "Starting a session for user: #{user_record.email}"
-      session_id = @sessions.start_session(user_record.email)
-      redirect '/internal_error' unless session_id
-      response.set_cookie(
-          'user_session',
-          :value => session_id,
-          # :expires => @expiration_date,
-          :path => '/'
-        )
-      redirect '/'
-    else
-      erb :login, :locals => {:login_error => 'Invalid Login'}
-    end
-  end
+  # post '/login' do
+  #   username = params[:username]
+  #   password = params[:password]
+  #   # puts "user submitted '#{username}' with pass: '#{password}'"
+  #   user_record = @users.validate_login(username, password)
+  #
+  #   if user_record
+  #     # puts "Starting a session for user: #{user_record.email}"
+  #     session_id = @sessions.start_session(user_record.email)
+  #     redirect '/internal_error' unless session_id
+  #     response.set_cookie(
+  #         'user_session',
+  #         :value => session_id,
+  #         :path => '/'
+  #       )
+  #     redirect '/'
+  #   else
+  #     erb :login, :locals => {:login_error => 'Invalid Login'}
+  #   end
+  # end
 
   get '/internal_error' do
     "Error: System has encounterd a DB error"
@@ -312,45 +426,45 @@ class Sync < Sinatra::Base
   end
 
   get '/logout' do
-    cookie = request.cookies['user_session']
+    cookie = session[:uid]
     @sessions.end_session(cookie)
     session.clear # clear the cookies on user logout
     erb "<div class='alert alert-message'>Logged out</div>"
     redirect '/'
   end
 
-  get '/signup' do
-    erb :signup
-  end
-
-  post '/signup' do
-    username = params[:username]
-    password = params[:password]
-    verify = params[:verify]
-    @errors = {
-      'username' => username,
-      'username_error' => '',
-      'password_error' => '',
-      'verify_error' => ''
-    }
-    if validate_signup(username, password, verify, @errors)
-      unless @users.add_user(username, password)
-        @errors['username_error'] = 'Username already exists, please choose another'
-        return erb :signup # with errors
-      end
-      session_id = @sessions.start_session(username)
-      response.set_cookie(
-          'user_session',
-          :value => session_id,
-          # :expires => @expiration_date,
-          :path => '/'
-        )
-      redirect '/'
-    else
-      # puts "user validation failed"
-      erb :signup # with errors
-    end
-  end
+  # get '/signup' do
+  #   erb :signup
+  # end
+  #
+  # post '/signup' do
+  #   username = params[:username]
+  #   password = params[:password]
+  #   verify = params[:verify]
+  #   @errors = {
+  #     'username' => username,
+  #     'username_error' => '',
+  #     'password_error' => '',
+  #     'verify_error' => ''
+  #   }
+  #   if validate_signup(username, password, verify, @errors)
+  #     unless @users.add_user(username, password)
+  #       @errors['username_error'] = 'Username already exists, please choose another'
+  #       return erb :signup # with errors
+  #     end
+  #     session_id = @sessions.start_session(username)
+  #     response.set_cookie(
+  #         'user_session',
+  #         :value => session_id,
+  #         # :expires => @expiration_date,
+  #         :path => '/'
+  #       )
+  #     redirect '/'
+  #   else
+  #     # puts "user validation failed"
+  #     erb :signup # with errors
+  #   end
+  # end
 
   #
   # => CONSULTANTS
@@ -2042,9 +2156,25 @@ class Sync < Sinatra::Base
   post '/requests/addproject' do
     content_type :text
     success = true
-    message = "Sucessfully submitted form"
+    message = "Sucessfully added project"
 
-    p params
+    ap params
+
+    # Process params and store
+    # First process required fields
+    # Check if the user has already in the consultant collection else create one
+    # begin
+    #   Consultant.find_by(email: params[:consultantname])
+    # rescue Mongoid::Errors::DocumentNotFound
+    #   Consultant.create(
+    #     first_name: 'ashrith',
+    #     last_name: 'mekala',
+    #     team: 1,
+    #     email: 'ashrith@me.com'
+    #   )
+    # end
+    # Check if the user has previously filled out the form
+
     { success: success, msg: message }.to_json
   end
 
@@ -2151,6 +2281,13 @@ class Sync < Sinatra::Base
     else
       erb :doc_requests, :locals => {:error_msg => error_msg}
     end
+  end
+
+  #
+  # => Timesheets
+  #
+  get '/timesheets' do
+    erb :timesheets
   end
 
   #

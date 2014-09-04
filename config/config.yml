@@ -1,5 +1,10 @@
 ---
 #
+# Google API
+#
+google_key: '22486611835-fmoqk1vpoavkdug2iniepeaqpm5tfaqj.apps.googleusercontent.com'
+google_secret: 'EBNBSUqdSW2gUyH1Zb1g6o8v'
+#
 # GMail Configuration
 #
 email: admin@cloudwick.com

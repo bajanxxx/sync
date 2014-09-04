@@ -9,10 +9,10 @@ class SessionDAO
 
   # start a new session id by adding a new document to the sessions collections
   # returns the sessionID or nil
-  def self.start_session(username)
-    session_id = rand(36**32).to_s(36) # random string of length 32
+  def self.start_session(username, session_id)
+    # session_id = rand(36**32).to_s(36) # random string of length 32
     begin
-      Session.create(session_id: session_id, username: username)
+      Session.create(session_id: session_id, username: username, active: true)
     rescue
       puts "Unexpected error on start_session: #{$!}"
       return nil
@@ -23,13 +23,15 @@ class SessionDAO
   # send a new user session by deleteing from sessions table
   def self.end_session(session_id)
     session = get_session(session_id)
-    session.delete if session
+    if session && session.active
+      session.update_attribute(:active, false)
+    end
   end
 
   # get the username of the current session, or nil if the session is not valid
   def self.get_username(session_id)
     session = get_session(session_id)
-    if session
+    if session.active
       session.username
     else
       nil
