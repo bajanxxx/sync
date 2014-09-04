@@ -253,12 +253,12 @@ class Sync < Sinatra::Base
   #
   get '/auth/:provider/callback' do
     @auth = env['omniauth.auth']
-    ap @auth.info.urls['Google']
     if @auth.info['email'].split("@")[1] == "cloudwick.com"
       # signed in as cloudwick user
       # create session for the user
       user_email = @auth.info['email']
       session_uid = @auth['uid']
+      google_profile = @auth.info.urls && @auth.info.urls['Google'] || nil
 
       # make sure user exists in the user collection
       begin
@@ -273,7 +273,7 @@ class Sync < Sinatra::Base
           first_name: @auth.info['first_name'],
           last_name: @auth.info['last_name'],
           image_url: @auth.info['image'],
-          google_profile: @auth.info.urls['Google']
+          google_profile: google_profile
         )
       rescue Mongoid::Errors::DocumentNotFound
         Consultant.create(
@@ -281,7 +281,7 @@ class Sync < Sinatra::Base
           last_name: @auth.info['last_name'],
           email: user_email,
           image_url: @auth.info['image'],
-          google_profile: @auth.info.urls['Google']
+          google_profile: google_profile
         )
       end
 
