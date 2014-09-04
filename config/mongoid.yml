@@ -5,6 +5,12 @@ development:
       database: job_portal
       hosts:
         - localhost:27017
+testing:
+  sessions:
+    default:
+      database: testdb
+      hosts:
+        - localhost:27017
 # production:
 #   sessions:
 #     default:

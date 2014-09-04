@@ -24,5 +24,6 @@ gem 'delayed_job_mongoid'
 gem 'mini_magick'
 gem 'prawn'
 gem 'twilio-ruby'
+gem 'omniauth-google-oauth2'
 
 gem 'newrelic_rpm'
