@@ -91,9 +91,16 @@
                           <input id="p<%= projectindex %>client" name="p<%= projectindex %>client" class="form-control" placeholder="name of the client" type="text">
                         </div>
                       </div>
+                      <!-- project name -->
+                      <div class="form-group">
+                        <label class="control-label" for="p<%= projectindex %>name">Name of the project</label>
+                        <div class="">
+                          <input id="p<%= projectindex %>name" name="p<%= projectindex %>name" class="form-control" placeholder="a unique name for your project, this will be used later to retrieve/edit the project info" type="text">
+                        </div>
+                      </div>
                       <!-- Software Used -->
                       <div class="form-group">
-                        <label class="control-label" for="p<%= projectindex %>softwareused">Software Used</label>
+                        <label class="control-label" for="p<%= projectindex %>softwareused">Software(s) Used</label>
                         <div class="">
                           <input id="p<%= projectindex %>softwareused" name="p<%= projectindex %>softwareused" class="form-control select2" multiple data-placeholder="softwares used" style="width:100%">
                         </div>
@@ -113,12 +120,14 @@
                         </div>
                       </div>
                       <!-- illustration upload -->
+                      <!-- TODO NOTE: detail design diagram -->
                       <div class="form-group">
                         <label class="control-label">Illustration Upload</label>
                         <div class="">
                           <input type="file" id="p<%= projectindex %>illustrations" class="form-control" name="p<%= projectindex %>illustrations[]" title="Select illustrations related to project" data-filename-placement="inside" multiple/>
                         </div>
                       </div>
+                      <!-- TODO NOTE requirement, design, supporting documents -->
                       <!-- documents upload -->
                       <div class="form-group">
                         <label class="control-label">Documents Upload</label>
@@ -170,9 +179,9 @@
                                       <textarea id="p<%= projectindex %>uc<%= usecaseindex %>requirementdesc<%= requirementindex %>" name="p<%= projectindex %>uc<%= usecaseindex %>requirementdesc<%= requirementindex %>" class="form-control" placeholder="Specify the requiment in the usecase that you were trying to solve"></textarea>
                                     </div>
                                   </div>
-                                  <!-- approch -->
+                                  <!-- approach -->
                                   <div class="form-group">
-                                    <label class="control-label" for="p<%= projectindex %>uc<%= usecaseindex %>approch<%= requirementindex %>">Approch</label>
+                                    <label class="control-label" for="p<%= projectindex %>uc<%= usecaseindex %>approch<%= requirementindex %>">Approach</label>
                                     <div class="">
                                       <textarea id="p<%= projectindex %>uc<%= usecaseindex %>approch<%= requirementindex %>" name="p<%= projectindex %>uc<%= usecaseindex %>approch<%= requirementindex %>" class="form-control" placeholder="How I delivered the requirement"></textarea>
                                     </div>
@@ -480,6 +489,19 @@ $(document).ready(function() {
                 min: 5,
                 max: 30,
                 message: 'The name of the client must be more than 5 and less than 30 characters long'
+            }
+          }
+        },
+        p0name: {
+          message: 'Enter a name for project',
+          validators: {
+            notEmpty: {
+              message: 'The name of the project is required and cannot be empty'
+            },
+            stringLength: {
+                min: 5,
+                max: 30,
+                message: 'The name of the project must be more than 5 and less than 30 characters long'
             }
           }
         },
