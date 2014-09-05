@@ -171,6 +171,7 @@
 	    <div class="container-fluid">
 	      <a class="navbar-brand" href="/">Cloudwick Sync</a>
 	      <div class="collapse navbar-collapse">
+					<% if @admin_user %>
 	        <ul class="nav navbar-nav">
 	          <li><a href="/jobs">Jobs</a></li>
 	          <li><a href="/consultants">Consultants</a></li>
@@ -185,6 +186,15 @@
 						<li><a href="/documents">Docs</a></li>
 						<li><a href="/timesheets">Timesheets</a></li>
 	        </ul>
+					<% else %>
+					<ul class="nav navbar-nav">
+						<li><a href="/consultant/<%= @username %>/jobs">Jobs</a></li>
+						<li><a href="/consultant/<%= @username %>/projects">Projects</a></li>
+						<li><a href="/documents/requests/<%= @username %>">DocReqs</a></li>
+						<li><a href="/timesheets">Timesheets</a></li>
+						<li><a href="/cloudservers">CloudServers</a></li>
+					</ul>
+					<% end %>
 					<ul class="nav navbar-nav pull-right">
 						<form action="/search" method="post" class="navbar-form navbar-left" role="search">
   						<% if @admin_user %>

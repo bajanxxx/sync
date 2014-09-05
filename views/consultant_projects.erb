@@ -1,0 +1,140 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Consultant <small>(<%= consultant.email %> )</small></h2>
+  </div>
+  <div class="row-fluid">
+    <div class="panel panel-info">
+      <div class="panel-heading">
+        <strong>Details</strong>
+      </div>
+      <table id="consultantDetails" class="table table-striped" style="table-layout: fixed; word-wrap: break-word">
+        <tr>
+          <td width="35%"><strong>First Name</strong></td>
+          <td width="65%">
+            <a href="#" id="firstname"></a>
+           </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Last Name</strong></td>
+          <td width="65%">
+            <a href="#" id="lastname"><%= consultant.last_name %></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Team</strong></td>
+          <td width="65%">
+            <a href="#" id="team"><%= consultant.team %></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Current Company</strong></td>
+          <td width="65%">
+            <a href="#" id="company"><%= details.current_company %></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Certifications</strong></td>
+          <td width="65%">
+            <a href="#" id="certifications"><%= details.certifications.join(',') %></a>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <table id="consultantDetails" class="table table-bordered table-striped" style="clear: both">
+     <tbody>
+
+     </tbody>
+  </table>
+</div>
+
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Your Projects <small>(we appreciate if you could let us know what is that you are working on)</small>
+      <p class="pull-right">
+        <a id="AddProject" class="btn btn-primary btn-md" href="/consultant/<%= consultant.email %>/projects/add" role="button">Add Project &raquo;</a>
+      </p>
+    </h2>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  // inline editing
+  $.fn.editable.defaults.mode = 'inline';
+  $.fn.editable.defaults.ajaxOptions = {type: "POST"};
+
+  //make username editable
+  $('#firstname').editable({
+    type: 'text',
+    title: 'Enter firstname',
+    placement: 'right',
+    value: '<%= consultant.first_name %>', // initial value, will be updated and send to server side upon change
+    url: '/consultant/update',
+    pk: '<%= consultant.email %>', // primary key (mongo _id)
+    name: 'first_name', // mongo doc_key being update
+    validate: function(value) {
+       if($.trim(value) == '') return 'This field is required';
+    },
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
+
+  $('#lastname').editable({
+    type: 'text',
+    title: 'Enter lastname',
+    placement: 'right',
+    value: '<%= consultant.last_name %>',
+    url: '/consultant/update',
+    pk: '<%= consultant.email %>',
+    name: 'last_name',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
+
+  //make status editable
+  $('#team').editable({
+      type: 'select',
+      title: 'Select team',
+      placement: 'right',
+      value: '<%= consultant.team %>',
+      source: '/consultant/teams', // fetch the teams avaiable from remote url
+      pk: '<%= consultant.email %>',
+      name: 'team',
+      url: '/consultant/update',
+      success: function(response, newValue) {
+        if(!response.status) return response.msg;
+      },
+  });
+
+  $('#company').editable({
+    type: 'text',
+    title: 'Select your current company',
+    placement: 'right',
+    value: '<%= details.current_company %>',
+    url: '/consultant/details/update',
+    pk: '<%= details.consultant_id %>',
+    name: 'current_company',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  });
+
+  $("#certifications").editable({
+    type: 'checklist',
+    title: 'Update your certifications',
+    placement: 'right',
+    url: '/consultant/details/update',
+    separator: ',', // used to seperate values as arary from data-value
+    source: '/deatils/certifications/possible_values',
+    pk: '<%= details.consultant_id %>',
+    name: 'certifications',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
+
+});
+</script>
