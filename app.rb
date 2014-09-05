@@ -188,6 +188,15 @@ class Sync < Sinatra::Base
       end
     end
 
+    def user_fullname(user_email)
+      begin
+        c = Consultant.find_by(email: user_email)
+        "#{c.first_name} #{c.last_name}"
+      rescue Mongoid::Errors::DocumentNotFound
+        nil
+      end
+    end
+
     # check if the current user is admin user
     def admin_user
       if username
@@ -208,6 +217,7 @@ class Sync < Sinatra::Base
     @settings   = Settings._settings
     @sessions   = SessionDAO
     @username   = username
+    @userfullname = user_fullname(username)
     @admin_user = admin_user
     @admin_name = if @admin_user
                     begin
@@ -269,12 +279,13 @@ class Sync < Sinatra::Base
 
       # also create/update consultant document
       begin
-        Consultant.find_by(email: user_email).update_attributes(
-          first_name: @auth.info['first_name'],
-          last_name: @auth.info['last_name'],
-          image_url: @auth.info['image'],
-          google_profile: google_profile
-        )
+        Consultant.find_by(email: user_email)
+        # .update_attributes(
+        #   first_name: @auth.info['first_name'],
+        #   last_name: @auth.info['last_name'],
+        #   image_url: @auth.info['image'],
+        #   google_profile: google_profile
+        # )
       rescue Mongoid::Errors::DocumentNotFound
         Consultant.create(
           first_name: @auth.info['first_name'],
@@ -354,12 +365,12 @@ class Sync < Sinatra::Base
               :tracking_interview => tracking_interview
             }
       elsif @username == consultant
-        redirect "/consultant/view/#{@username}"
+        redirect "/consultant/#{@username}"
       else
         <<-HTML
         <div class="container theme-showcase" role="main">
           <div class="bs-callout bs-callout-info">
-            <p class="lead">You don't have a page yet created by admin. Please contanct <a href="mailto:syncadmin@cloudwick.com?subject=Account Creation">
+            <p class="lead">You don't have a page yet created by admin. Please contact <a href="mailto:syncadmin@cloudwick.com?subject=Account Creation">
 Admin</a> </p>
           </div>
         </div>
@@ -429,7 +440,7 @@ Admin</a> </p>
     cookie = session[:uid]
     @sessions.end_session(cookie)
     session.clear # clear the cookies on user logout
-    erb "<div class='alert alert-message'>Logged out</div>"
+    flash[:info] = "You have sucessfully logged out. Thanks for visiting!"
     redirect '/'
   end
 
@@ -515,8 +526,16 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
+  get '/consultant/:username' do |username|
+    if @username == username || @admin_user
+      erb :consultant_home
+    else
+      erb :admin_access_req
+    end
+  end
+
   # Render each consultant individually by email
-  get '/consultant/view/:id' do |id|
+  get '/consultant/:id/jobs' do |id|
     if @username == id || @admin_user
       consultant = Consultant.find_by(email: id)
       job_applications = []
@@ -545,7 +564,7 @@ Admin</a> </p>
           }
         end
       end
-      erb :consultant,
+      erb :consultant_jobs,
           :locals => {
             :consultant => consultant,
             :job_applications => job_applications.sort_by{|h| h[:title]},
@@ -554,6 +573,18 @@ Admin</a> </p>
     else
       erb :admin_access_req
     end
+  end
+
+  get '/consultant/:id/projects' do |id|
+    erb :consultant_projects,
+        locals: {
+          consultant: Consultant.find_by(email: id),
+          details: Detail.find_or_create_by(consultant_id: id)
+        }
+  end
+
+  get '/consultant/:id/projects/add' do |id|
+    erb :consultant_add_project, locals: { consultant: Consultant.find_by(email: id) }
   end
 
   # Send consultant email reg job details that he/her has to apply
@@ -620,6 +651,48 @@ Admin</a> </p>
     end
     # Return json response to be validated on the client side
     { success: success, msg: message }.to_json
+  end
+
+  post '/consultant/details/update' do
+    consultant_id = params[:pk]
+    update_key = params[:name]
+    update_value = params[:value]
+    success = true
+    message = "Successfully updated #{update_key} to #{update_value}"
+
+    begin
+      case update_key
+      when 'trainings'
+        Detail.find_by(consultant_id: consultant_id).add_to_set(update_key.to_sym, update_value)
+      else
+        Detail.find_by(consultant_id: consultant_id).update_attribute(update_key.to_sym, update_value)
+      end
+    rescue
+      success = false
+      message = "Failed to update(#{update_key})"
+    end
+    # Return json response to be validated on the client side
+    { success: success, msg: message }.to_json
+  end
+
+  get '/deatils/certifications/possible_values' do
+    status_values = []
+    status_values << { text: 'Cloudera Certified Professional: Data Scientist', value:  'ccpds' }
+    status_values << { text: 'Cloudera Certified Developer for Apache Hadoop', value:  'ccdh' }
+    status_values << { text: 'Cloudera Certified Administrator for Apache Hadoop', value: 'ccah' }
+    status_values << { text: 'Cloudera Certified Specialist in Apache HBase', value: 'ccshb' }
+    status_values << { text: 'HortonWorks Certified Apache Hadoop Java Develper', value: 'hcjd' }
+    status_values << { text: 'HortonWorks Certified Apache Hadoop Develper', value: 'hchd' }
+    status_values << { text: 'HortonWorks Certified Apache Hadoop Admin', value: 'hcha' }
+    status_values << { text: 'DataStasx Certified Cassandra 1.2 Developer', value: 'dsccd' }
+    status_values << { text: 'MongoDB Certified DBA Associate', value: 'c100dba' }
+    status_values << { text: 'MongoDB Certified Developer Associate', value: 'c100dev' }
+
+    if request.xhr?
+      halt 200, status_values.to_json
+    else
+      status_values.to_json
+    end
   end
 
   # Update consultant application details
@@ -758,19 +831,26 @@ Admin</a> </p>
 
   post '/upload/resume/:email' do |email|
     consultant = Consultant.find_by(email: email)
-    file_name = email.split('@').first.upcase + '_' + params[:file][:filename]
-    temp_file = params[:file][:tempfile]
-    resume_id = upload_resume(temp_file,file_name)
-    if resume_id
-      consultant.resumes.find_or_create_by(file_name: file_name) do |resume|
-        resume.id = resume_id
-        resume.resume_name = file_name
-        resume.uploaded_date = DateTime.now
+    s_files = []
+    w_files = []
+
+    params[:resumes].each do |resume|
+      file_name = email.split('@').first.upcase + '_' + resume[:filename]
+      temp_file = resume[:tempfile]
+      resume_id = upload_resume(temp_file,file_name)
+      if resume_id
+        consultant.resumes.find_or_create_by(file_name: file_name) do |resume|
+          resume.id = resume_id
+          resume.resume_name = file_name
+          resume.uploaded_date = DateTime.now
+        end
+        s_files << file_name
+      else
+        w_files << file_name
       end
-      flash[:info] = "Uploaded sucessfully #{resume_id}"
-    else
-      flash[:warning] = "Failed uploading resume. Resume with #{file_name} already exists!."
     end
+    flash[:info] = "Successfully uploaded files '#{s_files.join(',')}'" unless s_files.empty?
+    flash[:warning] = "Failed uploading resume. Resume(s) with '#{w_files.join(',')}' already exists!." unless w_files.empty?
     redirect back
   end
 
@@ -2288,6 +2368,13 @@ Admin</a> </p>
   #
   get '/timesheets' do
     erb :timesheets
+  end
+
+  #
+  # => CloudServers
+  #
+  get '/cloudservers' do
+    erb :cloudservers
   end
 
   #

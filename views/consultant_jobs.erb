@@ -1,34 +1,14 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
-    <h2>Consultant <small>(<%= consultant.email %> )</small></h2>
+    <h2>Jobs Following <small>(assigned to you)</small></h2>
   </div>
-  <table id="consultantDetails" class="table table-bordered table-striped" style="clear: both">
-     <tbody>
-       <tr>
-         <td width="35%">First Name</td>
-         <td width="65%">
-           <a href="#" id="firstname"></a>
-          </td>
-       </tr>
-       <tr>
-         <td width="35%">Last Name</td>
-         <td width="65%">
-           <a href="#" id="lastname"><%= consultant.last_name %></a>
-         </td>
-       </tr>
-       <tr>
-         <td width="35%">Team</td>
-         <td width="65%">
-           <a href="#" id="team"><%= consultant.team %></a>
-         </td>
-       </tr>
-     </tbody>
-  </table>
-</div>
-<div class="container theme-showcase" role="main">
-  <div class="page-header">
-    <h3>Jobs Following</h3>
+  <% if job_applications.empty? %>
+  <div class="container theme-showcase" role="main">
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No job postings have been assigned to you yet. Keep an eye out admin may assign some.</code></p>
+    </div>
   </div>
+  <% end %>
   <!-- Two job postings in a row -->
   <% job_applications.each_slice(2) do |job_applications_in_twos| %>
     <div class="row-fluid">
@@ -130,10 +110,11 @@
         </div>
         <div class="panel-body">
           <!-- upload new resumes -->
-          <form id="upload" method="post" action="/upload/resume/<%= consultant.email %>" enctype="multipart/form-data">
-            <input type="file" title="Select resumes to upload" name="file" multiple />
+          <form role="form" id="upload" method="post" action="/upload/resume/<%= consultant.email %>" enctype="multipart/form-data">
+            <input type="file" class="form-control" title="Select resumes to upload" name="resumes[]" data-filename-placement="inside" multiple />
             <ul id="fileList"></ul>
-            <input type="submit" class="btn btn-primary btn-md" value="upload!"/>
+            <button type="submit" class="btn btn-primary" id="SubmitBtn">Upload Resumé</button>
+            <!-- <input type="submit" class="btn btn-primary btn-md" value="Upload Resumé"/> -->
           </form>
         </div>
       </div>
@@ -142,58 +123,33 @@
 </div>
 
 <script src="/js/bootstrap.file-input.js"></script>
-<script>
+<script type="text/javascript">
 $(document).ready(function() {
   $('input[type=file]').bootstrapFileInput();
   $('.file-inputs').bootstrapFileInput();
 
-  // inline editing
-  $.fn.editable.defaults.mode = 'inline';
-  $.fn.editable.defaults.ajaxOptions = {type: "POST"};
-
-  //make username editable
-  $('#firstname').editable({
-    type: 'text',
-    title: 'Enter firstname',
-    placement: 'right',
-    value: '<%= consultant.first_name %>', // initial value, will be updated and send to server side upon change
-    url: '/consultant/update',
-    pk: '<%= consultant.email %>', // primary key (mongo _id)
-    name: 'first_name', // mongo doc_key being update
-    validate: function(value) {
-       if($.trim(value) == '') return 'This field is required';
+  // validate resume upload
+  $('#upload').bootstrapValidator({
+    feedbackIcons: {
+      valid: 'glyphicon glyphicon-ok',
+      invalid: 'glyphicon glyphicon-remove',
+      validating: 'glyphicon glyphicon-refresh'
     },
-    success: function(response, newValue) {
-      if(!response.status) return response.msg;
-    },
-  });
-
-  $('#lastname').editable({
-    type: 'text',
-    title: 'Enter lastname',
-    placement: 'right',
-    value: '<%= consultant.last_name %>',
-    url: '/consultant/update',
-    pk: '<%= consultant.email %>',
-    name: 'last_name',
-    success: function(response, newValue) {
-      if(!response.status) return response.msg;
-    },
-  });
-
-  //make status editable
-  $('#team').editable({
-      type: 'select',
-      title: 'Select team',
-      placement: 'right',
-      value: '<%= consultant.team %>',
-      source: '/consultant/teams', // fetch the teams avaiable from remote url
-      pk: '<%= consultant.email %>',
-      name: 'team',
-      url: '/consultant/update',
-      success: function(response, newValue) {
-        if(!response.status) return response.msg;
+    fields: {
+      'resumes[]': {
+        validators: {
+          notEmpty: {
+            message: 'The resume is required'
+          },
+          file: {
+            extension: 'pdf',
+            type: 'application/pdf',
+            maxSize: 5120 * 1024,   // 5 MB
+            message: 'Currently we only accept pdf files with size limit of 5MB'
+          }
+        }
       },
+    }
   });
 
   <% job_applications.each_slice(2) do |job_applications_in_twos| %>

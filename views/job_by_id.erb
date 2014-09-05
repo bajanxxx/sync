@@ -129,7 +129,7 @@
               <% if application.status.include?('INTERVIEW_SCHEDULED') %>
               <span class="badge alert-danger">IS</span>
               <% end %>
-              <a href="/consultant/view/<%= application.consultant_id %>"><%= application.consultant_id.split('@').first %></a>
+              <a href="/consultant/jobs/<%= application.consultant_id %>"><%= application.consultant_id.split('@').first %></a>
             </li>
             <% end %>
           </ul>
@@ -141,7 +141,7 @@
           <ul class="list-group">
             <% tracking.each do |application| %>
             <li class="list-group-item">
-              <a href="/consultant/view/<%= application.consultant_id %>"><strong><%= application.consultant_id.split('@').first %></strong></a>
+              <a href="/consultant/jobs/<%= application.consultant_id %>"><strong><%= application.consultant_id.split('@').first %></strong></a>
               <% if application.notes %>
               <strong>notes</strong>: <%= application.notes %>.
               <% end %>
