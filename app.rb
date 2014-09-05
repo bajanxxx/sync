@@ -158,8 +158,10 @@ class Sync < Sinatra::Base
     set :session_secret, 'super secret' # with out this session's get reset
 
     register Sinatra::Flash
-    set :raise_errors, true
     set :environment, :production
+    # Disable internal middleware for presenting errors as useful HTML pages
+    set :show_exceptions, false
+    set :raise_errors, false
 
     # Load OmniAuth
     use OmniAuth::Builder do
@@ -256,6 +258,23 @@ class Sync < Sinatra::Base
   after do
     # make sure we close any open database connection
     @db.connection.close if !@db.nil?
+  end
+
+  not_found do
+    status 404
+    erb :not_found
+  end
+
+  # The error handlers will only be invoked, however, if both the Sinatra
+  # :raise_errors and :show_exceptions configuration options have been set to false.
+  error do
+    error_msg = request.env['sinatra.error'].name
+    erb :error, :locals => { error_msg: error_msg }
+  end
+
+  error Moped::Errors::ConnectionFailure do
+    error_msg = "Cannot connect to the Mongo. Please notify the admin."
+    erb :error, :locals => { error_msg: error_msg }
   end
 
   #
@@ -379,16 +398,6 @@ Admin</a> </p>
     else
       erb :index
     end
-  end
-
-  not_found do
-    status 404
-    erb :not_found
-  end
-
-  error do
-    error_msg = request.env['sinatra.error']
-    erb :error, :locals => { error_msg: error_msg }
   end
 
   get '/up' do
