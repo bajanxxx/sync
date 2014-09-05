@@ -670,12 +670,12 @@ Admin</a> </p>
     message = "Successfully updated #{update_key} to #{update_value}"
 
     begin
-      case update_key
-      when 'trainings'
-        Detail.find_by(consultant_id: consultant_id).add_to_set(update_key.to_sym, update_value)
-      else
+      # case update_key
+      # when 'trainings'
+      #   Detail.find_by(consultant_id: consultant_id).add_to_set(update_key.to_sym, update_value)
+      # else
         Detail.find_by(consultant_id: consultant_id).update_attribute(update_key.to_sym, update_value)
-      end
+      # end
     rescue
       success = false
       message = "Failed to update(#{update_key})"
