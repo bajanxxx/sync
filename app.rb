@@ -596,6 +596,21 @@ Admin</a> </p>
     erb :consultant_add_project, locals: { consultant: Consultant.find_by(email: id) }
   end
 
+  post '/consultant/:id/projects/add' do
+    content_type :text
+    success = true
+    message = "Sucessfully added project"
+
+    ap params
+
+    # Process params and store
+    # First process required fields
+    
+    # Check if the user has previously filled out the form
+
+    { success: success, msg: message }.to_json
+  end
+
   # Send consultant email reg job details that he/her has to apply
   post '/consultant/send_posting/:email/:job_id' do |email, job_id|
     job = Job.find(job_id)
@@ -738,7 +753,7 @@ Admin</a> </p>
 
   get '/consultant/teams' do
     teams = []
-    Consultant.distinct(:team).each do |team|
+    Consultant.distinct(:team).sort.each do |team|
       teams << {value: team, text: team}
     end
     if request.xhr? # if this is a ajax request
@@ -2237,36 +2252,6 @@ Admin</a> </p>
   #
   # => Consultant request managements (Routes open for all)
   #
-
-  get '/requests/addproject' do
-    erb :add_project
-  end
-
-  post '/requests/addproject' do
-    content_type :text
-    success = true
-    message = "Sucessfully added project"
-
-    ap params
-
-    # Process params and store
-    # First process required fields
-    # Check if the user has already in the consultant collection else create one
-    # begin
-    #   Consultant.find_by(email: params[:consultantname])
-    # rescue Mongoid::Errors::DocumentNotFound
-    #   Consultant.create(
-    #     first_name: 'ashrith',
-    #     last_name: 'mekala',
-    #     team: 1,
-    #     email: 'ashrith@me.com'
-    #   )
-    # end
-    # Check if the user has previously filled out the form
-
-    { success: success, msg: message }.to_json
-  end
-
   get '/requests/documents' do
     erb :doc_requests, :locals => {:error_msg => ''}
   end
