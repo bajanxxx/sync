@@ -69,7 +69,7 @@
     </tr>
     <% consultants.each_with_index do |consultant, count| %>
       <tr id="consultant<%= count+1 %>">
-        <td><a href="/consultant/jobs/<%= consultant.email %>"><%= consultant.email %></a></td>
+        <td><a href="/consultant/<%= consultant.email %>/jobs"><%= consultant.email %></a></td>
         <td><%= consultant.first_name %></td>
         <td><%= consultant.last_name %></td>
         <td><%= consultant.team %></td>

@@ -10,7 +10,7 @@
           <h3 class="panel-title">Project Details</h3>
         </div>
         <div class="panel-body">
-          <form role="form" id="primary" method="post" action="/requests/addproject" enctype="multipart/form-data">
+          <form role="form" id="primary" method="post" action="/consultant/<%= consultant.email %>/projects/add" enctype="multipart/form-data">
             <!-- projects -->
             <div class="projects">
               <div id="parentprojectwrapper">
