@@ -3,7 +3,7 @@ class EmailJobPosting < Struct.new(:settings, :admin, :job, :user, :notes)
   def perform
     email_body = <<EOBODY
       <p>Hi,</p>
-      <p><strong>#{admin}</strong> sent the following link: <a href="#{job.url}">#{job.title}</a> for the job posting. Please take a look at this posting.</p>
+      <p><strong>#{admin}</strong> sent the following job posting: <strong>#{job.title}</strong>. Please take a look at this posting in the <a href="#{http://sync.cloudwick.com}">Sync portal</a>.</p>
       <p>Job Details:</p>
       <table width="100%" border="0" cellspacing="0" cellpading="0">
         <tr>
