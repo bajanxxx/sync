@@ -92,6 +92,13 @@
                             <a href="#" id="removeusecase<%= usecaseindex %>" class="btn btn-danger btn-xs pull-right"><span class="glyphicon glyphicon-remove"></span></a>
                             <% end %>
                           </legend>
+                          <!-- use case unique name -->
+                          <div class="form-group">
+                            <label class="control-label" for="uc<%= usecaseindex %>name">Usecase Name</label>
+                            <div class="">
+                              <input id="uc<%= usecaseindex %>name" name="uc<%= usecaseindex %>name" class="form-control" placeholder="Give a unique name to the usecase so that you could refer to it later.">
+                            </div>
+                          </div>
                           <!-- use case description -->
                           <div class="form-group">
                             <label class="control-label" for="uc<%= usecaseindex %>description">Usecase Description</label>
@@ -426,6 +433,10 @@ $(document).ready(function() {
                 min: 5,
                 max: 30,
                 message: 'The name of the project must be more than 5 and less than 30 characters long'
+            },
+            regexp: {
+                regexp: /^[a-zA-Z0-9_.-:]+$/,
+                message: 'Name of the project can only consist of alphabetical, number, period, underscore and hyphen'
             }
           }
         },
@@ -468,6 +479,23 @@ $(document).ready(function() {
                     options2 = options.split(',');
                 return (options2 !== null && options2.length >= 1 && options2.length <= 10);
               }
+            }
+          }
+        },
+        uc0name: {
+          message: 'Enter a name for the usecase',
+          validators: {
+            notEmpty: {
+              message: 'Usecase name for the project cannot be empty, usecase name should be unique with in a project'
+            },
+            stringLength: {
+                min: 5,
+                max: 25,
+                message: 'Usecase name could be between 5 and 25 characters long'
+            },
+            regexp: {
+                regexp: /^[a-zA-Z0-9_.-:]+$/,
+                message: 'Name of the project can only consist of alphabetical, number, period, underscore and hyphen'
             }
           }
         },
