@@ -268,7 +268,7 @@ class Sync < Sinatra::Base
   # The error handlers will only be invoked, however, if both the Sinatra
   # :raise_errors and :show_exceptions configuration options have been set to false.
   error do
-    error_msg = request.env['sinatra.error'].name
+    error_msg = request.env['sinatra.error']
     erb :error, :locals => { error_msg: error_msg }
   end
 
@@ -596,17 +596,93 @@ Admin</a> </p>
     erb :consultant_add_project, locals: { consultant: Consultant.find_by(email: id) }
   end
 
-  post '/consultant/:id/projects/add' do
+  post '/consultant/:id/projects/add' do |id|
     content_type :text
     success = true
     message = "Sucessfully added project"
 
     ap params
+    project_name = params[:name]
 
-    # Process params and store
-    # First process required fields
-    
-    # Check if the user has previously filled out the form
+    details = Detail.find_by(consultant_id: id)
+    begin
+      details.projects.find_by(name: project_name)
+    rescue Mongoid::Errors::DocumentNotFound
+      # project with the same name does not exist
+      details.projects << Project.new(
+        name: project_name,
+        client: params[:client],
+        title: params[:jobtitle],
+        software: params[:softwareused].split(','),
+        management_tools: params[:managementtoolsused].split(','),
+        commercial_support: params[:commercialsupport].split(',')
+      )
+      details.save
+
+      # upload illustration if any
+      if params[:illustrations]
+        params[:illustrations].each do |illustration|
+          file_name = "#{id}_#{project_name}_#{Time.now.getutc.to_i}_#{illustration[:filename]}"
+          illustration_id = upload_file(illustration[:tempfile], file_name)
+          if illustration_id
+            details.projects.find_by(name: project_name).illustrations << Illustration.new(
+              file_id: illustration_id,
+              filename: file_name,
+              uploaded_date: DateTime.now
+            )
+          end
+        end
+      end
+      # upload project documents if any
+      if params[:documents]
+        params[:documents].each do |document|
+          file_name = "#{id}_#{project_name}_#{Time.now.getutc.to_i}_#{document[:filename]}"
+          document_id = upload_file(document[:tempfile], file_name)
+          if document_id
+            details.projects.find_by(name: project_name).projectdocuments << ProjectDocument.new(
+              file_id: document_id,
+              filename: file_name,
+              uploaded_date: DateTime.now
+            )
+          end
+        end
+      end
+
+      5.times do |usecase_index|
+        unless params["uc#{usecase_index}name".to_sym].empty?
+          begin
+            details.projects.find_by(name: project_name).usecases.find_by(name: params["uc#{usecase_index}name".to_sym])
+          rescue Mongoid::Errors::DocumentNotFound
+            details.projects.find_by(name: project_name).usecases << UseCase.new(
+              name: params["uc#{usecase_index}name".to_sym],
+              description: params["uc#{usecase_index}description".to_sym]
+            )
+            details.save
+            # create requirements
+            5.times do |req_index|
+              unless params["uc#{usecase_index}requirementdesc#{req_index}".to_sym].empty?
+                details.projects.find_by(name: project_name).usecases.find_by(name: params["uc#{usecase_index}name".to_sym]).requirements << Requirement.new(
+                  requirement: params["uc#{usecase_index}requirementdesc#{req_index}".to_sym],
+                  approch: params["uc#{usecase_index}approch#{req_index}".to_sym],
+                  effort: params["uc#{usecase_index}effort#{req_index}".to_sym],
+                  tools: params["uc#{usecase_index}tools#{req_index}".to_sym].split(','),
+                  resources: params["uc#{usecase_index}resources#{req_index}".to_sym],
+                  insights: params["uc#{usecase_index}insights#{req_index}".to_sym]
+                )
+              end
+            end
+          else
+            # usecase with the name already exists
+            success = false
+            message = "Failed to add usecase as the usecase_name: #{usecase_index} already exists for project: #{project_name}"
+          end
+        end
+      end
+    else
+      # project with same name exists
+      success = false
+      message = "Failed to add project as the project_name: #{project_name} already exists"
+    end
 
     { success: success, msg: message }.to_json
   end
