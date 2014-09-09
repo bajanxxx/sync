@@ -232,6 +232,7 @@
                   </div>
                   <div class="span3"></div>
                 </div>
+                <p id="CreateProjectRequest" class="text-center"></p>
               </div>
             </div>
           </form>
@@ -628,6 +629,7 @@ $(document).ready(function() {
 
       // Get the form instance
       var $form = $(e.target);
+
       // var data = new FormData($form);
 
       // Get the BootstrapValidator instance
@@ -637,7 +639,7 @@ $(document).ready(function() {
       $.ajax({
         type: "POST",
         url: $form.attr('action'),
-        data: new FormData($form[0]),
+        data: new FormData($form[0]), // make sure we send files as a part of data
         cache: false,
         contentType: false,
         processData: false,
@@ -645,14 +647,17 @@ $(document).ready(function() {
         success: function(data) {
           if(!data.success) {
             console.log("Error: " + data.msg);
+            $('#CreateProjectRequest').addClass('text-danger').html(data.msg);
           } else {
             console.log("Sucess: " + data.msg);
+            $('#CreateProjectRequest').addClass('text-info').html(data.msg);
             location.href = "/consultant/<%= consultant.email %>/projects";
             // location.reload();
           }
         },
         error: function(data) {
           console.log("Error: " + data);
+          $('#CreateProjectRequest').addClass('text-danger').html(data.msg);
         }
       });
     });
