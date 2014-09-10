@@ -176,6 +176,10 @@
   });
 
   $('#gobackinternal').click(function() {
+    _this = $(this);
+    _this.html('<em>Read ...</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
     $.ajax({
       type: "POST",
       url: "/job/" + job_id + "/read",
