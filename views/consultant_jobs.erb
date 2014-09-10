@@ -113,7 +113,7 @@
           <form role="form" id="upload" method="post" action="/upload/resume/<%= consultant.email %>" enctype="multipart/form-data">
             <input type="file" class="form-control" title="Select resumes to upload" name="resumes[]" data-filename-placement="inside" multiple />
             <ul id="fileList"></ul>
-            <button type="submit" class="btn btn-primary" id="SubmitBtn"><i class="fa fa-cloud-upload fa-lg"></i> Upload Resumé</button>
+            <button type="submit" class="btn btn-primary center-block" id="SubmitBtn"><i class="fa fa-cloud-upload fa-lg"></i> Upload Resumé</button>
             <!-- <input type="submit" class="btn btn-primary btn-md" value="Upload Resumé"/> -->
           </form>
         </div>
@@ -218,7 +218,6 @@ $(document).ready(function() {
       );
 
       $('#deletebtn<%= job_application[:application_id] %>').click(function(){
-        console.log("Clicked!!!");
         if ($('#<%= job_application[:application_id] %>-closing_status').text() == 'Empty') {
           console.log($('#<%= job_application[:application_id] %>-closing_status').text());
           alert("Closing status should be updated.");

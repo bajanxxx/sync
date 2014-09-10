@@ -23,7 +23,7 @@
         <tr>
           <td width="35%"><strong>Team</strong></td>
           <td width="65%">
-            <a href="#" id="team"><%= consultant.team %></a>
+            <a href="#" id="team"><%= consultant.team || 'Ask Admin to Update' %></a>
           </td>
         </tr>
         <tr>
@@ -296,12 +296,13 @@ $(document).ready(function() {
   });
 
   //make status editable
+  <% if @admin_user %>
   $('#team').editable({
-      type: 'select',
-      title: 'Select team',
+      type: 'text',
+      title: 'Enter user team',
       placement: 'right',
       value: '<%= consultant.team %>',
-      source: '/consultant/teams', // fetch the teams avaiable from remote url
+      // source: '/consultant/teams', // fetch the teams avaiable from remote url
       pk: '<%= consultant.email %>',
       name: 'team',
       url: '/consultant/update',
@@ -309,6 +310,7 @@ $(document).ready(function() {
         if(!response.status) return response.msg;
       },
   });
+  <% end %>
 
   $('#company').editable({
     type: 'text',
