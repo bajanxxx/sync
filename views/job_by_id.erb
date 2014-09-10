@@ -22,8 +22,7 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button id="SendToConsultantButton" type="button" class="btn btn-primary">Send</button>
+        <button id="SendToConsultantButton" type="button" class="btn btn-large btn-primary center-block">Send</button>
       </div>
     </div>
   </div>
@@ -214,10 +213,12 @@
     });
   });
   $('#SendToConsultantButton').click(function(){
+    _this = $(this);
+    _this.html('<em>Sending ...</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
     var email = $('select[name="ConsultantEmail"]').val();
     var notes = $('textarea[name="ConsultantEmailNotes"]').val();
-    console.log(email);
-    $('#SendToConsultantFormLabel').html('Sending email & updating user ...');
     $.ajax({
       type: "POST",
       url: "/consultant/send_posting/" + email + "/" + job_id,
@@ -228,11 +229,17 @@
         history.go(-1);
       },
       error: function(e) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Try Again !');
         $('#SendToConsultantFormLabel').addClass('text-danger').html('Something went wrong sending email!!!');
       }
     });
   });
   $('#ApplyNowButton').click(function(){
+    _this = $(this);
+    _this.html('<em>Applying ...</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
     var email  = $('select[name="ApplyNowConsultantEmail"]').val();
     var resume_name = $('select[name="ApplyNowConsultantResume"]').val();
     var vendor_email = $('#ApplyNowVendorEmail').val();
@@ -248,6 +255,8 @@
         history.go(-1);
       },
       error: function(e) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Apply Now');
         $('#ApplyNowFormLabel').addClass('text-danger').html('Something went wrong sending email!!!');
       }
     });
@@ -265,6 +274,10 @@
     });
   });
   $('#FORGET_POST').click(function() {
+    _this = $(this);
+    _this.html('<em>Forgetting ...</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
     $.ajax({
       type: "POST",
       url: "/job/" + job_id + "/forget",
@@ -272,6 +285,8 @@
         history.go(-1);
       },
       error: function(e){
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Forget');
         alert("Error occurred");
       }
     });
@@ -280,6 +295,10 @@
   <% if !tracking.empty? %>
     <% tracking.each do |application| %>
     $('#SendNotification<%= application.id %>').click(function() {
+      _this = $(this);
+      _this.html('<i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
       $.ajax({
         type: "POST",
         url: "/consultant/send_reminder/<%= application.consultant_id %>",
@@ -288,6 +307,8 @@
           location.reload();
         },
         error: function(e) {
+          _this.attr('disabled', false); // no double submit
+          _this.html('<span class="glyphicon glyphicon-send"></span>');
         }
       });
     });
