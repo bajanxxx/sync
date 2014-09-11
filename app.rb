@@ -1184,7 +1184,7 @@ Admin</a> </p>
 
   get '/job/:id' do |id|
     job = Job.find(id)
-    consultant_emails = Consultant.all.pluck(:email)
+    consultant_emails = Consultant.asc(:first_name).all.pluck(:email)
     resumes = {}
     # { email => { Resumes } }
     consultant_emails.each do |email|
@@ -1194,7 +1194,7 @@ Admin</a> </p>
         :locals =>
         {
           :job         => Job.find(id),
-          :consultants => Consultant.all.pluck(:email), # for sending emails
+          :consultants => consultant_emails, # for sending emails
           :resumes     => resumes,
           :tracking    => Application.where(job_url: job.url)
         }

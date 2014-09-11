@@ -91,10 +91,10 @@ RAILS_ENV='production' unicorn --config-file config/unicorn.rb --host 0.0.0.0 --
 /etc/init.d/nginx start
 ```
 
-**Starting 4 delayed_job processes:**
+**Starting 8 delayed_job processes:**
 
 ```
-RAILS_ENV=production bin/delayed_job.rb -n 4 start
+RAILS_ENV=production bin/delayed_job.rb -n 8 start
 ```
 
 **stopping and restarting all processes**
@@ -102,11 +102,11 @@ RAILS_ENV=production bin/delayed_job.rb -n 4 start
 ```
 cd /opt/sync
 cat tmp/pids/unicorn.pid | xargs kill -QUIT
-RAILS_ENV=production bin/delayed_job.rb -n 4 stop
+RAILS_ENV=production bin/delayed_job.rb stop
 /etc/init.d/nginx stop
 
 RAILS_ENV='production' unicorn --config-file config/unicorn.rb --host 0.0.0.0 --port 9292 --env development --daemonize config.ru
-RAILS_ENV=production bin/delayed_job.rb -n 4 start
+RAILS_ENV=production bin/delayed_job.rb -n 8 start
 /etc/init.d/nginx start
 ```
 

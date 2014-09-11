@@ -142,10 +142,10 @@ $(document).ready(function() {
             message: 'The resume is required'
           },
           file: {
-            extension: 'pdf',
-            type: 'application/pdf',
+            extension: 'pdf,doc,docx',
+            type: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             maxSize: 5120 * 1024,   // 5 MB
-            message: 'Currently we only accept pdf files with size limit of 5MB'
+            message: 'Currently we only accept pdf, doc, docx files with size limit of 5MB'
           }
         }
       },
