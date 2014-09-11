@@ -56,23 +56,6 @@ class LeaveLetter
         CreationDate: Time.now.strftime('%B %d, %Y')
       }) do |pdf|
 
-      #  pdf.repeat :all do
-      #   # header
-      #   pdf.bounding_box [pdf.bounds.left, pdf.bounds.top], :width  => pdf.bounds.width do
-      #     pdf.font "Helvetica"
-      #     pdf.text "Leave Letter for #{@name}", :align => :center, :size => 25
-      #     pdf.stroke_horizontal_rule
-      #   end
-      #
-      #   # footer
-      #   pdf.bounding_box [pdf.bounds.left, pdf.bounds.bottom + 25], :width  => pdf.bounds.width do
-      #     pdf.font "Helvetica"
-      #     pdf.stroke_horizontal_rule
-      #     pdf.move_down(5)
-      #     pdf.text @footer, :size => 8, align: :center, style: :bold, :color => "007700"
-      #   end
-      # end
-
       # body
       pdf.bounding_box([pdf.bounds.left, pdf.bounds.top - 75], :width  => pdf.bounds.width, :height => pdf.bounds.height - 125) do
         pdf.text "Dated #{@dated_date}", style: :bold, align: :right
@@ -88,17 +71,19 @@ class LeaveLetter
 
         pdf.move_down 20
         body = @template
-        pdf.text body, leading: 10, indent_paragraphs: 60, align: :justify
+        # pdf.text body, leading: 10, indent_paragraphs: 60, align: :justify
+        pdf.text body, inline_format: true
 
         pdf.move_down 20
-        pdf.text "Sincerely,"
 
-        pdf.image StringIO.new(@signature), width: 100, height: 50
-
-        pdf.move_down 20
-        pdf.font("Helvetica", size: 10) do
-          pdf.text "Maninder Chhabra\nCEO\n#{@company}\n#{@address}\nEmail: #{@email}\nCorp Site: #{@url}", inline_format: true
-        end
+        pdf.table([
+            [pdf.make_cell(content: 'Sincerely,', inline_format: true)],
+            [{image: StringIO.new(@signature), image_height: 50, image_width: 100}],
+            [pdf.make_cell(content: "Maninder Chhabra\nCEO\n#{@company}\n#{@address}\nEmail: #{@email}\nCorp Site: #{@url}", inline_format: true)]
+          ],
+          cell_style: {inline_format: true, borders: []},
+          width: pdf.bounds.width
+        )
       end
     end
   end

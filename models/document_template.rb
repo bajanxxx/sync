@@ -3,5 +3,5 @@ class DocumentTemplate
 
   field :name, type: String
   field :content, type: String
-  field :type, type: String # type of template, OFFERLETTER, LEAVELETTER
+  field :type, type: String # type of template, OL, LL, EVL, RL, TA
 end

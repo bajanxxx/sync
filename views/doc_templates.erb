@@ -14,20 +14,41 @@
           </div>
           <div class="form-group">
             <label for="TemplateType">Template Type: </label>
-            <label for="TemplateType">
-              <input type="radio" name="TypeOptions" id="OfferLetterOption" value="OfferLetterOption">
+              <input type="radio" name="TypeOptions" id="OfferLetterOption" value="OL">
               Offer Letter
-            </label>
-            <label for="TemplateType">
-              <input type="radio" name="TypeOptions" id="LeaveLetterOption" value="LeaveLetterOption">
+              <input type="radio" name="TypeOptions" id="LeaveLetterOption" value="LL">
               Leave Letter
-            </label>
+              <input type="radio" name="TypeOptions" id="EmploymentVerificationOption" value="EVL">
+              Employment Verification Letter
+              <input type="radio" name="TypeOptions" id="TrainingAgreementOption" value="TA">
+              Training Agreement
+              <input type="radio" name="TypeOptions" id="SalaryIncrementOption" value="SIL">
+              Salary Increment
+              <input type="radio" name="TypeOptions" id="ReleavingLetterOption" value="RL">
+              Releaving Letter
           </div>
         </form>
         <div id="summernote">Start adding content here...</div>
         <p id="AddTemplateFormLabel" class="text-center"></p>
         <hr />
-        <button id="SubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary">Add</button>
+        <button id="SubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary">Add Template</button>
+        <hr \>
+        <p>
+          <b>Legend</b>: Here are some of the predefined variables that if placed in between '<code>{{ }}</code>' will be replaced by the SYNC.
+          <br />
+          <ul>
+            <li><code>{{name}}</code> - replaces with consultant name</li>
+            <li><code>{{start_date}}</code> - replaces with start date selected in the form by the consultant</li>
+            <li><code>{{end_date}}</code> - replaces with end date selected in the form by the consultant</li>
+            <li><code>{{position}}</code> - replaces with consultant position at the company selected in the form</li>
+            <li><code>{{company}}</code> - replaces with consultant company</li>
+            <li><code>{{location}}</code> - replaces with company location</li>
+            <li><code>{{companyid}}</code> - replaces with company e-verify number</li>
+            <li><code>{{salary}}</code> - replaces with consultant's salary</li>
+            <li><code>{{dated_as}}</code> - replaces with dated as</li>
+            <li><code>{{li}}</code> - replaces with a bullet point</li>
+          </ul>
+        </p>
       </div>
     </div>
   </div>
@@ -121,7 +142,7 @@
     <% templates.each do |template| %>
     <li class="list-group-item">
       <div class="pull-right button-group">
-        <button id="deletebtn<%= template.id %>" class="btn btn-xs btn-default">x</button>
+        <button id="deletebtn<%= template.id %>" class="btn btn-xs btn-default deleteicon" data-original-title="Delete this template"><i class="fa fa-times"></i></button>
       </div>
       <a id="EditTemplate" data-toggle="modal" href="#EditTemplate-<%= template.id %>">
       <strong><%= template.name %></strong> (<%= template.type %>)
@@ -146,7 +167,7 @@
     </h2>
   </div>
   <% if !signatures.empty? %>
-    <div class="row">
+    <div class="row-fluid">
     <% signatures.each do |signature| %>
       <div class="col-lg-2 col-sm-3 col-xs-4">
         <a href="/documents/signatures/<%= signature.file_id %>/render/200x200">
@@ -172,7 +193,7 @@
     </h2>
   </div>
   <% if !layouts.empty? %>
-    <div class="row">
+    <div class="row-fluid">
     <% layouts.each do |layout| %>
       <div class="col-lg-2 col-sm-3 col-xs-4">
         <a href="/documents/layouts/<%= layout.file_id %>/render/200x200">
@@ -190,23 +211,43 @@
 
 <script>
 $(document).ready(function() {
-  $('#summernote').summernote();
+  $('.deleteicon').tooltip();
+
+  $('#summernote').summernote({
+    height: 150,
+    toolbar: [
+      ['options', ['codeview', 'fullscreen']],
+    ]
+  });
 
   $('#SubmitBtn').click(function() {
     var sHTML = $('#summernote').code();
     var name = $('#TemplateName').val();
-    var oltype = false;
-    var lltype = false;
+    var ol = false;
+    var ll = false;
+    var evl = false;
+    var rl = false;
+    var ta = false;
+    var si = false;
+
     if(document.getElementById('OfferLetterOption').checked) {
-      var oltype = true;
+      var ol = true;
     } else if(document.getElementById('LeaveLetterOption').checked) {
-      var lltype = true;
+      var ll = true;
+    } else if (document.getElementById('EmploymentVerificationOption').checked) {
+      var evl = true;
+    } else if (document.getElementById('TrainingAgreementOption').checked) {
+      var ta = true;
+    } else if (document.getElementById('ReleavingLetterOption').checked) {
+      var rl = true;
+    } else if (document.getElementById('SalaryIncrementOption').checked) {
+      var si = true;
     }
     $.ajax({
       type: "POST",
       dataType: "json",
       url: "/documents/templates",
-      data: {'name': name, 'body': sHTML, 'oltype': oltype, 'lltype': lltype},
+      data: {'name': name, 'body': sHTML, 'ol': ol, 'll': ll, 'evl': evl, 'rl': rl, 'ta': ta, 'si': si},
       success: function(data) {
         if(!data.success) {
           console.log("Error: " + data.msg)

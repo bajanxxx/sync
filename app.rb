@@ -209,6 +209,21 @@ class Sync < Sinatra::Base
         end
       end
     end
+
+    def db
+      Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+    end
+
+    def grid
+      Mongo::Grid.new(db)
+    end
+
+    def twilio
+      Twilio::REST::Client.new(
+        @settings[:twilio_account_sid],
+        @settings[:twilio_auth_token]
+      )
+    end
   end
 
   #
@@ -232,12 +247,8 @@ class Sync < Sinatra::Base
                       'ADMIN'
                     end
                   end
-    @db         = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
-    @grid       = Mongo::Grid.new(@db)
-    @twilio     = Twilio::REST::Client.new(
-                    @settings[:twilio_account_sid],
-                    @settings[:twilio_auth_token]
-                  )
+
+    @doc_requests = DocumentRequest.where(status: 'pending').count
 
     # we do not want to redirect to twitter when the path info starts
     # with /auth/
@@ -255,10 +266,10 @@ class Sync < Sinatra::Base
     # end
   end
 
-  after do
-    # make sure we close any open database connection
-    @db.connection.close if !@db.nil?
-  end
+  # after do
+  #   # make sure we close any open database connection
+  #   @db.connection.close if !@db.nil?
+  # end
 
   not_found do
     status 404
@@ -585,11 +596,15 @@ Admin</a> </p>
   end
 
   get '/consultant/:id/projects' do |id|
-    erb :consultant_projects,
-        locals: {
-          consultant: Consultant.find_by(email: id),
-          details: Detail.find_or_create_by(consultant_id: id)
-        }
+    if @username == id || @admin_user
+      erb :consultant_projects,
+          locals: {
+            consultant: Consultant.find_by(email: id),
+            details: Detail.find_or_create_by(consultant_id: id)
+          }
+    else
+      erb :admin_access_req
+    end
   end
 
   get '/consultant/:id/projects/add' do |id|
@@ -694,6 +709,9 @@ Admin</a> </p>
     # Add consultant to list of 'applications' in the 'consultant' document to keep track of
     user = Consultant.find_by(email: email)
 
+    # mark the job posting as read
+    job.update_attribute(:read, true)
+
     Delayed::Job.enqueue(
       EmailJobPosting.new(@settings, @admin_name, job, user, notes),
       queue: 'consultant_emails',
@@ -701,10 +719,9 @@ Admin</a> </p>
       run_at: 1.seconds.from_now
     )
 
-    job.update_attribute(:read, true)
-
     flash[:info] = "Post marked as 'sent to consultant' & 'read' (#{job.title})"
-    redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
+    # redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
+    redirect back
   end
 
   post '/consultant/send_reminder/:email' do |email|
@@ -827,17 +844,17 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
-  get '/consultant/teams' do
-    teams = []
-    Consultant.distinct(:team).sort.each do |team|
-      teams << {value: team, text: team}
-    end
-    if request.xhr? # if this is a ajax request
-      halt 200, teams.to_json
-    else
-      teams.to_json
-    end
-  end
+  # get '/consultants/teams' do
+  #   teams = []
+  #   Consultant.distinct(:team).sort.each do |team|
+  #     teams << {value: team, text: team}
+  #   end
+  #   if request.xhr? # if this is a ajax request
+  #     halt 200, teams.to_json
+  #   else
+  #     teams.to_json
+  #   end
+  # end
 
   ###
   ### => APPLICATIONS
@@ -1197,11 +1214,11 @@ Admin</a> </p>
     # mark the post as forget and dont show this posting down the line
     if trigger == 'forget'
       job.update_attribute(:hide, true)
-      flash[:info] = "Post marked as #{trigger}(#{job.title}). It won't be displayed the next time."
+      flash[:info] = "Post marked as #{trigger} (#{job.title}). It won't be displayed the next time."
     else
       job.add_to_set(:trigger, trigger.upcase)
       job.update_attribute(:read, true) # also mark the job as read
-      flash[:info] = "Post marked as #{trigger}(#{job.title})"
+      flash[:info] = "Post marked as #{trigger} (#{job.title})"
       redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
     end
   end
@@ -1978,11 +1995,11 @@ Admin</a> </p>
     if @admin_user
       erb :documents,
           :locals => {
-            :templates => DocumentTemplate.all,
-            :signatures => DocumentSignature.all,
-            :layouts => DocumentLayout.all,
-            :pending_requests => DocumentRequest.where(status: 'pending'),
-            :approved_requests => DocumentRequest.where(status: 'approved'),
+            :templates            => DocumentTemplate.all,
+            :signatures           => DocumentSignature.all,
+            :layouts              => DocumentLayout.all,
+            :pending_requests     => DocumentRequest.where(status: 'pending'),
+            :approved_requests    => DocumentRequest.where(status: 'approved'),
             :disapproved_requests => DocumentRequest.where(status: 'disapproved'),
           }
     else
@@ -1993,13 +2010,13 @@ Admin</a> </p>
   get '/documents/templates' do
     if @admin_user
       # (signature_images ||= []) << DocumentSignature.all.each do |signature|
-      #   @grid.get(BSON::ObjectId(signature.id)).read
+      #   grid.get(BSON::ObjectId(signature.id)).read
       # end
       erb :doc_templates,
           :locals => {
-            :templates => DocumentTemplate.all,
+            :templates  => DocumentTemplate.all,
             :signatures => DocumentSignature.all,
-            :layouts => DocumentLayout.all
+            :layouts    => DocumentLayout.all
           }
     else
       erb :admin_access_req
@@ -2007,19 +2024,25 @@ Admin</a> </p>
   end
 
   post '/documents/templates' do
-    puts params
     puts CGI.unescapeHTML(params["body"])
     template_name = params[:name]
     template_body = params[:body]
-    template_type = if params[:oltype] == 'true'
-                      'OFFERLETTER'
-                    elsif params[:lltype] == 'true'
-                      'LEAVELETTER'
+    template_type = if params[:ol] == 'true'
+                      'OL'
+                    elsif params[:ll] == 'true'
+                      'LL'
+                    elsif params[:evl] == 'true'
+                      'EVL'
+                    elsif params[:rl] == 'true'
+                      'RL'
+                    elsif params[:ta] == 'true'
+                      'TA'
+                    elsif params[:si] == 'true'
+                      'SI'
                     end
     success    = true
-    message    = "Successfully added email template with name: #{template_name}"
+    message    = "Successfully added email template with name: #{template_name} and type: #{template_type}"
 
-    #{"name"=>"Test", "body"=>"Start adding content here...", "oltype"=>"true", "lltype"=>"false"}
     if template_name.empty? || template_body.empty? || template_type.empty?
       success = false
       message = "fields cannot be empty"
@@ -2044,7 +2067,6 @@ Admin</a> </p>
   end
 
   post '/documents/templates/:id/update_template' do |id|
-    # data: {'name': name, 'type': type, 'body': sHTML},
     template_type = params[:type]
     template_body = params[:body]
     success    = true
@@ -2060,7 +2082,7 @@ Admin</a> </p>
           type: template_type,
           content: template_body
         )
-      rescue Mongoid::Errors::DocumentNotFound # template not found
+      rescue Mongoid::Errors::DocumentNotFound
         success = false
         message = "Something went wrong, document not found!!!"
       end
@@ -2068,7 +2090,7 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
-  # Deletes email template and its associated campaign
+  # Deletes document template
   delete '/documents/templates/:id' do |id|
     DocumentTemplate.find_by(_id: id).delete
   end
@@ -2116,7 +2138,7 @@ Admin</a> </p>
   # also resolves to /documents/signatures/id/render/200x200
   get '/documents/signatures/:id/render/?:size?' do |id, size|
     image_prps = DocumentSignature.find_by(file_id: id)
-    image_file = @grid.get(BSON::ObjectId(id)).read
+    image_file = grid.get(BSON::ObjectId(id)).read
     image = MiniMagick::Image.read(image_file)
     image.resize(size || '100x100')
     send_file(image.path, type: image_prps.type, disposition: 'inline')
@@ -2124,17 +2146,142 @@ Admin</a> </p>
 
   get '/documents/layouts/:id/render/?:size?' do |id, size|
     image_prps = DocumentLayout.find_by(file_id: id)
-    image_file = @grid.get(BSON::ObjectId(id)).read
+    image_file = grid.get(BSON::ObjectId(id)).read
     image = MiniMagick::Image.read(image_file)
     image.resize(size || '100x100')
     send_file(image.path, type: image_prps.type, disposition: 'inline')
   end
 
-  post '/documents/leaveletter/send' do
+  # get '/documents/download/:id' do |file_id|
+  #   document = download_file(file_id)
+  #   response.headers['content_type'] = "application/octet-stream"
+  #   attachment(document.filename)
+  #   response.write(document.read)
+  # end
+
+  # post '/documents/render/:type' do |document_type|
+  #   email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
+  #   cname = params[:name]
+  #   email = params[:email]
+  #   company = params[:company]
+  #   position = params[:position]
+  #   start_date = params[:sdate]
+  #   end_date = params[:edate]
+  #   dated = params[:dated]
+  #   tname = params[:tname]
+  #   sname = params[:sname]
+  #   lname = params[:layout]
+  #   rid = params[:rid] # open present if this a request from consultant
+  #   document_format = ''
+  #   namespace = nil
+
+  #   success    = true
+  #   message    = "Successfully generated #{document_type}"
+
+  #   begin
+  #     signature_id = DocumentSignature.find_by(filename: sname).file_id
+  #     layout_id = DocumentLayout.find_by(filename: lname).file_id
+
+  #     tmp_file = Tempfile.new(cname.downcase.gsub(' ', '_'))
+
+  #     case document_type
+  #     when 'leaveletter'
+  #       if Date.strptime(start_date, "%m/%d/%Y") > Date.strptime(end_date, "%m/%d/%Y")
+  #         success = false
+  #         message = "start date should be less than end date"
+  #       end
+  #       document_format = 'LEAVELETTER'
+  #       namespace = OpenStruct.new(name: cname, start_date: start_date, end_date: end_date)
+  #       # Build an erb template and replace variables
+  #       template_content = DocumentTemplate.find_by(name: tname).content
+  #       erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+  #       template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+  #     when 'offerletter'
+  #       document_format = 'OFFERLETTER'
+  #       namespace = OpenStruct.new(
+  #         name: cname,
+  #         start_date: start_date,
+  #         position: position,
+  #         li: '•'
+  #       )
+  #       # Build an erb template and replace variables
+  #       template_content = DocumentTemplate.find_by(name: tname).content
+  #       erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+  #       template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+  #     when 'employmentletter'
+  #       document_format = 'EMPLOYMENTLETTER'
+  #       namespace = OpenStruct.new(name: cname, start_date: start_date, position: position)
+  #       # Build an erb template and replace variables
+  #       template_content = DocumentTemplate.find_by(name: tname).content
+  #       erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+  #       template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+  #     end
+
+  #     if email !~ email_regex
+  #       success = false
+  #       message = "email not formatted properly"
+  #     else
+  #       case document_type
+  #       when 'leaveletter'
+  #         LeaveLetter.new(
+  #           cname,
+  #           company,
+  #           grid.get(BSON::ObjectId(signature_id)).read,
+  #           grid.get(BSON::ObjectId(layout_id)).read,
+  #           Date.strptime(start_date, "%m/%d/%Y").strftime('%B %d, %Y'),
+  #           Date.strptime(end_date, "%m/%d/%Y").strftime('%B %d, %Y'),
+  #           Date.strptime(dated, "%m/%d/%Y").strftime('%B %d, %Y'),
+  #           template,
+  #           tmp_file.path
+  #         ).build!
+  #       when 'offerletter'
+  #         OfferLetter.new(
+  #           cname,
+  #           company,
+  #           grid.get(BSON::ObjectId(signature_id)).read,
+  #           grid.get(BSON::ObjectId(layout_id)).read,
+  #           Date.strptime(start_date, "%m/%d/%Y").strftime('%B %d, %Y'),
+  #           Date.strptime(dated, "%m/%d/%Y").strftime('%B %d, %Y'),
+  #           template,
+  #           tmp_file.path
+  #         ).build!
+  #       when 'employmentletter'
+  #         EmploymentLetter.new(
+  #           cname,
+  #           company,
+  #           grid.get(BSON::ObjectId(signature_id)).read,
+  #           grid.get(BSON::ObjectId(layout_id)).read,
+  #           Date.strptime(start_date, "%m/%d/%Y").strftime('%B %d, %Y'),
+  #           Date.strptime(dated, "%m/%d/%Y").strftime('%B %d, %Y'),
+  #           template,
+  #           tmp_file.path
+  #         ).build!
+  #       end
+  #       success = true
+  #       message = "Sucessfully sent #{document_type} to #{cname}"
+  #       file_id = upload_file(tmp_file.path, Pathname.new(tmp_file.path).basename.to_s)
+  #       if file_id
+  #         redirect "/documents/download/#{file_id}"
+  #       else
+  #         success = false
+  #         message = 'Failed rendering file to mongo'
+  #       end
+  #     end
+  #   rescue ArgumentError
+  #     success = false
+  #     message = "Cannot parse date format (expected format: mm/dd/yyyy)"
+  #   ensure
+  #     tmp_file.close
+  #   end
+  #   { success: success, msg: message }.to_json
+  # end
+
+  post '/documents/send/:type' do |document_type|
     email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
     cname = params[:name]
     email = params[:email]
     company = params[:company]
+    position = params[:position]
     start_date = params[:sdate]
     end_date = params[:edate]
     dated = params[:dated]
@@ -2142,49 +2289,105 @@ Admin</a> </p>
     sname = params[:sname]
     lname = params[:layout]
     rid = params[:rid] # open present if this a request from consultant
-
-    # Build an erb template and replace variables
-    namespace = OpenStruct.new(name: cname, start_date: start_date, end_date: end_date)
-    template_content = DocumentTemplate.find_by(name: tname).content
-    erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
-    template = ERB.new(erb_template).result(namespace.instance_eval {binding})
-
-    signature_id = DocumentSignature.find_by(filename: sname).file_id
-    layout_id = DocumentLayout.find_by(filename: lname).file_id
+    document_format = ''
+    namespace = nil
 
     success    = true
-    message    = "Successfully sent leaveletter to #{email}"
+    message    = "Successfully sent #{document_type} to #{email}"
+
     begin
-      if Date.strptime(start_date, "%m/%d/%Y") > Date.strptime(end_date, "%m/%d/%Y")
-        success = false
-        message = "start date should be less than end date"
-      elsif email !~ email_regex
+      signature_id = DocumentSignature.find_by(filename: sname).file_id
+      layout_id = DocumentLayout.find_by(filename: lname).file_id
+
+      case document_type
+      when 'leaveletter'
+        if Date.strptime(start_date, "%m/%d/%Y") > Date.strptime(end_date, "%m/%d/%Y")
+          success = false
+          message = "start date should be less than end date"
+        end
+        document_format = 'LEAVELETTER'
+        namespace = OpenStruct.new(name: cname, start_date: start_date, end_date: end_date)
+        # Build an erb template and replace variables
+        template_content = DocumentTemplate.find_by(name: tname).content
+        erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+        template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+
+        generate_document_opts = {
+          cname: cname,
+          company: company,
+          signature_id: signature_id,
+          layout_id: layout_id,
+          start_date: start_date,
+          end_date: end_date,
+          dated: dated,
+          template: template
+        }
+      when 'offerletter'
+        document_format = 'OFFERLETTER'
+        namespace = OpenStruct.new(
+          name: cname,
+          start_date: start_date,
+          position: position,
+          li: '•'
+        )
+        # Build an erb template and replace variables
+        template_content = DocumentTemplate.find_by(name: tname).content
+        erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+        template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+
+        generate_document_opts = {
+          cname: cname,
+          company: company,
+          signature_id: signature_id,
+          layout_id: layout_id,
+          start_date: start_date,
+          dated: dated,
+          template: template
+        }
+      when 'employmentletter'
+        document_format = 'EMPLOYMENTLETTER'
+        namespace = OpenStruct.new(name: cname, start_date: start_date, position: position)
+        # Build an erb template and replace variables
+        template_content = DocumentTemplate.find_by(name: tname).content
+        erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+        template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+
+        generate_document_opts = {
+          cname: cname,
+          company: company,
+          signature_id: signature_id,
+          layout_id: layout_id,
+          start_date: start_date,
+          dated: dated,
+          template: template
+        }
+
+      end
+
+      if email !~ email_regex
         success = false
         message = "email not formatted properly"
       else
         Delayed::Job.enqueue(
-          GenerateDocument.new(email, @settings, 'LEAVELETTER', @admin_name,
-            @grid.get(BSON::ObjectId(signature_id)).read,
-            @grid.get(BSON::ObjectId(layout_id)).read,
-            { cname: cname,
-              company: company,
-              signature_id: signature_id,
-              layout_id: layout_id,
-              start_date: start_date,
-              end_date: end_date,
-              dated: dated,
-              template: template }
+          GenerateDocument.new(email, @settings, document_format, @admin_name,
+            grid.get(BSON::ObjectId(signature_id)).read,
+            grid.get(BSON::ObjectId(layout_id)).read,
+            generate_document_opts
           ),
           queue: 'consultant_document_requests',
           priority: 10,
           run_at: 1.seconds.from_now
         )
-        # If this a request being approved mark as approved and by whom
+        # If this a request made by consultant mark the status of the request
         if rid
-          DocumentRequest.find(rid).update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
+          DocumentRequest.find(rid).update_attributes(
+            status: 'approved',
+            approved_by: @admin_name,
+            approved_at: DateTime.now
+          )
         end
         success = true
-        message = "Sucessfully sent leaveletter to #{cname}"
+        message = "Sucessfully sent #{document_type} to #{cname}"
       end
     rescue ArgumentError
       success = false
@@ -2194,121 +2397,117 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
-  post '/documents/offerletter/send' do
+  # send the documents to admin instead
+  # TODO replace this with download/preview of documents
+  post '/documents/send/:type/admin' do |document_type|
     email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
     cname = params[:name]
     email = params[:email]
     company = params[:company]
+    position = params[:position]
     start_date = params[:sdate]
+    end_date = params[:edate]
     dated = params[:dated]
     tname = params[:tname]
     sname = params[:sname]
     lname = params[:layout]
     rid = params[:rid] # open present if this a request from consultant
-
-    # Build an erb template and replace variables
-    namespace = OpenStruct.new(name: cname, start_date: start_date)
-    template_content = DocumentTemplate.find_by(name: tname).content
-    erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
-    template = ERB.new(erb_template).result(namespace.instance_eval {binding})
-
-    signature_id = DocumentSignature.find_by(filename: sname).file_id
-    layout_id = DocumentLayout.find_by(filename: lname).file_id
+    document_format = ''
+    namespace = nil
 
     success    = true
-    message    = "Successfully sent offerletter to #{email}"
+    message    = "Successfully sent #{document_type} to #{email}"
+
     begin
+      signature_id = DocumentSignature.find_by(filename: sname).file_id
+      layout_id = DocumentLayout.find_by(filename: lname).file_id
+
+      case document_type
+      when 'leaveletter'
+        if Date.strptime(start_date, "%m/%d/%Y") > Date.strptime(end_date, "%m/%d/%Y")
+          success = false
+          message = "start date should be less than end date"
+        end
+        document_format = 'LEAVELETTER'
+        namespace = OpenStruct.new(name: cname, start_date: start_date, end_date: end_date)
+        # Build an erb template and replace variables
+        template_content = DocumentTemplate.find_by(name: tname).content
+        erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+        template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+
+        generate_document_opts = {
+          cname: cname,
+          company: company,
+          signature_id: signature_id,
+          layout_id: layout_id,
+          start_date: start_date,
+          end_date: end_date,
+          dated: dated,
+          template: template
+        }
+      when 'offerletter'
+        document_format = 'OFFERLETTER'
+        namespace = OpenStruct.new(
+          name: cname,
+          start_date: start_date,
+          position: position,
+          li: '•'
+        )
+        # Build an erb template and replace variables
+        template_content = DocumentTemplate.find_by(name: tname).content
+        erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+        template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+
+        generate_document_opts = {
+          cname: cname,
+          company: company,
+          signature_id: signature_id,
+          layout_id: layout_id,
+          start_date: start_date,
+          dated: dated,
+          template: template
+        }
+      when 'employmentletter'
+        document_format = 'EMPLOYMENTLETTER'
+        namespace = OpenStruct.new(name: cname, start_date: start_date, position: position)
+        # Build an erb template and replace variables
+        template_content = DocumentTemplate.find_by(name: tname).content
+        erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
+        template = ERB.new(erb_template).result(namespace.instance_eval {binding})
+
+        generate_document_opts = {
+          cname: cname,
+          company: company,
+          signature_id: signature_id,
+          layout_id: layout_id,
+          start_date: start_date,
+          dated: dated,
+          template: template
+        }
+
+      end
+
       if email !~ email_regex
         success = false
         message = "email not formatted properly"
       else
         Delayed::Job.enqueue(
-          GenerateDocument.new(email, @settings, 'OFFERLETTER', @admin_name,
-            @grid.get(BSON::ObjectId(signature_id)),
-            @grid.get(BSON::ObjectId(layout_id)),
-            { cname: cname,
-              company: company,
-              signature_id: signature_id,
-              layout_id: layout_id,
-              start_date: start_date,
-              dated: dated,
-              template: template }
+          GenerateDocument.new(@username, @settings, document_format, @admin_name,
+            grid.get(BSON::ObjectId(signature_id)).read,
+            grid.get(BSON::ObjectId(layout_id)).read,
+            generate_document_opts
           ),
           queue: 'consultant_document_requests',
           priority: 10,
           run_at: 1.seconds.from_now
         )
-        # If this a request being approved mark as approved and by whom
-        if rid
-          DocumentRequest.find(rid).update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
-        end
         success = true
-        message = "Sucessfully sent offerletter to #{cname}"
+        message = "Sucessfully sent #{document_type} to #{@username}"
       end
     rescue ArgumentError
       success = false
       message = "Cannot parse date format (expected format: mm/dd/yyyy)"
     end
-    flash[:info] = message
-    { success: success, msg: message }.to_json
-  end
-
-  post '/documents/employmentletter/send' do
-    email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
-    cname = params[:name]
-    email = params[:email]
-    company = params[:company]
-    start_date = params[:sdate]
-    dated = params[:dated]
-    tname = params[:tname]
-    sname = params[:sname]
-    lname = params[:layout]
-    rid = params[:rid] # open present if this a request from consultant
-
-    # Build an erb template and replace variables
-    namespace = OpenStruct.new(name: cname, start_date: start_date)
-    template_content = DocumentTemplate.find_by(name: tname).content
-    erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
-    template = ERB.new(erb_template).result(namespace.instance_eval {binding})
-
-    signature_id = DocumentSignature.find_by(filename: sname).file_id
-    layout_id = DocumentLayout.find_by(filename: lname).file_id
-
-    success    = true
-    message    = "Successfully sent employmentletter to #{email}"
-    begin
-      if email !~ email_regex
-        success = false
-        message = "email not formatted properly"
-      else
-        Delayed::Job.enqueue(
-          GenerateDocument.new(email, @settings, 'EMPLOYMENTLETTER', @admin_name,
-            @grid.get(BSON::ObjectId(signature_id)),
-            @grid.get(BSON::ObjectId(layout_id)),
-            { cname: cname,
-              company: company,
-              signature_id: signature_id,
-              layout_id: layout_id,
-              start_date: start_date,
-              dated: dated,
-              template: template }
-          ),
-          queue: 'consultant_document_requests',
-          priority: 10,
-          run_at: 1.seconds.from_now
-        )
-        # If this a request being approved mark as approved and by whom
-        if rid
-          DocumentRequest.find(rid).update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
-        end
-        success = true
-        message = "Sucessfully sent employment letter to #{cname}"
-      end
-    rescue ArgumentError
-      success = false
-      message = "Cannot parse date format (expected format: mm/dd/yyyy)"
-    end
-    flash[:info] = message
     { success: success, msg: message }.to_json
   end
 
@@ -2325,17 +2524,32 @@ Admin</a> </p>
     redirect "/documents"
   end
 
-  #
-  # => Consultant request managements (Routes open for all)
-  #
-  get '/requests/documents' do
+    get '/requests/documents' do
     erb :doc_requests, :locals => {:error_msg => ''}
   end
 
-  post '/requests/documents' do
+  #
+  # => Document Requests (Consultant Routes)
+  #
+
+  get '/documents/:userid' do |userid|
+    erb :consultant_documents,
+        locals: {
+          consultant: Consultant.find_by(email: userid),
+          pending_requests: DocumentRequest.where(consultant_email: userid, status: 'pending'),
+          previous_requests: DocumentRequest.where(consultant_email: userid, :status.ne => 'pending')
+        }
+  end
+
+  post '/documents/:userid/request' do |userid|
+    ap params
+    success    = true
+    message    = "Successfully created a requests"
+
     fullname = params[:fullname]
-    email = params[:email]
+    email = userid
     company = params[:company]
+    position = params[:position]
     document_type = params[:documenttype]
     llstartdate = params[:llstartdate]
     llenddate = params[:llenddate]
@@ -2345,92 +2559,92 @@ Admin</a> </p>
     elstartdate = params[:elstartdate]
     eldatedas = params[:eldatedas]
 
-    recaptcha_challenge_field = params[:recaptcha_challenge_field]
-    recaptcha_response_field = params[:recaptcha_response_field]
-
-    error_msg = ''
-    dr = nil
-
-    if email !~ /[a-zA-Z0-9._%+-]+@cloudwick.com/
-      error_msg = 'Email is not formatted properly, enter only cloudwick email address.'
+    %w(fullname company position).each do |param|
+      if params[param.to_sym].empty?
+        success = false
+        message = "Param '#{param}' cannot be empty"
+      end
     end
 
-    if !%w(leaveletter offerletter employmentletter).include?(document_type)
-      error_msg = 'Select document type'
+    if !%w(LL OL EVL RL).include?(document_type)
+      success = false
+      message = "Select an appropriate document type"
     else
       case document_type
-      when 'leaveletter'
+      when 'LL'
         if llstartdate.empty? || llenddate.empty? || lldatedas.empty?
-          error_msg = 'Must provide start, end and dated as dates for a leave letter'
+          success = false
+          message = 'Must provide start, end and dated as dates for a leave letter'
         elsif Date.strptime(llstartdate, "%m/%d/%Y") > Date.strptime(llenddate, "%m/%d/%Y")
-          error_msg = 'Start date of leaveletter should be before end date'
+          success = false
+          message = 'Start date of leaveletter should be before end date'
         end
-      when 'offerletter'
+      when 'OL'
         if olstartdate.empty? || oldatedas.empty?
-          error_msg = 'Must provide startdate end dated as dates for offer letter'
+          success = false
+          message = 'Must provide startdate end dated as dates for offer letter'
         end
-      when 'employmentletter'
+      when 'EVL'
         if elstartdate.empty? || eldatedas.empty?
-          error_msg = 'Must provide startdate end dated as dates for employment letter'
+          success = false
+          message = 'Must provide startdate end dated as dates for employment letter'
         end
       end
     end
 
-    if !check_captcha(request.ip, recaptcha_challenge_field, recaptcha_response_field)
-      error_msg = 'Invalid Captcha'
-    end
-
-    if error_msg == ''
-      # Generate Requests
+    if success
       case document_type
-      when 'leaveletter'
+      when 'LL'
         dr = DocumentRequest.create(
           consultant_name: fullname,
           consultant_email: email,
-          document_type: document_type.upcase,
+          position: position,
+          document_type: document_type,
           start_date: llstartdate,
           end_date: llenddate,
           dated: lldatedas,
           company: company
         )
-      when 'offerletter'
+      when 'OL'
         dr = DocumentRequest.create(
           consultant_name: fullname,
           consultant_email: email,
-          document_type: document_type.upcase,
+          position: position,
+          document_type: document_type,
           start_date: olstartdate,
           dated: oldatedas,
           company: company
         )
-      when 'employmentletter'
+      when 'EVL'
         dr = DocumentRequest.create(
           consultant_name: fullname,
           consultant_email: email,
-          document_type: document_type.upcase,
+          position: position,
+          document_type: document_type,
           start_date: elstartdate,
           dated: eldatedas,
           company: company
         )
       end
       # Send email to the admin group
-      Delayed::Job.enqueue(
-        EmailDocumentRequest.new(@settings, @admin_name, dr),
-        queue: 'consultant_document_requests',
-        priority: 10,
-        run_at: 1.seconds.from_now
-      )
+      # TODO remove this comments once testing is done
+      # Delayed::Job.enqueue(
+      #   EmailDocumentRequest.new(@settings, @admin_name, dr),
+      #   queue: 'consultant_document_requests',
+      #   priority: 10,
+      #   run_at: 1.seconds.from_now
+      # )
       # Send an sms to the admin
       @settings[:admin_phone].each do |to_phone|
-        @twilio.account.messages.create(
+        twilio.account.messages.create(
           from: @settings[:twilio_phone],
           to: to_phone,
-          body: "SYNC: #{fullname} sent document request (#{document_type})"
+          body: "SYNC: #{fullname} requested document: (#{document_type})"
         )
       end
-      erb :doc_requests_success, locals: {email: email}
-    else
-      erb :doc_requests, :locals => {:error_msg => error_msg}
     end
+
+    { success: success, msg: message }.to_json
   end
 
   #

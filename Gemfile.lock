@@ -80,6 +80,7 @@ GEM
     prawn (1.2.1)
       pdf-core (~> 0.2.5)
       ttfunk (~> 1.2.0)
+    prawn-table (0.1.0)
     rack (1.5.2)
     rack-flash (0.1.2)
       rack
@@ -141,7 +142,8 @@ DEPENDENCIES
   omniauth-google-oauth2
   parallel
   pony
-  prawn
+  prawn (~> 1.2.1)
+  prawn-table (~> 0.1.0)
   rack-flash
   rake
   rest-client
