@@ -22,6 +22,11 @@
             <span class="help-block"></span>
           </div>
           <div class="form-group">
+            <label for="Position">Consultant position at the company:</label>
+            <input type="text" class="form-control" id="LLPosition" name="Position" placeholder="Position" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
             <label for="templateName">Select a company: </label>
             <select name="LLCompanyName" id="LLCompanyName" class="form-control">
               <option>JB Micro, INC</option>
@@ -67,7 +72,14 @@
         </form>
         <p id="CreateLeaveLetterFormLabel" class="text-center"></p>
         <hr />
-        <button id="SubmitCreateLLBtn" name="SubmitBtn" class="btn btn-large btn-primary">Submit</button>
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="PreviewCreateLLBtn" name="SubmitBtn" class="btn btn-large btn-primary">Preview</button>
+            <button id="SubmitCreateLLBtn" name="SubmitBtn" class="btn btn-large btn-primary">Send Email</button>
+          </div>
+          <div class="span3"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -91,6 +103,11 @@
           <div class="form-group">
             <label for="Email">Email Address of Consultant:</label>
             <input type="email" class="form-control" id="OLEmail" name="Email" placeholder="Email" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="Position">Consultant position at the company:</label>
+            <input type="text" class="form-control" id="OLPosition" name="Position" placeholder="Position" value="" required="required" />
             <span class="help-block"></span>
           </div>
           <div class="form-group">
@@ -135,7 +152,14 @@
         </form>
         <p id="CreateOfferLetterFormLabel" class="text-center"></p>
         <hr />
-        <button id="SubmitCreateOLBtn" name="SubmitBtn" class="btn btn-large btn-primary">Submit</button>
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="PreviewCreateOLBtn" name="SubmitBtn" class="btn btn-large btn-primary">Preview</button>
+            <button id="SubmitCreateOLBtn" name="SubmitBtn" class="btn btn-large btn-primary">Send Email</button>
+          </div>
+          <div class="span3"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -159,6 +183,11 @@
           <div class="form-group">
             <label for="Email">Email Address of Consultant:</label>
             <input type="email" class="form-control" id="ELEmail" name="Email" placeholder="Email" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="Position">Consultant position at the company:</label>
+            <input type="text" class="form-control" id="ELPosition" name="Position" placeholder="Position" value="" required="required" />
             <span class="help-block"></span>
           </div>
           <div class="form-group">
@@ -203,7 +232,14 @@
         </form>
         <p id="CreateEmploymentLetterFormLabel" class="text-center"></p>
         <hr />
-        <button id="SubmitCreateELBtn" name="SubmitBtn" class="btn btn-large btn-primary">Submit</button>
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="PreviewCreateELBtn" name="SubmitBtn" class="btn btn-large btn-primary">Preview</button>
+            <button id="SubmitCreateELBtn" name="SubmitBtn" class="btn btn-large btn-primary">Send Email</button>
+          </div>
+          <div class="span3"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -211,7 +247,7 @@
 
 <!-- Dynamic Modals (Requests made by user) -->
 <!-- dynamic leave letter modals -->
-<% pending_requests.where(document_type: 'LEAVELETTER').each do |request| %>
+<% pending_requests.where(document_type: 'LL').each do |request| %>
   <div class="modal fade" id="CreateLeaveLetter-<%= request.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -229,6 +265,11 @@
             <div class="form-group">
               <label for="Email">Email Address of Consultant:</label>
               <input type="email" class="form-control" id="LLEmail-<%= request.id %>" name="Email-<%= request.id %>" placeholder="Email" value="<%= request.consultant_email %>" required="required" />
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Position">Consultant position at the company:</label>
+              <input type="text" class="form-control" id="LLPosition-<%= request.id %>" name="Position-<%= request.id %>" placeholder="Position" value="<%= request.position %>" required="required" />
               <span class="help-block"></span>
             </div>
             <div class="form-group">
@@ -282,14 +323,21 @@
           </form>
           <p id="CreateLeaveLetterFormLabel-<%= request.id %>" class="text-center"></p>
           <hr />
-          <button id="SubmitCreateLLBtn-<%= request.id %>" name="SubmitBtn-<%= request.id %>" class="btn btn-large btn-primary">Submit</button>
+          <div class="row-fluid">
+            <div class="span3"></div>
+            <div class="span6 text-center">
+              <button id="PreviewCreateLLBtn-<%= request.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Preview</button>
+              <button id="SubmitCreateLLBtn-<%= request.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Send Email</button>
+            </div>
+            <div class="span3"></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 <% end %>
 <!-- dynamic offer letter modals -->
-<% pending_requests.where(document_type: 'OFFERLETTER').each do |request| %>
+<% pending_requests.where(document_type: 'OL').each do |request| %>
 <div class="modal fade" id="CreateOfferLetter-<%= request.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -307,6 +355,11 @@
           <div class="form-group">
             <label for="Email">Email Address of Consultant:</label>
             <input type="email" class="form-control" id="OLEmail-<%= request.id %>" name="Email" placeholder="Email" value="<%= request.consultant_email %>" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="Position">Consultant position at the company:</label>
+            <input type="text" class="form-control" id="OLPosition-<%= request.id %>" name="Position-<%= request.id %>" placeholder="Position" value="<%= request.position %>" required="required" />
             <span class="help-block"></span>
           </div>
           <div class="form-group">
@@ -356,7 +409,14 @@
         </form>
         <p id="CreateOfferLetterFormLabel-<%= request.id %>" class="text-center"></p>
         <hr />
-        <button id="SubmitCreateOLBtn-<%= request.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Submit</button>
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="PreviewCreateOLBtn-<%= request.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Preview</button>
+            <button id="SubmitCreateOLBtn-<%= request.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Send Email</button>
+          </div>
+          <div class="span3"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -364,7 +424,7 @@
 <% end %>
 
 <!-- dynamic employment letter modals -->
-<% pending_requests.where(document_type: 'EMPLOYMENTLETTER').each do |request| %>
+<% pending_requests.where(document_type: 'EVL').each do |request| %>
 <div class="modal fade" id="CreateEmploymentLetter-<%= request.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -382,6 +442,11 @@
           <div class="form-group">
             <label for="Email">Email Address of Consultant:</label>
             <input type="email" class="form-control" id="ELEmail-<%= request.id %>" name="Email" placeholder="Email" value="<%= request.consultant_email %>" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="Position">Consultant position at the company:</label>
+            <input type="text" class="form-control" id="ELPosition-<%= request.id %>" name="Position-<%= request.id %>" placeholder="Position" value="<%= request.position %>" required="required" />
             <span class="help-block"></span>
           </div>
           <div class="form-group">
@@ -431,7 +496,14 @@
         </form>
         <p id="CreateEmploymentLetterFormLabel-<%= request.id %>" class="text-center"></p>
         <hr />
-        <button id="SubmitCreateELBtn-<%= request.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Submit</button>
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="PreviewCreateELBtn-<%= request.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Preview</button>
+            <button id="SubmitCreateELBtn-<%= request.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Send Email</button>
+          </div>
+          <div class="span3"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -484,13 +556,13 @@
     <ul class="list-group">
       <% pending_requests.each do |request| %>
       <li class="list-group-item">
-        <button type="button" id="DisapproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-remove"></span></button>
-        <% if request.document_type == 'LEAVELETTER' %>
-        <button type="button" data-toggle="modal" data-target="#CreateLeaveLetter-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok"></span></button>
-        <% elsif request.document_type == 'OFFERLETTER' %>
-        <button type="button" data-toggle="modal" data-target="#CreateOfferLetter-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok"></span></button>
-        <% else %>
-        <button type="button" data-toggle="modal" data-target="#CreateEmploymentLetter-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok"></span></button>
+        <button type="button" id="DisapproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-remove disapprovebutton" data-original-title="Disapprove this request"></span></button>
+        <% if request.document_type == 'LL' %>
+        <button type="button" data-toggle="modal" data-target="#CreateLeaveLetter-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok approvebutton" data-original-title="Approve this request"></span></button>
+        <% elsif request.document_type == 'OL' %>
+        <button type="button" data-toggle="modal" data-target="#CreateOfferLetter-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok approvebutton" data-original-title="Approve this request"></span></button>
+        <% elsif request.document_type == 'EVL' %>
+        <button type="button" data-toggle="modal" data-target="#CreateEmploymentLetter-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok approvebutton" data-original-title="Approve this request"></span></button>
         <% end %>
         <span><%= request.consultant_name %> has requested <%= request.document_type %></span>
       </li>
@@ -543,15 +615,23 @@
 </div>
 
 <script type="text/javascript">
+$('.approvebutton').tooltip();
+$('.disapprovebutton').tooltip();
+
 $('#LLStartDate').datepicker({});
 $('#LLEndDate').datepicker({});
 $('#LLDatedAsDate').datepicker({});
 $('#SubmitCreateLLBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
   var consultantName = $("#LLConsultantName").val();
   var email = $("#LLEmail").val();
   var company = $("#LLCompanyName").val();
   var sdate = $("#LLStartDate").val();
   var edate = $("#LLEndDate").val();
+  var position = $("#LLPosition").val();
   var dated = $("#LLDatedAsDate").val();
   var tname = $('#LeaveLetterTemplateNameSelected').val();
   var sname = $('#LeaveLetterSignatureSelected').val();
@@ -560,33 +640,86 @@ $('#SubmitCreateLLBtn').click(function() {
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "/documents/leaveletter/send",
-    data: {'name': consultantName, 'email': email, 'company': company, 'sdate': sdate, 'edate': edate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout},
+    url: "/documents/send/leaveletter",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'edate': edate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout},
     success: function(data) {
       if(!data.success) {
-        console.log("Error: " + data.msg)
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
         $('#CreateLeaveLetterFormLabel').addClass('text-danger').html(data.msg);
       } else {
-        console.log("Sucess: " + data.msg)
+        console.log("Sucess: " + data.msg);
+        _this.html("Submitted");
         $('#CreateLeaveLetterFormLabel').addClass('text-info').html(data.msg);
         $('#CreateLeaveLetter').modal('hide');
         location.reload();
       }
     },
     error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
       $('#CreateLeaveLetterFormLabel').addClass('text-danger').html('Something went wrong adding email template!!!');
     }
   });
 });
+$('#PreviewCreateLLBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Rendering</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var consultantName = $("#LLConsultantName").val();
+  var email = $("#LLEmail").val();
+  var company = $("#LLCompanyName").val();
+  var sdate = $("#LLStartDate").val();
+  var edate = $("#LLEndDate").val();
+  var position = $("#LLPosition").val();
+  var dated = $("#LLDatedAsDate").val();
+  var tname = $('#LeaveLetterTemplateNameSelected').val();
+  var sname = $('#LeaveLetterSignatureSelected').val();
+  var layout = $('#LeaveLetterLayoutSelected').val();
+
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/documents/send/leaveletter/admin",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'edate': edate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout},
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Try Again!');
+        $('#CreateLeaveLetterFormLabel').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Sucess: " + data.msg);
+        _this.html("Sent");
+        $('#CreateLeaveLetterFormLabel').addClass('text-info').html(data.msg);
+        // $('#CreateLeaveLetter').modal('hide');
+        // location.reload();
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Render Again!');
+      $('#CreateLeaveLetterFormLabel').addClass('text-danger').html('Something went wrong rendering document!!!');
+    }
+  });
+});
+
 
 $('#OLStartDate').datepicker({});
 $('#OLDatedAsDate').datepicker({});
 $('#SubmitCreateOLBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
   var consultantName = $("#OLConsultantName").val();
   var email = $("#OLEmail").val();
+  var position = $("#OLPosition").val();
   var company = $("#OLCompanyName").val();
   var sdate = $("#OLStartDate").val();
-  var dated = $("$OLDatedAsDate").val();
+  var dated = $("#OLDatedAsDate").val();
   var tname = $('#OfferLetterTemplateNameSelected').val();
   var sname = $('#OfferLetterSignatureSelected').val();
   var layout = $('#OfferLetterLayoutSelected').val();
@@ -594,30 +727,80 @@ $('#SubmitCreateOLBtn').click(function() {
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "/documents/offerletter/send",
-    data: {'name': consultantName, 'email': email, 'company': company, 'sdate': sdate, 'edate': edate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout},
+    url: "/documents/send/offerletter",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout},
     success: function(data) {
       if(!data.success) {
         console.log("Error: " + data.msg)
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Try Again!');
         $('#CreateOfferLetterFormLabel').addClass('text-danger').html(data.msg);
       } else {
-        console.log("Sucess: " + data.msg)
+        console.log("Sucess: " + data.msg);
+        _this.html("Sent");
         $('#CreateOfferLetterFormLabel').addClass('text-info').html(data.msg);
         $('#CreateOfferLetter').modal('hide');
         location.reload();
       }
     },
     error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-send');
+      $('#CreateOfferLetterFormLabel').addClass('text-danger').html('Something went wrong sending offer letter!!!');
+    }
+  });
+});
+$('#PreviewCreateOLBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Rendering</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var consultantName = $("#OLConsultantName").val();
+  var email = $("#OLEmail").val();
+  var position = $("#OLPosition").val();
+  var company = $("#OLCompanyName").val();
+  var sdate = $("#OLStartDate").val();
+  var dated = $("#OLDatedAsDate").val();
+  var tname = $('#OfferLetterTemplateNameSelected').val();
+  var sname = $('#OfferLetterSignatureSelected').val();
+  var layout = $('#OfferLetterLayoutSelected').val();
+
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/documents/send/offerletter/admin",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout},
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg)
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Try Again!');
+        $('#CreateOfferLetterFormLabel').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Sucess: " + data.msg);
+        _this.html("Sent");
+        $('#CreateOfferLetterFormLabel').addClass('text-info').html(data.msg);
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
       $('#CreateOfferLetterFormLabel').addClass('text-danger').html('Something went wrong sending offer letter!!!');
     }
   });
 });
 
+
 $('#ELStartDate').datepicker({});
 $('#ELDatedAsDate').datepicker({});
 $('#SubmitCreateELBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
   var consultantName = $("#ELConsultantName").val();
   var email = $("#ELEmail").val();
+  var position = $("#ELPosition").val();
   var company = $("#ELCompanyName").val();
   var sdate = $("#ELStartDate").val();
   var dated = $("$ELDatedAsDate").val();
@@ -628,32 +811,82 @@ $('#SubmitCreateELBtn').click(function() {
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "/documents/employmentletter/send",
-    data: {'name': consultantName, 'email': email, 'company': company, 'sdate': sdate, 'edate': edate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout},
+    url: "/documents/send/employmentletter",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout},
     success: function(data) {
       if(!data.success) {
-        console.log("Error: " + data.msg)
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
         $('#CreateEmploymentLetterFormLabel').addClass('text-danger').html(data.msg);
       } else {
-        console.log("Sucess: " + data.msg)
+        console.log("Sucess: " + data.msg);
+        _this.html("Submitted");
         $('#CreateEmploymentLetterFormLabel').addClass('text-info').html(data.msg);
         $('#CreateEmploymentLetter').modal('hide');
         location.reload();
       }
     },
     error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
+      $('#CreateEmploymentLetterFormLabel').addClass('text-danger').html('Something went wrong sending employment letter!!!');
+    }
+  });
+});
+$('#PreviewCreateELBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Rendering</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var consultantName = $("#ELConsultantName").val();
+  var email = $("#ELEmail").val();
+  var position = $("#ELPosition").val();
+  var company = $("#ELCompanyName").val();
+  var sdate = $("#ELStartDate").val();
+  var dated = $("$ELDatedAsDate").val();
+  var tname = $('#EmploymentLetterTemplateNameSelected').val();
+  var sname = $('#EmploymentLetterSignatureSelected').val();
+  var layout = $('#EmploymentLetterLayoutSelected').val();
+
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/documents/send/employmentletter/admin",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout},
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Try Again!');
+        $('#CreateEmploymentLetterFormLabel').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Sucess: " + data.msg);
+        _this.html("Sent");
+        $('#CreateEmploymentLetterFormLabel').addClass('text-info').html(data.msg);
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
       $('#CreateEmploymentLetterFormLabel').addClass('text-danger').html('Something went wrong sending employment letter!!!');
     }
   });
 });
 
-<% pending_requests.where(document_type: 'LEAVELETTER').each do |request| %>
+
+<% pending_requests.where(document_type: 'LL').each do |request| %>
 $('#LLStartDate-<%= request.id %>').datepicker({});
 $('#LLEndDate-<%= request.id %>').datepicker({});
 $('#LLDatedAsDate-<%= request.id %>').datepicker({});
 $('#SubmitCreateLLBtn-<%= request.id %>').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
   var consultantName = $("#LLConsultantName-<%= request.id %>").val();
   var email = $("#LLEmail-<%= request.id %>").val();
+  var position = $("#LLPosition-<%= request.id %>").val();
   var company = $("#LLCompanyName-<%= request.id %>").val();
   var dated = $("#LLDatedAsDate-<%= request.id %>").val();
   var sdate = $("#LLStartDate-<%= request.id %>").val();
@@ -666,31 +899,83 @@ $('#SubmitCreateLLBtn-<%= request.id %>').click(function() {
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "/documents/leaveletter/send",
-    data: {'name': consultantName, 'email': email, 'company': company, 'sdate': sdate, 'edate': edate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout, 'rid': rid},
+    url: "/documents/send/leaveletter",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'edate': edate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout, 'rid': rid},
     success: function(data) {
       if(!data.success) {
-        console.log("Error: " + data.msg)
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
         $('#CreateLeaveLetterFormLabel-<%= request.id %>').addClass('text-danger').html(data.msg);
       } else {
-        console.log("Sucess: " + data.msg)
+        console.log("Sucess: " + data.msg);
+        _this.html("Submitted");
         $('#CreateLeaveLetterFormLabel-<%= request.id %>').addClass('text-info').html(data.msg);
         $('#CreateLeaveLetter-<%= request.id %>').modal('hide');
         location.reload();
       }
     },
     error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
+      $('#CreateLeaveLetterFormLabel-<%= request.id %>').addClass('text-danger').html('Something went wrong adding email template!!!');
+    }
+  });
+});
+$('#PreviewCreateLLBtn-<%= request.id %>').click(function() {
+  _this = $(this);
+  _this.html('<em>Rendering</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var consultantName = $("#LLConsultantName-<%= request.id %>").val();
+  var email = $("#LLEmail-<%= request.id %>").val();
+  var position = $("#LLPosition-<%= request.id %>").val();
+  var company = $("#LLCompanyName-<%= request.id %>").val();
+  var dated = $("#LLDatedAsDate-<%= request.id %>").val();
+  var sdate = $("#LLStartDate-<%= request.id %>").val();
+  var edate = $("#LLEndDate-<%= request.id %>").val();
+  var tname = $('#LeaveLetterTemplateNameSelected-<%= request.id %>').val();
+  var sname = $('#LeaveLetterSignatureSelected-<%= request.id %>').val();
+  var layout = $('#LeaveLetterLayoutSelected-<%= request.id %>').val();
+  var rid = '<%= request.id %>';
+
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/documents/send/leaveletter/admin",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'edate': edate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout, 'rid': rid},
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Try Again!');
+        $('#CreateLeaveLetterFormLabel-<%= request.id %>').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Sucess: " + data.msg);
+        _this.html("Sent");
+        $('#CreateLeaveLetterFormLabel-<%= request.id %>').addClass('text-info').html(data.msg);
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
       $('#CreateLeaveLetterFormLabel-<%= request.id %>').addClass('text-danger').html('Something went wrong adding email template!!!');
     }
   });
 });
 <% end %>
-<% pending_requests.where(document_type: 'OFFERLETTER').each do |request| %>
+
+<% pending_requests.where(document_type: 'OL').each do |request| %>
 $('#OLStartDate-<%= request.id %>').datepicker({});
 $('#OLDatedAsDate-<%= request.id %>').datepicker({});
 $('#SubmitCreateOLBtn-<%= request.id %>').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
   var consultantName = $("#OLConsultantName-<%= request.id %>").val();
   var email = $("#OLEmail-<%= request.id %>").val();
+  var position = $("#OLPosition-<%= request.id %>").val();
   var company = $("#OLCompanyName-<%= request.id %>").val();
   var dated = $("#OLDatedAsDate-<%= request.id %>").val();
   var sdate = $("#OLStartDate-<%= request.id %>").val();
@@ -702,31 +987,82 @@ $('#SubmitCreateOLBtn-<%= request.id %>').click(function() {
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "/documents/offerletter/send",
-    data: {'name': consultantName, 'email': email, 'company': company, 'sdate': sdate, 'edate': edate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout, 'rid': rid},
+    url: "/documents/send/offerletter",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout, 'rid': rid},
     success: function(data) {
       if(!data.success) {
-        console.log("Error: " + data.msg)
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
         $('#CreateOfferLetterFormLabel-<%= request.id %>').addClass('text-danger').html(data.msg);
       } else {
-        console.log("Sucess: " + data.msg)
+        console.log("Sucess: " + data.msg);
+        _this.html("Submitted");
         $('#CreateOfferLetterFormLabel-<%= request.id %>').addClass('text-info').html(data.msg);
         $('#CreatOfferLetter-<%= request.id %>').modal('hide');
         location.reload();
       }
     },
     error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
+      $('#CreateOfferLetterFormLabel-<%= request.id %>').addClass('text-danger').html('Something went wrong sending offer letter!!!');
+    }
+  });
+});
+$('#PreviewCreateOLBtn-<%= request.id %>').click(function() {
+  _this = $(this);
+  _this.html('<em>Rendering</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var consultantName = $("#OLConsultantName-<%= request.id %>").val();
+  var email = $("#OLEmail-<%= request.id %>").val();
+  var position = $("#OLPosition-<%= request.id %>").val();
+  var company = $("#OLCompanyName-<%= request.id %>").val();
+  var dated = $("#OLDatedAsDate-<%= request.id %>").val();
+  var sdate = $("#OLStartDate-<%= request.id %>").val();
+  var tname = $('#OfferLetterTemplateNameSelected-<%= request.id %>').val();
+  var sname = $('#OfferLetterSignatureSelected-<%= request.id %>').val();
+  var layout = $('#OfferLetterLayoutSelected-<%= request.id %>').val();
+  var rid = '<%= request.id %>';
+
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/documents/send/offerletter/admin",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout, 'rid': rid},
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Try Again!');
+        $('#CreateOfferLetterFormLabel-<%= request.id %>').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Sucess: " + data.msg);
+        _this.html("Sent");
+        $('#CreateOfferLetterFormLabel-<%= request.id %>').addClass('text-info').html(data.msg);
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
       $('#CreateOfferLetterFormLabel-<%= request.id %>').addClass('text-danger').html('Something went wrong sending offer letter!!!');
     }
   });
 });
 <% end %>
-<% pending_requests.where(document_type: 'EMPLOYMENTLETTER').each do |request| %>
+
+<% pending_requests.where(document_type: 'EVL').each do |request| %>
 $('#ELStartDate-<%= request.id %>').datepicker({});
 $('#ELDatedAsDate-<%= request.id %>').datepicker({});
 $('#SubmitCreateELBtn-<%= request.id %>').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
   var consultantName = $("#ELConsultantName-<%= request.id %>").val();
   var email = $("#ELEmail-<%= request.id %>").val();
+  var position = $("#ELPosition-<%= request.id %>").val();
   var company = $("#ELCompanyName-<%= request.id %>").val();
   var dated = $("#ELDatedAsDate-<%= request.id %>").val();
   var sdate = $("#ELStartDate-<%= request.id %>").val();
@@ -738,20 +1074,65 @@ $('#SubmitCreateELBtn-<%= request.id %>').click(function() {
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "/documents/employmentletter/send",
-    data: {'name': consultantName, 'email': email, 'company': company, 'sdate': sdate, 'edate': edate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout, 'rid': rid},
+    url: "/documents/send/employmentletter",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout, 'rid': rid},
     success: function(data) {
       if(!data.success) {
-        console.log("Error: " + data.msg)
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
         $('#CreateEmploymentLetterFormLabel-<%= request.id %>').addClass('text-danger').html(data.msg);
       } else {
-        console.log("Sucess: " + data.msg)
+        console.log("Sucess: " + data.msg);
+        _this.html("Submitted");
         $('#CreateEmploymentLetterFormLabel-<%= request.id %>').addClass('text-info').html(data.msg);
         $('#CreatEmploymentLetter-<%= request.id %>').modal('hide');
         location.reload();
       }
     },
     error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.html('Re-submit');
+      $('#CreateEmploymentLetterFormLabel-<%= request.id %>').addClass('text-danger').html('Something went wrong sending employment letter!!!');
+    }
+  });
+});
+$('#PreviewCreateELBtn-<%= request.id %>').click(function() {
+  _this = $(this);
+  _this.html('<em>Rendering</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var consultantName = $("#ELConsultantName-<%= request.id %>").val();
+  var email = $("#ELEmail-<%= request.id %>").val();
+  var position = $("#ELPosition-<%= request.id %>").val();
+  var company = $("#ELCompanyName-<%= request.id %>").val();
+  var dated = $("#ELDatedAsDate-<%= request.id %>").val();
+  var sdate = $("#ELStartDate-<%= request.id %>").val();
+  var tname = $('#EmploymentLetterTemplateNameSelected-<%= request.id %>').val();
+  var sname = $('#EmploymentLetterSignatureSelected-<%= request.id %>').val();
+  var layout = $('#EmploymentLetterLayoutSelected-<%= request.id %>').val();
+  var rid = '<%= request.id %>';
+
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/documents/send/employmentletter/admin",
+    data: {'name': consultantName, 'email': email, 'position': position, 'company': company, 'sdate': sdate, 'dated': dated, 'tname': tname, 'sname': sname, 'layout': layout, 'rid': rid},
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Try Again!');
+        $('#CreateEmploymentLetterFormLabel-<%= request.id %>').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Sucess: " + data.msg);
+        _this.html("Sent");
+        $('#CreateEmploymentLetterFormLabel-<%= request.id %>').addClass('text-info').html(data.msg);
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.html('Re-submit');
       $('#CreateEmploymentLetterFormLabel-<%= request.id %>').addClass('text-danger').html('Something went wrong sending employment letter!!!');
     }
   });
@@ -762,7 +1143,11 @@ $('#SubmitCreateELBtn-<%= request.id %>').click(function() {
 $(document).ready(function(){
   <% pending_requests.each do |request| %>
   $('#DisapproveRequest-<%= request.id %>').click(function() {
-    console.log("Initializing call")
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
     $.ajax({
       type: "POST",
       url: "/documents/requests/deny/<%= request.id %>",

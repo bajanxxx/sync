@@ -72,6 +72,7 @@ EOBODY
         },
         attachments: {"#{options[:cname].downcase.gsub(' ', '_')}_#{type.downcase}.pdf" => File.read(tmp_file.path)}
       )
+      # FileUtils.cp(tmp_file.path, "/Users/ashrith/Downloads/test.pdf")
     ensure
       tmp_file.close
     end
