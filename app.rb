@@ -2412,6 +2412,16 @@ Admin</a> </p>
     sname = params[:sname]
     lname = params[:layout]
     rid = params[:rid] # open present if this a request from consultant
+    everify = if company =~/Cloudwick|cloudwick/
+                642485
+              else
+                270262
+              end
+    location = if company =~/Cloudwick|cloudwick/
+                'Newark, California'
+              else
+                'Hayward, California'
+              end
     document_format = ''
     namespace = nil
 
@@ -2429,7 +2439,12 @@ Admin</a> </p>
           message = "start date should be less than end date"
         end
         document_format = 'LEAVELETTER'
-        namespace = OpenStruct.new(name: cname, start_date: start_date, end_date: end_date)
+        namespace = OpenStruct.new(
+          name: cname,
+          start_date: start_date,
+          end_date: end_date,
+          dated_as: dated
+        )
         # Build an erb template and replace variables
         template_content = DocumentTemplate.find_by(name: tname).content
         erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
@@ -2451,7 +2466,10 @@ Admin</a> </p>
           name: cname,
           start_date: start_date,
           position: position,
-          li: '•'
+          li: '•',
+          companyid: everify,
+          location: location,
+          dated_as: dated
         )
         # Build an erb template and replace variables
         template_content = DocumentTemplate.find_by(name: tname).content
@@ -2469,7 +2487,15 @@ Admin</a> </p>
         }
       when 'employmentletter'
         document_format = 'EMPLOYMENTLETTER'
-        namespace = OpenStruct.new(name: cname, start_date: start_date, position: position)
+        namespace = OpenStruct.new(
+          name: cname,
+          start_date: start_date,
+          position: position,
+          companyid: everify,
+          company: company,
+          location: location,
+          dated_as: dated
+        )
         # Build an erb template and replace variables
         template_content = DocumentTemplate.find_by(name: tname).content
         erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
