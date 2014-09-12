@@ -58,26 +58,40 @@
     </h2>
   </div>
   <% if !consultants.empty? %>
-  <table class="table table-hover">
-    <tr>
-      <th>Email</th>
-      <th>First Name</th>
-      <th>Last Name</th>
-      <th>Team</th>
-      <th>Jobs Tracking</th>
-      <th></th>
-    </tr>
-    <% consultants.each_with_index do |consultant, count| %>
-      <tr id="consultant<%= count+1 %>">
-        <td><a href="/consultant/<%= consultant.email %>/jobs"><%= consultant.email %></a></td>
-        <td><%= consultant.first_name %></td>
-        <td><%= consultant.last_name %></td>
-        <td><%= consultant.team %></td>
-        <td><%= consultant.applications.count %></td>
-        <td><a id="deletebutton<%= count+1 %>"></a></td>
-      </tr>
-    <% end %>
-  </table>
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <strong>Consultants</strong>
+    </div>
+    <table class="table table-hover">
+      <thead>
+        <th>Email</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Team</th>
+        <th>Jobs Tracking</th>
+        <th>Projects</th>
+      </thead>
+      <tbody>
+      <% consultants.each_with_index do |consultant, count| %>
+        <tr id="consultant<%= count+1 %>">
+          <td><a href="/consultant/<%= consultant.email %>/jobs"><%= consultant.email %></a></td>
+          <td><%= consultant.first_name %></td>
+          <td><%= consultant.last_name %></td>
+          <td><%= consultant.team %></td>
+          <td><%= consultant.applications.count %></td>
+          <td>
+            <a href="/consultant/<%= consultant.email %>/projects">
+              <%= consultant.has_details? &&
+                  ( consultant.details.has_projects? && consultant.details.projects.count || 0 ) ||
+                  0 # if consultant does not have any details entry in the details collection
+              %>
+            </a>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
   <% else %>
   <div class="bs-callout bs-callout-info">
     <p class="lead">No consultants are added yet. Add using <code>'Add New'</code></p>
@@ -88,119 +102,96 @@
 <script type="text/javascript">
 // On load
 $(document).ready(function(){
-  <% consultants.each_with_index do |consultant, count| %>
-  $('#consultant<%= count+1 %>').hover(
-    function(){ // mouseenter
-      $('#deletebutton<%= count+1 %>').html('x');
-    },
-    function(){ // mouseleave
-      $('#deletebutton<%= count+1 %>').empty();
-    }
-  );
-
-  $('#deletebutton<%= count+1 %>').click(function(){
-    $.ajax({
-      type: "POST",
-      url: "/consultant/delete/<%= consultant.email %>",
-      success: function(data){
-        location.reload();
+  // Add new consultant
+  $(AddNewConsultant).click(function () {
+    jQuery.validator.setDefaults({
+      debug: true,
+      errorClass: 'has-error',
+      validClass: 'has-success',
+      ignore: "",
+      highlight: function (element, errorClass, validClass) {
+        $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
       },
-      error: function(e){
-        alert("Error occurred");
+      unhighlight: function (element, errorClass, validClass) {
+        $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
+        $(element).closest('.form-group').find('.help-block').text('');
+      },
+      errorPlacement: function (error, element) {
+        $(element).closest('.form-group').find('.help-block').text(error.text());
+      },
+      submitHandler: function (form) {
+        return true;
+        // if ($(form).valid()) {
+        //   form.submit();
+        // }
       }
     });
-  });
-  <% end %>
-});
-// Add new consultant
-$(AddNewConsultant).click(function () {
-  jQuery.validator.setDefaults({
-    debug: true,
-    errorClass: 'has-error',
-    validClass: 'has-success',
-    ignore: "",
-    highlight: function (element, errorClass, validClass) {
-      $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
-    },
-    unhighlight: function (element, errorClass, validClass) {
-      $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
-      $(element).closest('.form-group').find('.help-block').text('');
-    },
-    errorPlacement: function (error, element) {
-      $(element).closest('.form-group').find('.help-block').text(error.text());
-    },
-    submitHandler: function (form) {
-      return true;
-      // if ($(form).valid()) {
-      //   form.submit();
-      // }
-    }
-  });
 
-  var firstName = $("#FirstName");
-  var lastName = $("#LastName");
-  var email = $("#Email");
-  var team = $("#Team");
-  var form = $('#AddForm');
-  var submitBtn = $('#SubmitBtn');
+    var firstName = $("#FirstName");
+    var lastName = $("#LastName");
+    var email = $("#Email");
+    var team = $("#Team");
+    var form = $('#AddForm');
+    var submitBtn = $('#SubmitBtn');
 
-  form.validate();
+    form.validate();
 
-  firstName.rules("add", {
-    required: true,
-    rangelength: [3, 20],
-    messages: {
-      required: "You must provide consultants first name.",
-      rangelength: "The first name must be between 3 and 20 characters in length."
-    }
-  });
-  lastName.rules("add", {
-    required: true,
-    rangelength: [3, 20],
-    messages: {
-      required: "You must provide consultants last name.",
-      rangelength: "The last name must be between 3 and 20 characters in length."
-    }
-  });
-  email.rules("add", {
-    required: true,
-    rangelength: [3, 50],
-    messages: {
-      required: "You must provide consultants email address.",
-      rangelength: "The email must be between 3 and 20 characters in length."
-    }
-  });
-  team.rules("add", {
-    required: true,
-    digits: true,
-    max: 15,
-    messages: {
-      required: "You must provide consultants team.",
-      rangelength: "The team number must be less than 15."
-    }
-  });
-
-  form.submit(function () {
-    console.log("Submitting data");
-    $.ajax({
-      type: "POST",
-      dataType: "json",
-      url: "/consultant/new",
-      data: form.serialize(),
-      success: function(data) {
-        if(!data.success) {
-          console.log("Error: " + data.msg)
-          $('#AddConsultantFormLabel').addClass('text-danger').html(data.msg);
-        } else {
-          console.log("Sucess: " + data.msg)
-          $('#AddConsultantFormLabel').addClass('text-info').html(data.msg);
-          $('#AddConsultant').modal('hide');
-          location.reload();
-        }
-      },
-      error: function(data) {
-        $('#AddConsultantFormLabel').addClass('text-danger').html('Something went wrong adding consultant!!!');
+    firstName.rules("add", {
+      required: true,
+      rangelength: [3, 20],
+      messages: {
+        required: "You must provide consultants first name.",
+        rangelength: "The first name must be between 3 and 20 characters in length."
       }
+    });
+    lastName.rules("add", {
+      required: true,
+      rangelength: [3, 20],
+      messages: {
+        required: "You must provide consultants last name.",
+        rangelength: "The last name must be between 3 and 20 characters in length."
+      }
+    });
+    email.rules("add", {
+      required: true,
+      rangelength: [3, 50],
+      messages: {
+        required: "You must provide consultants email address.",
+        rangelength: "The email must be between 3 and 20 characters in length."
+      }
+    });
+    team.rules("add", {
+      required: true,
+      digits: true,
+      max: 15,
+      messages: {
+        required: "You must provide consultants team.",
+        rangelength: "The team number must be less than 15."
+      }
+    });
+
+    form.submit(function () {
+      console.log("Submitting data");
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "/consultant/new",
+        data: form.serialize(),
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg)
+            $('#AddConsultantFormLabel').addClass('text-danger').html(data.msg);
+          } else {
+            console.log("Sucess: " + data.msg)
+            $('#AddConsultantFormLabel').addClass('text-info').html(data.msg);
+            $('#AddConsultant').modal('hide');
+            location.reload();
+          }
+        },
+        error: function(data) {
+          $('#AddConsultantFormLabel').addClass('text-danger').html('Something went wrong adding consultant!!!');
+        }
+      });
     });
   });
 });

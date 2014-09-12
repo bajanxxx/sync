@@ -508,7 +508,7 @@ Admin</a> </p>
   # Display consultants available
   get '/consultants' do
     if @admin_user
-      erb :consultants, :locals => { :consultants => Consultant.all.entries }
+      erb :consultants, :locals => { :consultants => Consultant.asc(:first_name).all.entries }
     else
       erb :admin_access_req
     end
