@@ -1,6 +1,16 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
+    <% if admin_user %>
+    <h2>Jobs Following <small>(<%= consultant.email %>)</small>
+      <p class="pull-right">
+        <a id="ManagePostings" class="btn btn-primary btn-md" role="button">
+          Manage Postings &raquo;
+        </a>
+      </p>
+    </h2>
+    <% else %>
     <h2>Jobs Following <small>(assigned to you)</small></h2>
+    <% end %>
   </div>
   <% if job_applications.empty? %>
   <div class="container theme-showcase" role="main">
@@ -22,11 +32,13 @@
         <% else %>
         <div class="panel panel-info">
         <% end %>
-          <div class="panel-heading">
+          <div class="panel-heading clearfix">
             <% if admin_user %>
             <a href="/job/<%= job_application[:job_id] %>"><strong><%= job_application[:title] %></strong></a>
-            <button id="deletebtn<%= job_application[:application_id] %>" class="btn btn-xs btn-default pull-right">x</button>
-            <button class="btn btn-xs btn-info pull-right"><%= job_application[:vendor] %></button>
+            <div class="btn-group pull-right">
+              <a class="btn btn-xs btn-info"><%= job_application[:vendor] %></a>
+              <a id="deletebtn<%= job_application[:application_id] %>" class="btn btn-xs btn-default deleteicon"><i class="fa fa-times"></i></a>
+            </div>
             <% else %>
             <a href="<%= job_application[:job_url] %>"><strong><%= job_application[:title] %></strong></a>
             <button class="btn btn-xs btn-info pull-right"><%= job_application[:vendor] %></button>
@@ -127,6 +139,26 @@
 $(document).ready(function() {
   $('input[type=file]').bootstrapFileInput();
   $('.file-inputs').bootstrapFileInput();
+
+  var show = false;
+
+  // hide all delete buttons
+  $('.deleteicon').hide();
+
+  $('#ManagePostings').click(function() {
+    _this = $(this);
+
+    if(show) {
+      $('.deleteicon').hide();
+      show = false;
+      _this.html('Manage Postings');
+    } else {
+      $('.deleteicon').show();
+      show = true;
+      _this.html('Hide Delete');
+    }
+  })
+
 
   // validate resume upload
   $('#upload').bootstrapValidator({
