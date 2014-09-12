@@ -587,7 +587,8 @@ Admin</a> </p>
       erb :consultant_jobs,
           :locals => {
             :consultant => consultant,
-            :job_applications => job_applications.sort_by{|h| h[:title]},
+            # sort job applications by posted_date in desc order and then by job's title in asc order
+            :job_applications => job_applications.sort{|a, b| [b[:posted_date], a[:title]] <=> [a[:posted_date], b[:title]]},
             :admin_user => @admin_user
           }
     else
