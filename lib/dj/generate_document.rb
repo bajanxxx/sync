@@ -57,6 +57,7 @@ EOBODY
       send_email_with_attachement(
         email_settings[:email],
         email,
+        email_settings[:admin_group],
         "Sync: The document (#{type}) you requested",
         email_body,
         "#{options[:cname].downcase.gsub(' ', '_')}_#{type.downcase}.pdf",
@@ -80,7 +81,7 @@ EOBODY
     end
   end
 
-  def send_email_with_attachement(from, to, subject, body, attachment_name, attachment)
+  def send_email_with_attachement(from, to, cc, subject, body, attachment_name, attachment)
     begin
       filecontent = File.read(attachment)
       encodedcontent = [filecontent].pack("m") # base64
@@ -93,6 +94,7 @@ EOBODY
     part1 =<<EOF
 From: Cloudwick Sync <#{from}>
 To: #{to}
+Cc: #{cc}
 Subject: #{subject}
 MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary=#{marker}
