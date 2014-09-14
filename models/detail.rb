@@ -1,5 +1,9 @@
 class Detail
   include Mongoid::Document
+  include Mongoid::Versioning
+
+  # keep at most 5 versions of a record
+  max_versions 5
 
   field :trainings, type: Array, default: []
   field :certifications, type: Array, default: []

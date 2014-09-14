@@ -167,12 +167,16 @@
                         <ul class="list-group">
                           <% project.illustrations.each do |illustartion| %>
                           <li class="list-group-item">
-                            <%= illustartion.filename && illustartion.filename.split('_', 4).last %>
+                            <a href="/download/<%= illustration.file_id %>">
+                              <%= illustartion.filename && illustartion.filename.split('_', 4).last %>
+                            </a>
                           </li>
                           <% end %>
                           <% project.projectdocuments.each do |document| %>
                           <li class="list-group-item">
-                            <%= document.filename && document.filename.split('_', 4).last %>
+                            <a href="/download/<%= document.file_id %>">
+                              <%= document.filename && document.filename.split('_', 4).last %>
+                            </a>
                           </li>
                           <% end %>
                         </ul>

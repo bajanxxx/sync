@@ -2799,6 +2799,17 @@ Admin</a> </p>
   end
 
   #
+  # => Generic routes
+  #
+  # Download a file by its id from mongo
+  get '/download/:id' do |id|
+    file = download_file(id)
+    response.headers['content_type'] = "application/octet-stream"
+    attachment(file.filename)
+    response.write(file.read)
+  end
+
+  #
   # => HELPERS
   #
 
