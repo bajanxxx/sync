@@ -13,9 +13,11 @@ class Project
   field :management_tools, type: Array, default: [] # management tools used
   field :commercial_support, type: Array, default: []
 
+  embedded_in :detail, class_name: 'Detail'
   embeds_many :usecases, class_name: 'UseCase'
   accepts_nested_attributes_for :usecases
-  embedded_in :detail, class_name: 'Detail'
-  has_many :illustrations, class_name: 'Illustration'
-  has_many :projectdocuments, class_name: 'ProjectDocument'
+  embeds_many :illustrations, class_name: 'Illustration'
+  accepts_nested_attributes_for :illustrations
+  embeds_many :projectdocuments, class_name: 'ProjectDocument'
+  accepts_nested_attributes_for :projectdocuments
 end
