@@ -1,3 +1,38 @@
+<!-- Modal definitions -->
+<% if details.has_projects? %>
+  <% details.projects.each do |project| %>
+    <div class="modal fade" id="AddFilesToProject<%= project.name %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Add Document(s)/Illustration(s) to project (<%= project.name %>)</h4>
+          </div>
+          <div class="modal-body">
+            <form role="form" id="uploadfiles<%= project.name %>" method="post" action="/consultant/<%= consultant.email %>/details/projects/<%= project.name %>/add_files" enctype="multipart/form-data">
+              <div class="form-group">
+                <label class="control-label">Illustration Upload</label>
+                <div class="">
+                  <input type="file" id="illustrations" class="form-control" name="illustrations[]" title="Select illustrations related to project" data-filename-placement="inside" multiple/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="control-label">Documents Upload</label>
+                <div class="">
+                  <input type="file" id="docuemnts" class="form-control" name="documents[]" title="Select documents related to project" data-filename-placement="inside" multiple/>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary center-block" id="SubmitBtn"><i class="fa fa-cloud-upload fa-lg"></i> Upload Files</button>
+              <!-- <input type="submit" class="btn btn-primary btn-md" value="Upload Resumé"/> -->
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2>Consultant <small>(<%= consultant.email %> )</small></h2>
@@ -35,7 +70,7 @@
         <tr>
           <td width="35%"><strong>Certifications</strong></td>
           <td width="65%">
-            <a href="#" id="certifications"><%= details.certifications.join(',') %></a>
+            <a href="#" id="certifications"><%= details.certifications.join(', ') %></a>
           </td>
         </tr>
         <tr>
@@ -78,37 +113,37 @@
                           <tr>
                             <td width="35%"><strong>Client</strong></td>
                             <td width="65%">
-                              <a id="<%= project.name %>client"><%= project.client %></a>
+                              <a href="#" id="<%= project.name %>client"><%= project.client %></a>
                              </td>
                           </tr>
                           <tr>
                             <td width="35%"><strong>Title</strong></td>
                             <td width="65%">
-                              <a id="<%= project.name %>title"><%= project.title %></a>
+                              <a href="#" id="<%= project.name %>title"><%= project.title %></a>
                              </td>
                           </tr>
                           <tr>
                             <td width="35%"><strong>Duration</strong></td>
                             <td width="65%">
-                              <a id="<%= project.name %>duration"><%= project.duration || 0 %></a>
+                              <a href="#" id="<%= project.name %>duration"><%= project.duration || 0 %></a>
                              </td>
                           </tr>
                           <tr>
                             <td width="35%"><strong>Software Used</strong></td>
                             <td width="65%">
-                              <a id="<%= project.name %>software"><%= project.software.join(', ') %></a>
+                              <a href="#" id="<%= project.name %>software"><%= project.software.join(', ') %></a>
                              </td>
                           </tr>
                           <tr>
                             <td width="35%"><strong>Management Tools</strong></td>
                             <td width="65%">
-                              <a id="<%= project.name %>software"><%= project.management_tools.join(', ') %></a>
+                              <a href="#" id="<%= project.name %>management_tools"><%= project.management_tools.join(', ') %></a>
                              </td>
                           </tr>
                           <tr>
                             <td width="35%"><strong>Commercial Support</strong></td>
                             <td width="65%">
-                              <a id="<%= project.name %>software"><%= project.commercial_support.join(', ') %></a>
+                              <a href="#" id="<%= project.name %>commercial_support"><%= project.commercial_support.join(', ') %></a>
                              </td>
                           </tr>
                         </table>
@@ -120,7 +155,7 @@
                           <a>
                             <% document_count = ( project.illustrations.count || 0 ) + ( project.projectdocuments.count || 0 ) %>
                             <span class="badge pull-right uploadprojectfilescount" data-original-title="Number of files uploaded"><%= document_count %></span>
-                            <a href="#">
+                            <a href="#AddFilesToProject<%= project.name %>" data-toggle="modal">
                               <span class="badge badge-important pull-right uploadprojectfiles" data-original-title="Upload files to the project"><i class="fa fa-cloud-upload"></i></span>
                             </a>
                             <strong><%= project.name %> Files</strong>
@@ -184,8 +219,13 @@
                               </tr>
                               <tr>
                                 <td width="25%"><strong>Usecase Description</strong></td>
-                                <td width="75%">
-                                  <%= usecase.description %>
+                                <td width="75%" style="white-space: nowrap">
+                                  <span id="<%= project.name + usecase.name %>description" data-value="<%= usecase.description %>"><%= usecase.description %></span>
+                                  <div id="<%= project.name + usecase.name %>editdescription">
+                                    <span class="badge pull-right editusecasedescription">
+                                      <i class="fa fa-pencil"></i>
+                                    </span>
+                                  </div>
                                 </td>
                               </tr>
                             </table>
@@ -199,37 +239,67 @@
                                 <tr>
                                   <td width="25%">Requirement</td>
                                   <td width="75%">
-                                    <%= requirement.requirement %>
+                                    <span id="<%= requirement.id %>requirement" data-value="<%= requirement.requirement %>"><%= requirement.requirement %></span>
+                                    <div id="<%= requirement.id %>editrequirement">
+                                      <span class="badge pull-right editrequirement">
+                                        <i class="fa fa-pencil"></i>
+                                      </span>
+                                    </div>
                                   </td>
                                 </tr>
                                 <tr>
                                   <td width="25%">Approach</td>
                                   <td width="75%">
-                                    <%= requirement.approch %>
+                                    <span id="<%= requirement.id %>approach" data-value="<%= requirement.approch %>"><%= requirement.approch %></span>
+                                    <div id="<%= requirement.id %>editapproach">
+                                      <span class="badge pull-right editapproach">
+                                        <i class="fa fa-pencil"></i>
+                                      </span>
+                                    </div>
                                   </td>
                                 </tr>
                                 <tr>
                                   <td width="25%">Effort</td>
                                   <td width="75%">
-                                    <%= requirement.effort %>
+                                    <span id="<%= requirement.id %>effort" data-value="<%= requirement.effort %>"><%= requirement.effort %></span>
+                                    <div id="<%= requirement.id %>editeffort">
+                                      <span class="badge pull-right editeffort">
+                                        <i class="fa fa-pencil"></i>
+                                      </span>
+                                    </div>
                                   </td>
                                 </tr>
                                 <tr>
                                   <td width="25%">Tools</td>
                                   <td width="75%">
-                                    <%= requirement.tools.join(', ') %>
+                                    <span id="<%= requirement.id %>tools" data-value="<%= requirement.tools.join(', ') %>"><%= requirement.tools.join(', ') %></span>
+                                    <div id="<%= requirement.id %>edittools">
+                                      <span class="badge pull-right edittools">
+                                        <i class="fa fa-pencil"></i>
+                                      </span>
+                                    </div>
                                   </td>
                                 </tr>
                                 <tr>
                                   <td width="25%">Resources</td>
                                   <td width="75%">
-                                    <%= requirement.resources %>
+                                    <span id="<%= requirement.id %>resources" data-value="<%= requirement.resources %>"><%= requirement.resources %></span>
+                                    <div id="<%= requirement.id %>editresources">
+                                      <span class="badge pull-right editresources">
+                                        <i class="fa fa-pencil"></i>
+                                      </span>
+                                    </div>
                                   </td>
                                 </tr>
                                 <tr>
                                   <td width="25%">Insights</td>
                                   <td width="75%">
-                                    <%= requirement.insights %>
+                                    <span id="<%= requirement.id %>insights" data-value="<%= requirement.insights %>"><%= requirement.insights %></span>
+                                    <div id="<%= requirement.id %>editinsights">
+                                      <span class="badge pull-right editinsights">
+                                        <i class="fa fa-pencil"></i>
+                                      </span>
+                                    </div>
                                   </td>
                                 </tr>
                               </table>
@@ -240,7 +310,6 @@
                       </div> <!-- end tab content -->
                     </div>
                   </div>
-                  <p class="text-center text-danger">Note: Inline editing of projects and usecases is in progress.</p>
                 <% end %>
               </div>
             </div>
@@ -255,15 +324,61 @@
   </div>
 </div>
 
+<script src="/js/bootstrap.file-input.js"></script>
 <script>
 $(document).ready(function() {
+  $('input[type=file]').bootstrapFileInput();
+  $('.file-inputs').bootstrapFileInput();
+
   // tooltip for project files upload
   $('.uploadprojectfiles').tooltip();
   $('.uploadprojectfilescount').tooltip();
+  $('.editusecasedescription').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit usecase description'});
+  $('.editrequirement').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit usecase requirement'});
+  $('.editapproach').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements approach'});
+  $('.editeffort').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements effort'});
+  $('.edittools').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements tools'});
+  $('.editresources').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements resources'});
+  $('.editinsights').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements insights'});
 
   // inline editing
-  $.fn.editable.defaults.mode = 'inline';
+  $.fn.editable.defaults.mode = 'popup';
   $.fn.editable.defaults.ajaxOptions = {type: "POST"};
+
+  // validate project files upload type
+  <% if details.has_projects? %>
+    <% details.projects.each do |project| %>
+      $('#uploadfiles<%= project.name %>').bootstrapValidator({
+        feedbackIcons: {
+          valid: 'glyphicon glyphicon-ok',
+          invalid: 'glyphicon glyphicon-remove',
+          validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+          'illustrations[]': {
+            validators: {
+              file: {
+                extension: 'jpeg,png',
+                type: 'image/jpeg,image/png',
+                maxSize: 2048 * 1024,   // 2 MB
+                message: 'Currently we only accept jpeg & png formats with size limit of 2MB'
+              }
+            }
+          },
+          'documents[]': {
+            validators: {
+              file: {
+                extension: 'pdf,doc,docx',
+                type: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                maxSize: 5120 * 1024,   // 5 MB
+                message: 'Currently we only accept pdf, doc, docx files with size limit of 5MB'
+              }
+            }
+          },
+        }
+      });
+    <% end %>
+  <% end %>
 
   //make username editable
   $('#firstname').editable({
@@ -316,6 +431,7 @@ $(document).ready(function() {
     type: 'text',
     title: 'Select your current company',
     placement: 'right',
+    emptytext: 'Click here to add your current work place (client)',
     value: '<%= details.current_company %>',
     url: '/consultant/details/update',
     pk: '<%= details.consultant_id %>',
@@ -331,6 +447,7 @@ $(document).ready(function() {
     placement: 'right',
     url: '/consultant/details/update',
     separator: ',', // used to seperate values as arary from data-value
+    emptytext: 'Click here to add a certification',
     source: '/deatils/certifications/possible_values',
     pk: '<%= details.consultant_id %>',
     name: 'certifications',
@@ -343,11 +460,234 @@ $(document).ready(function() {
     type: 'select2',
     tpl: "<input type='text' style='width: 400px'>",
     inputclass: 'input-large',
+    emptytext: 'Click here to add a training you had from internal',
     placement: 'right',
     select2: {
       tags: ['Mongodb Developer', 'Mongodb Admin']
     }
   });
+
+  // projects inline editing
+  <% if details.has_projects? %>
+    <% details.projects.each do |project| %>
+      $("#<%= project.name %>client").editable({
+        type: 'text',
+        title: 'Update the client name',
+        placement: 'right',
+        url: '/consultant/<%= details.consultant_id %>/details/projects/update',
+        value: '<%= project.client %>',
+        pk: '<%= project.name %>',
+        name: 'client',
+        success: function(response, newValue) {
+          if (!response.status) return response.msg;
+        }
+      });
+      $("#<%= project.name %>title").editable({
+        type: 'text',
+        title: 'Update the title',
+        placement: 'right',
+        url: '/consultant/<%= details.consultant_id %>/details/projects/update',
+        value: '<%= project.title %>',
+        pk: '<%= project.name %>',
+        name: 'title',
+        success: function(response, newValue) {
+          if (!response.status) return response.msg;
+        }
+      });
+      $("#<%= project.name %>duration").editable({
+        type: 'text',
+        title: 'Update the duration',
+        placement: 'right',
+        url: '/consultant/<%= details.consultant_id %>/details/projects/update',
+        value: '<%= project.duration %>',
+        pk: '<%= project.name %>',
+        name: 'duration',
+        success: function(response, newValue) {
+          if (!response.status) return response.msg;
+        }
+      });
+      // <a href="#" id="trainings" data-type="select2" data-pk="<%= details.consultant_id %>" data-value="<%= details.trainings && details.trainings.join(',') || '' %>" data-url="/consultant/details/update" data-title="Enter your trainings"></a>
+      $("#<%= project.name %>software").editable({
+        type: 'select2',
+        tpl: "<input type='text' style='width: 300px'>",
+        inputclass: 'input-large',
+        title: 'Update the software\'s used',
+        placement: 'right',
+        pk: '<%= project.name %>',
+        value: '<%= project.software && project.software.join(', ') %>',
+        url: '/consultant/<%= details.consultant_id %>/details/projects/update',
+        name: 'software',
+        select2: {
+          tags: ["hadoop", "hbase", "cassandra", "mongodb", "spark", "kafka", "storm"]
+        },
+        success: function(response, newValue) {
+          if (!response.status) return response.msg;
+        }
+      });
+      $("#<%= project.name %>management_tools").editable({
+        type: 'select2',
+        tpl: "<input type='text' style='width: 300px'>",
+        inputclass: 'input-large',
+        title: 'Update the management_tool\'s used',
+        placement: 'right',
+        pk: '<%= project.name %>',
+        value: '<%= project.management_tools && project.management_tools.join(', ') %>',
+        url: '/consultant/<%= details.consultant_id %>/details/projects/update',
+        name: 'management_tools',
+        select2: {
+          tags: ["cm", "ambari", "puppet", "chef", "ansible", "salt", "nagios", "ganglia", "zabbix", "logstash", "splunk"]
+        },
+        success: function(response, newValue) {
+          if (!response.status) return response.msg;
+        }
+      });
+      $("#<%= project.name %>commercial_support").editable({
+        type: 'select2',
+        tpl: "<input type='text' style='width: 300px'>",
+        inputclass: 'input-large',
+        title: 'Update the management_tool\'s used',
+        placement: 'right',
+        pk: '<%= project.name %>',
+        value: '<%= project.commercial_support && project.commercial_support.join(', ') %>',
+        url: '/consultant/<%= details.consultant_id %>/details/projects/update',
+        name: 'commercial_support',
+        select2: {
+          tags: ["Cloudera", "HortonWorks", "DataStax", "MapR", "10Gen", "ElasticSearch", "DataBricks"]
+        },
+        success: function(response, newValue) {
+          if (!response.status) return response.msg;
+        }
+      });
+      <% if project.has_usecases? %>
+        <% project.usecases.each_with_index do |usecase, index| %>
+          $('#<%= project.name + usecase.name %>editdescription').click(function(e){
+            e.stopPropagation();
+            $("#<%= project.name + usecase.name %>description").editable('toggle');
+          });
+          $("#<%= project.name + usecase.name %>description").editable({
+            type: 'textarea',
+            tpl: "<textarea style='width: 300px'>",
+            title: 'Update the usecase description',
+            pk: '<%= usecase.name %>',
+            url: '/consultant/<%= details.consultant_id %>/details/projects/<%= project.name %>/usecases/update',
+            name: 'description',
+            toggle: 'manual',
+            success: function(response, newValue) {
+              if (!response.status) return response.msg;
+            }
+          });
+          <% usecase.requirements.each do |requirement| %>
+            $('#<%= requirement.id %>editrequirement').click(function(e){
+              e.stopPropagation();
+              $("#<%= requirement.id %>requirement").editable('toggle');
+            });
+            $("#<%= requirement.id %>requirement").editable({
+              type: 'textarea',
+              tpl: "<textarea style='width: 300px'>",
+              title: 'Update the requirement',
+              pk: '<%= requirement.id %>',
+              url: '/consultant/<%= details.consultant_id %>/details/projects/<%= project.name %>/usecases/<%= usecase.name %>/requirements/update',
+              name: 'requirement',
+              toggle: 'manual',
+              success: function(response, newValue) {
+                if (!response.status) return response.msg;
+              }
+            });
+
+            $('#<%= requirement.id %>editapproach').click(function(e){
+              e.stopPropagation();
+              $("#<%= requirement.id %>approach").editable('toggle');
+            });
+            $("#<%= requirement.id %>approach").editable({
+              type: 'textarea',
+              tpl: "<textarea style='width: 300px'>",
+              title: 'Update the requirement approach',
+              pk: '<%= requirement.id %>',
+              url: '/consultant/<%= details.consultant_id %>/details/projects/<%= project.name %>/usecases/<%= usecase.name %>/requirements/update',
+              name: 'approch',
+              toggle: 'manual',
+              success: function(response, newValue) {
+                if (!response.status) return response.msg;
+              }
+            });
+
+            $('#<%= requirement.id %>editeffort').click(function(e){
+              e.stopPropagation();
+              $("#<%= requirement.id %>effort").editable('toggle');
+            });
+            $("#<%= requirement.id %>effort").editable({
+              type: 'textarea',
+              tpl: "<textarea style='width: 300px'>",
+              title: 'Update the requirement effort',
+              pk: '<%= requirement.id %>',
+              url: '/consultant/<%= details.consultant_id %>/details/projects/<%= project.name %>/usecases/<%= usecase.name %>/requirements/update',
+              name: 'effort',
+              toggle: 'manual',
+              success: function(response, newValue) {
+                if (!response.status) return response.msg;
+              }
+            });
+
+            $('#<%= requirement.id %>edittools').click(function(e){
+              e.stopPropagation();
+              $("#<%= requirement.id %>tools").editable('toggle');
+            });
+            $("#<%= requirement.id %>tools").editable({
+              type: 'select2',
+              tpl: "<input type='text' style='width: 300px'>",
+              inputclass: 'input-large',
+              title: 'Update the requirement tools',
+              placement: 'right',
+              pk: '<%= requirement.id %>',
+              url: '/consultant/<%= details.consultant_id %>/details/projects/<%= project.name %>/usecases/<%= usecase.name %>/requirements/update',
+              name: 'tools',
+              toggle: 'manual',
+              select2: {
+                tags:["hive", "pig", "sqoop", "oozie", "flume", "mapreduce"]
+              },
+              success: function(response, newValue) {
+                if (!response.status) return response.msg;
+              }
+            });
+
+            $('#<%= requirement.id %>editresources').click(function(e){
+              e.stopPropagation();
+              $("#<%= requirement.id %>resources").editable('toggle');
+            });
+            $("#<%= requirement.id %>resources").editable({
+              type: 'textarea',
+              tpl: "<textarea style='width: 300px'>",
+              title: 'Update the requirement resources',
+              pk: '<%= requirement.id %>',
+              url: '/consultant/<%= details.consultant_id %>/details/projects/<%= project.name %>/usecases/<%= usecase.name %>/requirements/update',
+              name: 'resources',
+              toggle: 'manual',
+              success: function(response, newValue) {
+                if (!response.status) return response.msg;
+              }
+            });
+
+            $('#<%= requirement.id %>editinsights').click(function(e){
+              e.stopPropagation();
+              $("#<%= requirement.id %>insights").editable('toggle');
+            });
+            $("#<%= requirement.id %>insights").editable({
+              type: 'textarea',
+              tpl: "<textarea style='width: 300px'>",
+              title: 'Update the requirement insights',
+              pk: '<%= requirement.id %>',
+              url: '/consultant/<%= details.consultant_id %>/details/projects/<%= project.name %>/usecases/<%= usecase.name %>/requirements/update',
+              name: 'insights',
+              toggle: 'manual',
+              success: function(response, newValue) {
+                if (!response.status) return response.msg;
+              }
+            });
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
 
 });
 </script>

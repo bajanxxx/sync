@@ -96,7 +96,7 @@
                           <div class="form-group">
                             <label class="control-label" for="uc<%= usecaseindex %>name">Usecase Name</label>
                             <div class="">
-                              <input id="uc<%= usecaseindex %>name" name="uc<%= usecaseindex %>name" class="form-control" placeholder="Give a unique name to the usecase so that you could refer to it later.">
+                              <input id="uc<%= usecaseindex %>name" name="uc<%= usecaseindex %>name" class="form-control" placeholder="Give a unique name to the usecase with in the project so that you could refer to it later.">
                             </div>
                           </div>
                           <!-- use case description -->
@@ -189,6 +189,7 @@
                       <button type="button" id="addusecase<%= usecaseindex %>" class="btn btn-default btn-xs">Add usecase <%= usecaseindex + 1 %></button>
                       <% end %>
                       <script type="text/javascript">
+                        $("#uc<%= usecaseindex %>name").tooltip({'trigger':'focus', 'title': 'Usecase name should be unique and cannot be changed later'});
                         $('#addusecase<%= usecaseindex %>').on("click", function(){
                           document.getElementById("usecase<%= usecaseindex %>").style.display="inline";
                           document.getElementById("addusecase<%= usecaseindex %>").style.display="none";
@@ -259,6 +260,8 @@ $(document).ready(function() {
   // enable bootstrap file input for all input type's of file
   $('input[type=file]').bootstrapFileInput();
   $('.file-inputs').bootstrapFileInput();
+
+  $('#name').tooltip({'trigger':'focus', 'title': 'Project name should be unique and cannot be changed later'});
 
   // Generate a simple captcha
   function randomNumber(min, max) {

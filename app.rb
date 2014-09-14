@@ -813,6 +813,102 @@ Admin</a> </p>
     end
   end
 
+  post '/consultant/:id/details/projects/update' do |consultant_id|
+    # possible updates from here are: client, commercial_support [], current (false), duration,
+    # management_tools [], software [], title
+    project_id = params[:pk]
+    update_key = params[:name]
+    update_value = params[:value]
+    success = true
+    message = "Successfully updated #{update_key} to #{update_value}"
+
+    begin
+      consultant_details = Detail.find_by(consultant_id: consultant_id)
+      consultant_details.projects.find_by(name: project_id).update_attribute(update_key.to_sym, update_value)
+    rescue
+      success = false
+      message = "Failed to update(#{update_key})"
+    end
+    { success: success, msg: message }.to_json
+  end
+
+  post '/consultant/:id/details/projects/:project_id/usecases/update' do |consultant_id, project_id|
+    usecase_id = params[:pk]
+    update_key = params[:name]
+    update_value = params[:value]
+    success = true
+    message = "Successfully updated #{update_key} to #{update_value}"
+
+    begin
+      consultant_details = Detail.find_by(consultant_id: consultant_id)
+      consultant_details.projects.find_by(name: project_id).usecases.find_by(name: usecase_id).update_attribute(update_key.to_sym, update_value)
+    rescue
+      success = false
+      message = "Failed to update(#{update_key})"
+    end
+    { success: success, msg: message }.to_json
+  end
+
+  post '/consultant/:id/details/projects/:project_id/usecases/:usecase_id/requirements/update' do |consultant_id, project_id, usecase_id|
+    requirement_id = params[:pk]
+    update_key = params[:name]
+    update_value = params[:value]
+    success = true
+    message = "Successfully updated #{update_key} to #{update_value}"
+
+    begin
+      consultant_details = Detail.find_by(consultant_id: consultant_id)
+      consultant_details.projects.find_by(name: project_id).usecases.find_by(name: usecase_id).requirements.find(requirement_id).update_attribute(update_key.to_sym, update_value)
+    rescue
+      success = false
+      message = "Failed to update(#{update_key})"
+    end
+    { success: success, msg: message }.to_json
+  end
+
+  post '/consultant/:id/details/projects/:project_id/add_files' do |consultant_id, project_id|
+    s_files = []
+    w_files = []
+    details = Detail.find_by(consultant_id: consultant_id)
+
+    if params[:illustrations]
+      params[:illustrations].each do |illustration|
+        file_name = "#{consultant_id}_#{project_id}_#{Time.now.getutc.to_i}_#{illustration[:filename]}"
+        illustration_id = upload_file(illustration[:tempfile], file_name)
+        if illustration_id
+          details.projects.find_by(name: project_id).illustrations << Illustration.new(
+            file_id: illustration_id,
+            filename: file_name,
+            uploaded_date: DateTime.now
+          )
+          s_files << file_name
+        else
+          w_files << file_name
+        end
+      end
+    end
+    # upload project documents if any
+    if params[:documents]
+      params[:documents].each do |document|
+        file_name = "#{consultant_id}_#{project_id}_#{Time.now.getutc.to_i}_#{document[:filename]}"
+        document_id = upload_file(document[:tempfile], file_name)
+        if document_id
+          details.projects.find_by(name: project_id).projectdocuments << ProjectDocument.new(
+            file_id: document_id,
+            filename: file_name,
+            uploaded_date: DateTime.now
+          )
+          s_files << file_name
+        else
+          w_files << file_name
+        end
+      end
+    end
+    flash[:info] = "Successfully uploaded files '#{s_files.join(',')}'" unless s_files.empty?
+    flash[:warning] = "Failed uploading resume. Resume(s) with '#{w_files.join(',')}' already exists!." unless w_files.empty?
+    redirect back
+  end
+
   # Update consultant application details
   post '/consultant/:id/application/update' do |id|
     consultant_id   = id
