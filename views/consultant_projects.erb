@@ -165,14 +165,14 @@
                           <p class="text-center">No files have been uploaded yet.</p>
                         <% else %>
                         <ul class="list-group">
-                          <% project.illustrations.each do |illustartion| %>
+                          <% project.illustrations && project.illustrations.each do |illustartion| %>
                           <li class="list-group-item">
-                            <a href="/download/<%= illustration.file_id %>">
+                            <a href="/download/<%= illustartion.file_id %>">
                               <%= illustartion.filename && illustartion.filename.split('_', 4).last %>
                             </a>
                           </li>
                           <% end %>
-                          <% project.projectdocuments.each do |document| %>
+                          <% project.projectdocuments && project.projectdocuments.each do |document| %>
                           <li class="list-group-item">
                             <a href="/download/<%= document.file_id %>">
                               <%= document.filename && document.filename.split('_', 4).last %>
