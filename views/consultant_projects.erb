@@ -146,6 +146,12 @@
                               <a href="#" id="<%= project.name %>commercial_support"><%= project.commercial_support.join(', ') %></a>
                              </td>
                           </tr>
+                          <tr>
+                            <td width="35%"><strong>Point of contact</strong></td>
+                            <td width="65%">
+                              <a href="#" id="<%= project.name %>pointofcontact"><%= project.point_of_contact.join(', ') %></a>
+                             </td>
+                          </tr>
                         </table>
                       </div>
                     </div> <!-- span 7 -->
@@ -195,9 +201,9 @@
                       <ul class="nav nav-tabs tabs-left">
                         <% project.usecases.each_with_index do |usecase, index| %>
                           <% if index == 0 %>
-                          <li class="active"><a href="#<%= project.name + usecase.name %>" data-toggle="tab"><%= usecase.name %></a></li>
+                          <li class="active"><a href="#<%= project.name + usecase.name %>" data-toggle="tab">usecase <%= index + 1 %></a></li>
                           <% else %>
-                          <li><a href="#<%= project.name + usecase.name %>" data-toggle="tab"><%= usecase.name %></a></li>
+                          <li><a href="#<%= project.name + usecase.name %>" data-toggle="tab">usecase <%= index + 1 %></a></li>
                           <% end %>
                         <% end %>
                       </ul>
@@ -234,10 +240,10 @@
                               </tr>
                             </table>
                           </div>
-                          <% usecase.requirements.each do |requirement| %>
+                          <% usecase.requirements.each_with_index do |requirement, index| %>
                             <div class="panel panel-default">
                               <div class="panel-heading">
-                                <a><b><%= usecase.name %> Requirements</b></a>
+                                <a><b>Requirement <%= index + 1 %></b></a>
                               </div>
                               <table id="requirement<%= requirement.id %>" class="table table-striped" style="table-layout: fixed; word-wrap: break-word">
                                 <tr>
@@ -263,11 +269,22 @@
                                   </td>
                                 </tr>
                                 <tr>
-                                  <td width="25%">Effort</td>
+                                  <td width="25%">Effort (hours)</td>
                                   <td width="75%">
                                     <span id="<%= requirement.id %>effort" data-value="<%= requirement.effort %>"><%= requirement.effort %></span>
                                     <div id="<%= requirement.id %>editeffort">
                                       <span class="badge pull-right editeffort">
+                                        <i class="fa fa-pencil"></i>
+                                      </span>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td width="25%">Team Effort (hours)</td>
+                                  <td width="75%">
+                                    <span id="<%= requirement.id %>teameffort" data-value="<%= requirement.teameffort %>"><%= requirement.teameffort %></span>
+                                    <div id="<%= requirement.id %>editteameffort">
+                                      <span class="badge pull-right editteameffort">
                                         <i class="fa fa-pencil"></i>
                                       </span>
                                     </div>
@@ -301,6 +318,17 @@
                                     <span id="<%= requirement.id %>insights" data-value="<%= requirement.insights %>"><%= requirement.insights %></span>
                                     <div id="<%= requirement.id %>editinsights">
                                       <span class="badge pull-right editinsights">
+                                        <i class="fa fa-pencil"></i>
+                                      </span>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td width="25%">Solution Benefits/Outcomes</td>
+                                  <td width="75%">
+                                    <span id="<%= requirement.id %>benefits" data-value="<%= requirement.benefits %>"><%= requirement.benefits %></span>
+                                    <div id="<%= requirement.id %>editbenefits">
+                                      <span class="badge pull-right editbenefits">
                                         <i class="fa fa-pencil"></i>
                                       </span>
                                     </div>
@@ -341,9 +369,11 @@ $(document).ready(function() {
   $('.editrequirement').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit usecase requirement'});
   $('.editapproach').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements approach'});
   $('.editeffort').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements effort'});
+  $('.editteameffort').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements team effort'});
   $('.edittools').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements tools'});
   $('.editresources').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements resources'});
   $('.editinsights').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements insights'});
+  $('.editbenefits').tooltip({trigger: 'hover', 'placement': 'bottom', 'title': 'Edit requirements outcomes'});
 
   // inline editing
   $.fn.editable.defaults.mode = 'popup';
@@ -562,6 +592,23 @@ $(document).ready(function() {
           if (!response.status) return response.msg;
         }
       });
+      $("#<%= project.name %>pointofcontact").editable({
+        type: 'select2',
+        tpl: "<input type='text' style='width: 300px'>",
+        inputclass: 'input-large',
+        title: 'Update the point of contact\'s from vendor',
+        placement: 'right',
+        pk: '<%= project.name %>',
+        value: '<%= project.point_of_contact && project.point_of_contact.join(', ') %>',
+        url: '/consultant/<%= details.consultant_id %>/details/projects/update',
+        name: 'point_of_contact',
+        select2: {
+          tags: []
+        },
+        success: function(response, newValue) {
+          if (!response.status) return response.msg;
+        }
+      });
       <% if project.has_usecases? %>
         <% project.usecases.each_with_index do |usecase, index| %>
           $('#<%= project.name + usecase.name %>editdescription').click(function(e){
@@ -632,6 +679,23 @@ $(document).ready(function() {
               }
             });
 
+            $('#<%= requirement.id %>editteameffort').click(function(e){
+              e.stopPropagation();
+              $("#<%= requirement.id %>teameffort").editable('toggle');
+            });
+            $("#<%= requirement.id %>teameffort").editable({
+              type: 'textarea',
+              tpl: "<textarea style='width: 300px'>",
+              title: 'Update the requirement team effort',
+              pk: '<%= requirement.id %>',
+              url: '/consultant/<%= details.consultant_id %>/details/projects/<%= project.name %>/usecases/<%= usecase.name %>/requirements/update',
+              name: 'teameffort',
+              toggle: 'manual',
+              success: function(response, newValue) {
+                if (!response.status) return response.msg;
+              }
+            });
+
             $('#<%= requirement.id %>edittools').click(function(e){
               e.stopPropagation();
               $("#<%= requirement.id %>tools").editable('toggle');
@@ -682,6 +746,22 @@ $(document).ready(function() {
               pk: '<%= requirement.id %>',
               url: '/consultant/<%= details.consultant_id %>/details/projects/<%= project.name %>/usecases/<%= usecase.name %>/requirements/update',
               name: 'insights',
+              toggle: 'manual',
+              success: function(response, newValue) {
+                if (!response.status) return response.msg;
+              }
+            });
+            $('#<%= requirement.id %>editbenefits').click(function(e){
+              e.stopPropagation();
+              $("#<%= requirement.id %>benefits").editable('toggle');
+            });
+            $("#<%= requirement.id %>benefits").editable({
+              type: 'textarea',
+              tpl: "<textarea style='width: 300px'>",
+              title: 'Update the requirement benefits',
+              pk: '<%= requirement.id %>',
+              url: '/consultant/<%= details.consultant_id %>/details/projects/<%= project.name %>/usecases/<%= usecase.name %>/requirements/update',
+              name: 'benefits',
               toggle: 'manual',
               success: function(response, newValue) {
                 if (!response.status) return response.msg;

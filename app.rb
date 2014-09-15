@@ -71,6 +71,7 @@ require_relative 'lib/dj/email_job_posting_remainder'
 require_relative 'lib/dj/generate_document'
 require_relative 'lib/dj/email_request_status'
 require_relative 'lib/dj/email_document_request'
+require_relative 'lib/dj/email_project_notification'
 
 # Prawn PDF Generators
 require_relative 'lib/prawn/leave_letter'
@@ -617,9 +618,10 @@ Admin</a> </p>
     success = true
     message = "Sucessfully added project"
 
-    ap params
+    # ap params
     project_name = params[:name]
 
+    consultant = Consultant.find_by(email: id)
     details = Detail.find_by(consultant_id: id)
     begin
       details.projects.find_by(name: project_name)
@@ -631,7 +633,8 @@ Admin</a> </p>
         title: params[:jobtitle],
         software: params[:softwareused].split(','),
         management_tools: params[:managementtoolsused].split(','),
-        commercial_support: params[:commercialsupport].split(',')
+        commercial_support: params[:commercialsupport].split(','),
+        point_of_contact: params[:pointofcontact].split(',') || []
       )
       details.save
 
@@ -681,9 +684,11 @@ Admin</a> </p>
                   requirement: params["uc#{usecase_index}requirementdesc#{req_index}".to_sym],
                   approch: params["uc#{usecase_index}approch#{req_index}".to_sym],
                   effort: params["uc#{usecase_index}effort#{req_index}".to_sym],
+                  teameffort: params["uc#{usecase_index}teameffort#{req_index}".to_sym],
                   tools: params["uc#{usecase_index}tools#{req_index}".to_sym].split(','),
                   resources: params["uc#{usecase_index}resources#{req_index}".to_sym],
-                  insights: params["uc#{usecase_index}insights#{req_index}".to_sym]
+                  insights: params["uc#{usecase_index}insights#{req_index}".to_sym],
+                  benefits: params["uc#{usecase_index}benefits#{req_index}".to_sym]
                 )
               end
             end
@@ -698,6 +703,15 @@ Admin</a> </p>
       # project with same name exists
       success = false
       message = "Failed to add project as the project_name: #{project_name} already exists"
+    end
+
+    if success
+      Delayed::Job.enqueue(
+        EmailProjectNotification.new(@settings, consultant),
+        queue: 'project_notifications',
+        priority: 10,
+        run_at: 10.seconds.from_now
+      )
     end
 
     { success: success, msg: message }.to_json
@@ -2670,7 +2684,7 @@ Admin</a> </p>
   end
 
   post '/documents/:userid/request' do |userid|
-    ap params
+    # ap params
     success    = true
     message    = "Successfully created a requests"
 

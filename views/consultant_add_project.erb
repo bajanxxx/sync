@@ -61,6 +61,13 @@
                         <input id="commercialsupport" name="commercialsupport" class="form-control select2" multiple data-placeholder="commercials support used" style="width:100%">
                       </div>
                     </div>
+                    <!-- point of contact -->
+                    <div class="form-group">
+                      <label class="control-label" for="pointofcontact">Point of contact</label>
+                      <div class="">
+                        <input id="pointofcontact" name="pointofcontact" class="form-control select2" multiple data-placeholder="list of persons who were your point of contact from vendor" style="width:100%">
+                      </div>
+                    </div>
                     <!-- illustration upload -->
                     <!-- TODO NOTE: detail design diagram -->
                     <div class="form-group">
@@ -137,16 +144,23 @@
                                 </div>
                                 <!-- effort -->
                                 <div class="form-group">
-                                  <label class="control-label" for="uc<%= usecaseindex %>effort<%= requirementindex %>">Effort</label>
+                                  <label class="control-label" for="uc<%= usecaseindex %>effort<%= requirementindex %>">My Effort (hours)</label>
                                   <div class="">
-                                    <textarea id="uc<%= usecaseindex %>effort<%= requirementindex %>" name="uc<%= usecaseindex %>effort<%= requirementindex %>" class="form-control" placeholder="How much time it took"></textarea>
+                                    <textarea id="uc<%= usecaseindex %>effort<%= requirementindex %>" name="uc<%= usecaseindex %>effort<%= requirementindex %>" class="form-control" placeholder="How much time it took (me)"></textarea>
+                                  </div>
+                                </div>
+                                <!-- team effort -->
+                                <div class="form-group">
+                                  <label class="control-label" for="uc<%= usecaseindex %>teameffort<%= requirementindex %>">Team Effort (hours)</label>
+                                  <div class="">
+                                    <textarea id="uc<%= usecaseindex %>teameffort<%= requirementindex %>" name="uc<%= usecaseindex %>teameffort<%= requirementindex %>" class="form-control" placeholder="Additional team members hours"></textarea>
                                   </div>
                                 </div>
                                 <!-- resources -->
                                 <div class="form-group">
-                                  <label class="control-label" for="uc<%= usecaseindex %>resources<%= requirementindex %>">Resources</label>
+                                  <label class="control-label" for="uc<%= usecaseindex %>resources<%= requirementindex %>">Solution Resources</label>
                                   <div class="">
-                                    <textarea id="uc<%= usecaseindex %>resources<%= requirementindex %>" name="uc<%= usecaseindex %>resources<%= requirementindex %>" class="form-control" placeholder="Where did you got info and help if any"></textarea>
+                                    <textarea id="uc<%= usecaseindex %>resources<%= requirementindex %>" name="uc<%= usecaseindex %>resources<%= requirementindex %>" class="form-control" placeholder="Where did you got information and help (if any)."></textarea>
                                   </div>
                                 </div>
                                 <!-- tools -->
@@ -158,9 +172,16 @@
                                 </div>
                                 <!-- insights -->
                                 <div class="form-group">
-                                  <label class="control-label" for="uc<%= usecaseindex %>insights<%= requirementindex %>">Insights</label>
+                                  <label class="control-label" for="uc<%= usecaseindex %>insights<%= requirementindex %>">Insights &amp;  Issues</label>
                                   <div class="">
-                                    <textarea id="uc<%= usecaseindex %>insights<%= requirementindex %>" name="uc<%= usecaseindex %>insights<%= requirementindex %>" class="form-control" placeholder="Lessons you have learned"></textarea>
+                                    <textarea id="uc<%= usecaseindex %>insights<%= requirementindex %>" name="uc<%= usecaseindex %>insights<%= requirementindex %>" class="form-control" placeholder="Issues and Insights into solving the problem (lessons you have learned)."></textarea>
+                                  </div>
+                                </div>
+                                <!-- solution benefits -->
+                                <div class="form-group">
+                                  <label class="control-label" for="uc<%= usecaseindex %>benefits<%= requirementindex %>">Solution Benefits / Outcomes</label>
+                                  <div class="">
+                                    <textarea id="uc<%= usecaseindex %>benefits<%= requirementindex %>" name="uc<%= usecaseindex %>benefits<%= requirementindex %>" class="form-control" placeholder="What was the benefit/outcome from solving this requirement"></textarea>
                                   </div>
                                 </div>
                               </fieldset> <!-- requirement wrapper fieldset -->
@@ -210,6 +231,7 @@
                   $("#softwareused").select2({tags:["hadoop", "hbase", "cassandra", "mongodb", "spark", "kafka", "storm"]});
                   $("#managementtoolsused").select2({tags:["cm", "ambari", "puppet", "chef", "ansible", "salt", "nagios", "ganglia", "zabbix", "logstash", "splunk"]});
                   $("#commercialsupport").select2({tags:["Cloudera", "HortonWorks", "DataStax", "MapR", "10Gen", "ElasticSearch", "DataBricks"]});
+                  $("#pointofcontact").select2({tags:[]});
                 </script>
               </fieldset> <!-- end project fieldset -->
             </div> <!-- end project wrapper -->
@@ -410,7 +432,7 @@ $(document).ready(function() {
             stringLength: {
                 min: 5,
                 max: 30,
-                message: 'The name of the job title must be more than 5 and less than 30 characters long'
+                message: 'The name of the job title must be should be between 5 and 30 characters long'
             }
           }
         },
@@ -423,7 +445,7 @@ $(document).ready(function() {
             stringLength: {
                 min: 5,
                 max: 30,
-                message: 'The name of the client must be more than 5 and less than 30 characters long'
+                message: 'The name of the client should be between 5 and 30 characters long'
             }
           }
         },
@@ -436,7 +458,7 @@ $(document).ready(function() {
             stringLength: {
                 min: 5,
                 max: 30,
-                message: 'The name of the project must be more than 5 and less than 30 characters long'
+                message: 'The name of the project should be between 5 and 30 characters long'
             },
             regexp: {
                 regexp: /^[a-zA-Z0-9_.-:]+$/,
@@ -495,7 +517,7 @@ $(document).ready(function() {
             stringLength: {
                 min: 5,
                 max: 25,
-                message: 'Usecase name could be between 5 and 25 characters long'
+                message: 'Usecase name should be between 5 and 25 characters long'
             },
             regexp: {
                 regexp: /^[a-zA-Z0-9_.-:]+$/,
@@ -512,7 +534,7 @@ $(document).ready(function() {
             stringLength: {
                 min: 25,
                 max: 10000,
-                message: 'Usecase description could be more than 25 and less than 1000 characters long'
+                message: 'Usecase description should be between 3 and 10000 characters long'
             }
           }
         },
@@ -525,7 +547,7 @@ $(document).ready(function() {
             stringLength: {
                 min: 25,
                 max: 10000,
-                message: 'Usecase requirement description could be more than 25 and less than 1000 characters long'
+                message: 'Usecase requirement description should be between 3 and 10000 characters long'
             }
           }
         },
@@ -538,7 +560,7 @@ $(document).ready(function() {
             stringLength: {
                 min: 25,
                 max: 10000,
-                message: 'Usecase requiremnt approch could be more than 25 and less than 1000 characters long'
+                message: 'Usecase requiremnt approch should be between 25 and 10000 characters long'
             }
           }
         },
@@ -549,9 +571,21 @@ $(document).ready(function() {
               message: 'Usecase requiremnt effort for the project cannot be empty'
             },
             stringLength: {
-                min: 3,
-                max: 10000,
-                message: 'Usecase requiremnt approch could be more than 25 and less than 1000 characters long'
+                min: 2,
+                max: 1000,
+                message: 'Usecase requiremnt effort should be between 2 and 1000 characters long'
+            }
+          }
+        },
+        uc0teameffort0: {
+          validators: {
+            notEmpty: {
+              message: 'Usecase requiremnt team effort for the project cannot be empty'
+            },
+            stringLength: {
+                min: 1,
+                max: 1000,
+                message: 'Usecase requiremnt team effort should be between 1 and 1000 characters long, put 0 for none'
             }
           }
         },
@@ -564,7 +598,7 @@ $(document).ready(function() {
             stringLength: {
                 min: 25,
                 max: 10000,
-                message: 'Usecase requiremnt resources could be more than 25 and less than 1000 characters long'
+                message: 'Usecase requiremnt resources should be between 25 and 10000 characters long'
             }
           }
         },
@@ -577,7 +611,7 @@ $(document).ready(function() {
             stringLength: {
                 min: 25,
                 max: 10000,
-                message: 'Usecase requiremnt insights could be more than 25 and less than 1000 characters long'
+                message: 'Usecase requiremnt insights should be between 25 and 10000 characters long'
             }
           }
         },

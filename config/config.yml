@@ -10,6 +10,10 @@ google_secret: 'EBNBSUqdSW2gUyH1Zb1g6o8v'
 email: admin@cloudwick.com
 cc: jobs@cloudwick.com
 admin_group: syncadmin@cloudwick.com
+project_notification_group:
+  - syncadmin@cloudwick.com
+  - samantha@cloudwick.com
+  - mark@cloudwick.com
 admin_phone:
   - +12013141533
   - +15594516899
