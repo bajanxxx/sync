@@ -2540,6 +2540,10 @@ Admin</a> </p>
           name: cname,
           start_date: start_date,
           end_date: end_date,
+          position: position,
+          company: company,
+          location: location,
+          companyid: everify,
           dated_as: dated
         )
         # Build an erb template and replace variables
@@ -2564,6 +2568,7 @@ Admin</a> </p>
           start_date: start_date,
           position: position,
           li: '•',
+          company: company,
           companyid: everify,
           location: location,
           dated_as: dated
