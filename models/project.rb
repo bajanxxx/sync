@@ -12,6 +12,7 @@ class Project
   field :software, type: Array, default: [] # frameworks used in the project
   field :management_tools, type: Array, default: [] # management tools used
   field :commercial_support, type: Array, default: []
+  field :point_of_contact, type: Array, default: []
 
   embedded_in :detail, class_name: 'Detail'
   embeds_many :usecases, class_name: 'UseCase'
