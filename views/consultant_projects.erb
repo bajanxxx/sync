@@ -87,9 +87,16 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2>Your Projects <small>(we appreciate if you could let us know what is that you are working on)</small>
-      <p class="pull-right">
-        <a id="AddProject" class="btn btn-primary btn-md" href="/consultant/<%= consultant.email %>/projects/add" role="button">Add Project &raquo;</a>
-      </p>
+        <% if @admin_user && details.has_projects? %>
+        <!-- <button id="GeneratorPDF" class="btn btn-primary btn-md pull-right" type="button">Generate Document &raquo;</button> -->
+        <p class="pull-right">
+          <a id="GeneratePDF" class="btn btn-primary btn-md" href="/consultant/<%= consultant.email %>/projects/generate" target="_blank" role="button">Generate PDF &raquo;</a>
+        </p>
+        <% else %>
+        <p class="pull-right">
+          <a id="AddProject" class="btn btn-primary btn-md" href="/consultant/<%= consultant.email %>/projects/add" role="button">Add Project &raquo;</a>
+        </p>
+        <% end %>
     </h2>
   </div>
   <div class="container-fluid">
@@ -381,6 +388,24 @@ $(document).ready(function() {
 
   // validate project files upload type
   <% if details.has_projects? %>
+      // $('#GeneratorPDF').click(function() {
+      //   _this = $(this);
+      //   _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+      //   _this.attr('disabled', true); // no double submit
+      //   $.ajax({
+      //     type: "GET",
+      //     contentType: "application/octet-stream",
+      //     url: "/consultant/<%= consultant.email %>/projects/generate",
+      //     success: function(data) {
+      //       _this.html("Generated");
+      //     },
+      //     error: function(data) {
+      //       _this.attr('disabled', false); // re-enable submit
+      //       _this.html('Re-Generate');
+      //     }
+      //   });
+      // });
+
     <% details.projects.each do |project| %>
       $('#uploadfiles<%= project.name %>').bootstrapValidator({
         feedbackIcons: {
