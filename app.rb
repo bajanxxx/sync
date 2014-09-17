@@ -718,6 +718,30 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
+  # Generate's pdf format of the user's project information
+  get '/consultant/:id/projects/generate' do |id|
+    consultant = Consultant.find_by(email: id)
+    consultant_name = "#{consultant.first_name.downcase}_#{consultant.last_name.downcase}"
+    file_name = "#{consultant_name}_#{DateTime.now.strftime("%Y_%m_%d")}.pdf"
+
+    # Make sure the file is opened in the browser window not downloadable
+    headers "Content-Disposition" => "Inline; filename=#{file_name}",
+            "Content-Type" => "application/pdf",
+            "Content-Transfer-Encoding" => "binary"
+
+    begin
+      tmp_file = Tempfile.new(consultant_name)
+      ProjectDocumentGenerator.new(
+        consultant.id,
+        tmp_file.path
+      ).build!
+      # output file contents
+      tmp_file.read
+    ensure
+      tmp_file.close
+    end
+  end
+
   # Send consultant email reg job details that he/her has to apply
   post '/consultant/send_posting/:email/:job_id' do |email, job_id|
     job = Job.find(job_id)
