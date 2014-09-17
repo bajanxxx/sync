@@ -112,8 +112,8 @@ EOF
 
     # Define the attachment section
     part3 =<<EOF
-Content-Type: multipart/mixed; name=\"#{attachment_name}\"
-Content-Transfer-Encoding:base64
+Content-Type: application/pdf; name=\"#{attachment_name}\"
+Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="#{attachment_name}"
 
 #{encodedcontent}
