@@ -77,6 +77,7 @@ require_relative 'lib/dj/email_project_notification'
 require_relative 'lib/prawn/leave_letter'
 require_relative 'lib/prawn/offer_letter'
 require_relative 'lib/prawn/employment_letter'
+require_relative 'lib/prawn/project_document'
 
 #
 # Monkey Patch Sinatra flash to bootstrap alert
