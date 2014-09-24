@@ -1555,7 +1555,7 @@ Admin</a> </p>
       #     }
       data = []
       Vendor.only(:first_name, :last_name, :company, :phone, :email).each do |v|
-        data << [ v.first_name, v.last_name, v.company, v.phone || "NA", v.email ]
+        data << [ v.first_name || 'NA', v.last_name || 'NA', v.company || 'NA' , v.phone || 'NA', v.email ]
       end
       erb :vendors, :locals => { vendors_data: data }
     else
