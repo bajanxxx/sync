@@ -2427,7 +2427,16 @@ Admin</a> </p>
     rid = params[:rid] # open present if this a request from consultant
     document_format = ''
     namespace = nil
-
+    everify = if company =~/Cloudwick|cloudwick/
+                642485
+              else
+                270262
+              end
+    location = if company =~/Cloudwick|cloudwick/
+                'Newark, California'
+              else
+                'Hayward, California'
+              end
     success    = true
     message    = "Successfully sent #{document_type} to #{email}"
 
@@ -2442,7 +2451,16 @@ Admin</a> </p>
           message = "start date should be less than end date"
         end
         document_format = 'LEAVELETTER'
-        namespace = OpenStruct.new(name: cname, start_date: start_date, end_date: end_date)
+        namespace = OpenStruct.new(
+          name: cname,
+          start_date: start_date,
+          end_date: end_date,
+          position: position,
+          company: company,
+          location: location,
+          companyid: everify,
+          dated_as: dated
+        )
         # Build an erb template and replace variables
         template_content = DocumentTemplate.find_by(name: tname).content
         erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
@@ -2464,7 +2482,11 @@ Admin</a> </p>
           name: cname,
           start_date: start_date,
           position: position,
-          li: '•'
+          li: '•',
+          company: company,
+          companyid: everify,
+          location: location,
+          dated_as: dated
         )
         # Build an erb template and replace variables
         template_content = DocumentTemplate.find_by(name: tname).content
@@ -2482,7 +2504,15 @@ Admin</a> </p>
         }
       when 'employmentletter'
         document_format = 'EMPLOYMENTLETTER'
-        namespace = OpenStruct.new(name: cname, start_date: start_date, position: position)
+        namespace = OpenStruct.new(
+          name: cname,
+          start_date: start_date,
+          position: position,
+          companyid: everify,
+          company: company,
+          location: location,
+          dated_as: dated
+        )
         # Build an erb template and replace variables
         template_content = DocumentTemplate.find_by(name: tname).content
         erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
