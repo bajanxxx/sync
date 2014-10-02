@@ -23,6 +23,10 @@ require 'net/http'
 require 'twilio-ruby'
 require 'omniauth'
 require 'omniauth-google-oauth2'
+# require 'fog'
+# require 'securerandom'
+# require 'sshkey'
+# require 'fileutils'
 
 # Load the mongo models
 require_relative 'models/application'
@@ -760,8 +764,7 @@ Admin</a> </p>
     )
 
     flash[:info] = "Post marked as 'sent to consultant' & 'read' (#{job.title})"
-    # redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
-    redirect back
+    redirect "/jobs/#{job.date_posted.strftime('%Y-%m-%d')}"
   end
 
   post '/consultant/send_reminder/:email' do |email|
@@ -1239,6 +1242,7 @@ Admin</a> </p>
   # Process and show the jobs for a given date
   get '/jobs/:date' do |date|
     if @admin_user
+      # Create a hash to store read, unread & attention_required jobs
       categorized_jobs = Hash.new { |hash, key| hash[key] = {} }
       tracking = {}
       p2_search_params = %w(bigdata big-data nosql hbase hive pig storm kafka hadoop cassandra)
@@ -1257,34 +1261,43 @@ Admin</a> </p>
           unread_jobs.each do |job|
             unread_postings << job
           end
+          # priority 1 search terms
           p1 = Regexp.new(search_term)
+          # priority 2 search terms
           p2 = Regexp.new((p2_search_params - [search_term]).join('|'))
           # sort un-read jobs by priority, p1 postings are which directly have hadoop
-          # in title, and p2 postings are which have some realted big-date keyword in
+          # in title, and p2 postings are which have a big-date realted keyword in the
           # title
-          unread_p1_jobs = unread_postings.find_all { |post| p1.match(post.title.downcase) }
-          unread_p2_jobs = unread_postings.find_all { |post| p2.match(post.title.downcase) }
-          unread_lp_jobs  = unread_postings - ( unread_p1_jobs + unread_p2_jobs )
+          unread_repeated_jobs = unread_postings.select { |post| Job.where(url: post.url).count > 1 }
+          unread_jobs_without_repeated = unread_postings - unread_repeated_jobs # unread less priority jobs
+          unread_p1_jobs = unread_jobs_without_repeated.find_all { |post| p1.match(post.title.downcase) }
+          unread_p2_jobs = unread_jobs_without_repeated.find_all { |post| p2.match(post.title.downcase) }
+
+          unread_lp_jobs  = unread_jobs_without_repeated - ( unread_p1_jobs + unread_p2_jobs )
+          # unread jobs sorted by priority
           unread_jobs_sorted = unread_p1_jobs + unread_p2_jobs + unread_lp_jobs
 
           # Sort read jobs based on follow-up and applied priority
           # gather postings that require attention which are basically are the
-          # applications which are marked as follow_up or applied
+          # job postings which are marked as follow_up or applied
           postings_req_attention = []
-          Job.where(search_term: search_term, source: source, date_posted: date, hide: false).each do |job|
-            Application.where(job_url: Job.find(job.id).url).entries.each do |app|
-              if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-                postings_req_attention << job
-              end
-            end
-          end
-          rest_jobs = read_postings - postings_req_attention
-          read_jobs_sorted = postings_req_attention + rest_jobs
+          # TODO for now commenting this, figure out a better way to implement this with out complex looping quries
+          # Job.where(search_term: search_term, source: source, date_posted: date, hide: false).each do |job|
+          #   Application.where(job_url: Job.find(job.id).url).entries.each do |app|
+          #     if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
+          #       postings_req_attention << job
+          #     end
+          #   end
+          # end
+          # rest_jobs = read_postings - postings_req_attention
+          # read_jobs_sorted = postings_req_attention + rest_jobs
 
           categorized_jobs[source][search_term] = {
-            read_jobs:      read_jobs_sorted,
-            unread_jobs:    unread_jobs_sorted,
-            atten_req_jobs: postings_req_attention
+            # read_jobs:      read_jobs_sorted,
+            read_jobs:            read_postings,
+            unread_jobs:          unread_jobs_sorted,
+            unread_repeated_jobs: unread_repeated_jobs,
+            atten_req_jobs:       postings_req_attention
           }
         end
       end
@@ -2855,8 +2868,31 @@ Admin</a> </p>
   # => CloudServers
   #
   get '/cloudservers' do
+    # openstack_capacity = {}
+
+    # conn = create_openstack_connection
+    # if conn
+    #   user_limits = conn.get_limits
+    #   openstack_capacity[:current_instances] = user_limits.body['limits']['absolute']['totalInstancesUsed']
+    #   openstack_capacity[:max_instances]     = user_limits.body['limits']['absolute']['maxTotalInstances']
+    #   openstack_capacity[:max_cores]         = user_limits.body['limits']['absolute']['maxTotalCores']
+    #   openstack_capacity[:current_cores]     = user_limits.body['limits']['absolute']['totalCoresUsed']
+    #   openstack_capacity[:max_ram]           = user_limits.body['limits']['absolute']['maxTotalRAMSize']
+    #   openstack_capacity[:current_ram]       = user_limits.body['limits']['absolute']['totalRAMUsed']
+    #   openstack_capacity[:current_secgroups] = user_limits.body['limits']['absolute']['totalSecurityGroupsUsed']
+    #   openstack_capacity[:max_secgroups]     = user_limits.body['limits']['absolute']['maxSecurityGroups']
+    # end
+    # erb :cloudservers, locals: { oc: openstack_capacity }
     erb :cloudservers
   end
+
+  # get '/cloudservers/requests' do
+  #   erb :cloudserver_requests
+  # end
+
+  # get '/cloudservers/request/:id' do |request_id|
+  #   erb :cloudserver_request_details
+  # end
 
   #
   # => Test routes
@@ -2886,6 +2922,24 @@ Admin</a> </p>
   #
   # => HELPERS
   #
+
+  # Creates an openstack connection
+  def create_openstack_connection
+    Fog::Compute.new({
+      provider:            'openstack',
+      openstack_api_key:   @settings[:openstack_api_key],
+      openstack_username:  @settings[:openstack_username],
+      openstack_auth_url:  @settings[:openstack_auth_url],
+      openstack_tenant:    @settings[:openstack_tenant],
+      connection_options:  { connect_timeout: 5 }
+    })
+  rescue Excon::Errors::Unauthorized
+    return nil
+  rescue Excon::Errors::BadRequest
+    return nil
+  rescue Excon::Errors::Timeout
+    return nil
+  end
 
   # Check if the specified string is an url
   def uri?(string)
