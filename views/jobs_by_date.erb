@@ -25,7 +25,7 @@
         </div>
 
         <div class="panel-body">
-          <p class="text-left">New Job listings found: <%= category[:unread_jobs].count %></p>
+          <p class="lead text-left">New Job listings found: <b><%= category[:unread_jobs].count %></b></p>
           <ul class="list-group">
             <% category[:unread_jobs].each do |job| %>
             <li class="list-group-item">
@@ -35,9 +35,6 @@
                 <% tracking[job.url].uniq.each do |user| %>
                 <span class="badge alert-default"><%= user %></span>
                 <% end %>
-                <% end %>
-                <% if Job.where(url: job.url).count > 1 %>
-                <span class="badge alert-warning">repeated</span>
                 <% end %>
                 <span class="badge alert-info"><%= job.location %></span>
                 <span class="badge alert-success"><%= job.company %></span>
@@ -49,7 +46,29 @@
             </li>
             <% end %>
           </ul> <!-- list-group (unread) -->
-          <p class="text-left">Read Job listings found: <%= category[:read_jobs].count %></p>
+          <p class="text-left lead">Repeated Job listings found: <b><%= category[:unread_repeated_jobs].count %></b></p>
+          <ul class="list-group">
+            <% category[:unread_repeated_jobs].each do |job| %>
+            <li class="list-group-item">
+              <div class="pull-right button-group">
+                <!-- Initials of users who are tracking it -->
+                <% if tracking.keys.include?(job.url) %>
+                  <% tracking[job.url].uniq.each do |user| %>
+                    <span class="badge alert-default"><%= user %></span>
+                  <% end %>
+                <% end %>
+                <span class="badge alert-warning">repeated</span>
+                <span class="badge alert-info"><%= job.location %></span>
+                <span class="badge alert-success"><%= job.company %></span>
+                <button id="deletebtn<%= job.id %>" class="btn btn-xs btn-default"><i class="fa fa-times"></i></button>
+              </div>
+              <a href="/job/<%= job._id %>">
+                <%= job.title %>
+              </a>
+            </li>
+            <% end %>
+          </ul> <!-- list-group (unread) -->
+          <p class="text-left lead">Read Job listings found: <b><%= category[:read_jobs].count %></b></p>
           <ul class="list-group">
             <% category[:read_jobs].each do |job| %>
             <% if category[:atten_req_jobs].include?(job) %>
@@ -60,15 +79,12 @@
               <div class="pull-right button-group">
                 <!-- Initials of users who are tracking it -->
                 <% if tracking.keys.include?(job.url) %>
-                <% tracking[job.url].uniq.each do |user| %>
-                <span class="badge alert-info"><%= user %></span>
-                <% end %>
+                  <% tracking[job.url].uniq.each do |user| %>
+                    <span class="badge alert-info"><%= user %></span>
+                  <% end %>
                 <% end %>
                 <span class="badge"><%= job.location %></span>
                 <span class="badge"><%= job.company %></span>
-                <% if Job.where(id: job.id).count > 1 %>
-                <span class="badge alert-warning">repeated</span>
-                <% end %>
                 <button id="deletebtn<%= job.id %>" class="btn btn-xs btn-default"><i class="fa fa-times"></i></button>
               </div>
               <a  href="/job/<%= job._id %>">
