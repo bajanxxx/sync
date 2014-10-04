@@ -191,6 +191,7 @@ class CloudInstances
       FileUtils.chmod(0700, ssh_home)
       FileUtils.chown(user_name, user_name, ssh_home) if OS.linux? # : FileUtils.chown(user_name, 'wheel', ssh_home)
       File.open(ssh_pem, 'w') { |file| file.write(kp.private_key) }
+      FileUtils.chown(user_name, user_name, ssh_pem) if OS.linux?
       FileUtils.chmod(0600, ssh_pem)
       # OS.linux? ? FileUtils.chown(user_name, user_name, ssh_pem) : FileUtils.chown(user_name, 'wheel', ssh_pem)
       # File.open(ssh_pub, 'w') { |file| file.write(kp.ssh_public_key) }
