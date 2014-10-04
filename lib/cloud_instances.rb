@@ -134,8 +134,8 @@ class CloudInstances
     user_name = user_email.split('@').first.gsub('.', '_')
 
     if OS.linux?
-      `grep -E '^#{user_name}' /etc/passwd`
-      unless $?.exitstatus # user does not eixst in the gateway box
+      user_exist = system("grep -E '^#{user_name}' /etc/passwd")
+      unless user_exist # user does not eixst in the gateway box
         # puts "Creating a new linux user with username: #{user_name}"
         password = SecureRandom.base64(10)
         salt = "$5$a1"
