@@ -28,5 +28,6 @@ gem 'twilio-ruby'
 gem 'omniauth-google-oauth2'
 gem 'multi_json'
 gem 'fog'
+gem 'sshkey'
 
 gem 'newrelic_rpm'
