@@ -14,7 +14,7 @@ class CloudRequest
   field :created_at, type: DateTime, default: DateTime.now
   field :approved_by, type: String
   field :approved_at, type: DateTime
-  field :disapproved?, type: Boolean
+  field :disapproved?, type: Boolean, default: false
   field :disapproved_by, type: String
   field :disapproved_at, type: DateTime
 

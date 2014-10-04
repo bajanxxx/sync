@@ -44,12 +44,16 @@
             <input type="text" class="form-control" id="Purpose" name="Purpose" placeholder="Why do you need servers" value="" required="required" />
               <span class="help-block"></span>
           </div>
+
+          <hr />
+
+          <div class="form-group">
+            <div class="row-fluid">
+              <button type="submit" id="SubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary center-block">Create Request</button>
+            </div>
+          </div>
+          <p id="CreateServersFormLabel" class="text-center"></p>
         </form>
-        <p id="CreateServersFormLabel" class="text-center"></p>
-        <hr />
-        <div class="row-fluid">
-          <button id="SubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary center-block">Create Request</button>
-        </div>
       </div>
     </div>
   </div>
@@ -102,7 +106,7 @@
       <% else %>
         <% bootstrapping_requests.each do |request| %>
           <li class="list-group-item">
-            <span class="badge alert-warning"><a href="/cloudservers/request/<%= request.id %>"><i class="fa fa-cogs"></i></a></span>
+            <span class="badge alert-warning"><a href="/cloudservers/request/<%= request.id %>"><i class="fa fa-cogs" data-toggle="tooltip" data-placement="bottom" title="Click here to view/modify instances."></i></a></span>
             <span class="badge alert-success">Req Type: Servers</span>
             <i class="fa fa-circle-o-notch fa-spin fa-lg"></i>
             <span>Bootstrapping <%= request.cloud_instances.count %> servers for <%= request.requester %></span>
@@ -122,7 +126,7 @@
       <% else %>
         <% running_requests.each do |request| %>
           <li class="list-group-item">
-            <span class="badge alert-warning"><a href="/cloudservers/request/<%= request.id %>"><i class="fa fa-cogs"></i></a></span>
+            <span class="badge alert-warning"><a href="/cloudservers/request/<%= request.id %>"><i class="fa fa-cogs" data-toggle="tooltip" data-placement="bottom" title="Click here to view/modify instances."></i></a></span>
             <span class="badge alert-success">Req Type: Servers</span>
             <span>Bootstrapped <%= request.cloud_instances.count %> servers for <%= request.requester %></span>
           </li>
@@ -182,34 +186,36 @@ $(document).ready(function(){
         }
       }
     }
-  });
+  })
+  .on('success.form.bv', function(e) {
+    e.preventDefault();
 
-  $('#SubmitBtn').click(function() {
-    _this = $(this);
-    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
-    _this.attr('disabled', true); // no double submit
+    // Get the form instance
+    var $form  = $(e.target);
+
+    // Get the BootstrapValidator instance
+    var bv = $form.data('bootstrapValidator');
+
     $.ajax({
       type: "POST",
       dataType: "json",
       url: "/cloudservers/<%= consultant.email %>/requests",
-      data: $('#CreateServerForm').serialize(),
+      data: new FormData($form[0]), // make sure we send files as a part of data
+      cache: false,
+      contentType: false,
+      processData: false,
       success: function(data) {
         if(!data.success) {
           console.log("Error: " + data.msg);
-          _this.attr('disabled', false); // re-enable submit
-          _this.html('Re-submit');
           $('#CreateServersFormLabel').addClass('text-danger').html(data.msg);
         } else {
           console.log("Sucess: " + data.msg)
-          _this.html("Submitted");
           $('#CreateServersFormLabel').addClass('text-info').html(data.msg);
           $('#CreateServersModal').modal('hide');
           location.reload();
         }
       },
       error: function(data) {
-        _this.attr('disabled', false); // re-enable submit
-        _this.html('Re-submit');
         $('#CreateServersFormLabel').addClass('text-danger').html('Something went wrong creating a new request!!!');
       }
     });

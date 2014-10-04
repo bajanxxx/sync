@@ -14,6 +14,7 @@ require_relative 'lib/settings'
 
 require_relative 'models/cloud_request'
 require_relative 'models/cloud_instance'
+require_relative 'models/user'
 
 module OS
   def OS.windows?
@@ -144,7 +145,7 @@ class CloudInstances
   end
 
   def create_user!(user_email)
-    user_name = user_email.split('@').first
+    user_name = user_email.split('@').first.gsub('.', '_')
 
     if OS.linux?
       `grep -E '^#{user_name}' /etc/passwd`
@@ -169,7 +170,7 @@ class CloudInstances
 
   def create_kp!(conn, user_email)
     # Check if the user already has key pair in the document
-    user_name = user_email.split('@').first
+    user_name = user_email.split('@').first.gsub('.', '_')
 
     # create a linux user
     create_user!(user_email)
@@ -203,7 +204,7 @@ class CloudInstances
 
       FileUtils.mkdir_p(ssh_home)
       FileUtils.chmod(0700, ssh_home)
-      OS.linux? ? FileUtils.chown(user_name, user_name, ssh_home) : FileUtils.chown(user_name, 'wheel', ssh_home)
+      FileUtils.chown(user_name, user_name, ssh_home) if OS.linux? # : FileUtils.chown(user_name, 'wheel', ssh_home)
       File.open(ssh_pem, 'w') { |file| file.write(kp.private_key) }
       FileUtils.chmod(0600, ssh_pem)
       # OS.linux? ? FileUtils.chown(user_name, user_name, ssh_pem) : FileUtils.chown(user_name, 'wheel', ssh_pem)
@@ -282,38 +283,43 @@ if __FILE__ == $0
   request = CloudRequest.where(approved?: true, active?: false, lock?: false, fulfilled?: false).first
 
   if request
-    puts "Getting lock on request: #{request}"
-    # now lets lock the request so that no other process can work on it
-    request.update_attributes!(lock?: true)
+    begin
+      puts "Getting lock on request: #{request}"
+      # now lets lock the request so that no other process can work on it
+      request.update_attributes!(lock?: true)
 
-    user_email = request.requester
-    user_name  = user_email.split('@').first
+      user_email = request.requester
+      user_name  = user_email.split('@').first.gsub('.', '_')
 
-    # try create linux user, a key pair to login to the instances and a security group
-    ci.create_kp!(conn, user_email)
+      # try create linux user, a key pair to login to the instances and a security group
+      ci.create_kp!(conn, user_email)
 
-    # try creating a security group and update rules
-    ci.create_sg!(conn, 'ankus')
+      # try creating a security group and update rules
+      ci.create_sg!(conn, 'ankus')
 
-    server_objs = {}
+      server_objs = {}
 
-    request.cloud_instances.each do |instance|
-      server_objs[instance.instance_name] = ci.create_server!(
-        conn,
-        instance.instance_name,
-        instance.flavor_id,
-        user_name,
-        instance.image_id,
-        ['ankus']
-      )
+      request.cloud_instances.each do |instance|
+        server_objs[instance.instance_name] = ci.create_server!(
+          conn,
+          instance.instance_name,
+          instance.flavor_id,
+          user_name,
+          instance.image_id,
+          ['ankus']
+        )
+      end
+
+      server_objs.each do |sn, so|
+        ci.update_server!(so, sn)
+      end
+    rescue
+      # something went wrong processing the request remove lock and exit
+      request.update_attributes!(fulfilled?: false, lock?: false)
+    else
+      # now we can safely update the request as fulfilled and release the lock
+      request.update_attributes!(fulfilled?: true, lock?: false)
     end
-
-    server_objs.each do |sn, so|
-      ci.update_server!(so, sn)
-    end
-
-    # now we can safely update the request as fulfilled and release the lock
-    request.update_attributes!(fulfilled?: true, lock?: false)
   else
     puts "No requests to fulfill"
   end
