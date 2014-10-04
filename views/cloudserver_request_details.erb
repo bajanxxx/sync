@@ -1,0 +1,147 @@
+<div class="container theme-showcase" role="main">
+  <!-- page header -->
+  <div class="page-header">
+    <h2>
+      Cloud Server Request <small>(For: <%= request.requester %>. Powered by <a href="http://github.com/ashrithr/ankus">Ankus</a>)</small>
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+          Request Options <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li><a id="CreateServers" data-toggle="modal" href="#CreateServersModal">Add new server</a></li>
+          <li><a id="CreateClusters" data-toggle="modal" href="#CreateClusterModal">Destroy instances</a></li>
+        </ul>
+      </div>
+    </h2>
+  </div>
+
+  <% unless request.fulfilled? %>
+  <p class="text-center" id="refreshcontainer"><i>NOTE:</i> This page is being refreshed every 5 seconds until the request is fulfilled.</p>
+  <% end %>
+
+  <div id="instancescontainer" class="row-fluid">
+    <% request.cloud_instances.each do |instance| %>
+      <div class="col-xs-4 spacer">
+        <div class="well">
+          <img style="position:absolute;bottom:0;right:0;" src="/img/<%= instance.os_flavor %>-logo.png" alt="folder" class="img-circle">
+          <% if instance.state == 'NOTAPPROVED' || instance.state == 'BUILDING' %>
+            <p><b><%= instance.instance_name %></b> <i class="fa fa-circle-o-notch fa-spin fa-lg pull-right"></i></p>
+            <hr \>
+            <p>IP: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-spinner fa-spin"></i></p>
+          <% elsif instance.state == 'ACTIVE' %>
+            <p><b><%= instance.instance_name %></b> <i class="fa fa-circle-thin fa-lg icon-green pull-right"></i></p>
+            <hr \>
+            <p>IP: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b><%= instance.ip_address %></b></p>
+          <% elsif instance.state == 'ERROR' %>
+            <p><b><%= instance.instance_name %></b> <i class="fa fa-circle-thin fa-lg icon-red pull-right"></i></p>
+            <hr \>
+            <p>IP: <i>Error</i></p>
+          <% else %>
+            <p><b><%= instance.instance_name %></b> <i class="fa fa-circle-thin fa-lg icon-yellow pull-right"></i></p>
+            <hr \>
+            <p>IP: <i><%= instance.ip_address || 'Error' %></i></p>
+          <% end %>
+
+          <p>Cores:     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b><%= instance.vcpus || '???' %></b></p>
+          <p>RAM (MB):  &nbsp;<b><%= instance.mem || '???' %></b></p>
+          <p>Disk (GB): &nbsp;&nbsp;<b><%= instance.disk || '???' %></b></p>
+
+          <% if instance.state == 'ACTIVE' %>
+            <p><a id="CreateServers" data-toggle="modal" href="#LoginInstructions-<%= instance.id %>">Login Instructions</a></p>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<% request.cloud_instances.each do |instance| %>
+<div class="modal fade" id="LoginInstructions-<%= instance.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Login and SSH Instructions for <%= instance.instance_name %></h4>
+      </div>
+      <div class="modal-body">
+      <p>To log into the instance do this:</p>
+      <ol>
+        <li>
+          SSH into gateway using: <code>ssh <%= instance.user_id.split('@').first %>@sync.cloudwick.com</code>
+          <br>
+          Your linux password is: <code><%= user.lpwd %></code>
+        </li>
+        <li>
+          Once logged into cloudwick gateway server, ssh into the instance using:
+          <br>
+          <code>ssh cloud-user@<%= instance.ip_address %></code>
+        </li>
+        <li>
+          Finally to open a web page on the instance like for example to view namenode web page, you have create a ssh tunnel like so:
+          <br>
+          <code>ssh -L [local_bindport]:[ipaddress]:[remote_bindport] [username]@sync.cloudwick.com</code>
+          <br>
+          More information on ssh tunneling can be found <a href="https://gist.github.com/ashrithr/3a83b42e3b658e742177" target="_blank">here</a>
+        </li>
+      </ol>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>
+
+
+<style>
+.borderless tbody tr td, .borderless thead tr th {
+  border: none;
+}
+.icon-green {
+  color: green;
+}
+.icon-yellow {
+  color: yellow;
+}
+.icon-red {
+  color: #D00000;
+}
+.spacer {
+  margin-top: 20px;
+}
+hr {
+  display: block; height: 1px;
+  border: 0; border-top: 1px solid #ccc;
+  margin: 1em 0; padding: 0;
+}
+</style>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    update_page()
+    var interval = setInterval(function(){
+      update_page()
+    }, 10000); // 10 seconds
+
+    function update_page() {
+      $.ajax({
+        type: "GET",
+        accepts: "application/json",
+        url: "/cloudservers/request/progress/<%= request.id %>",
+        success: function(data){
+          var response = JSON.parse(data)
+          console.log(response);
+          if (response.fulfilled == false) {
+            $("#instancescontainer").load('/cloudservers/request/partial/<%= request.id %>');
+            $("#refreshcontainer").html('This page is being refreshed every 5 seconds until the request is fulfilled');
+          } else {
+            console.log("clearing interval");
+            $("#refreshcontainer").remove();
+            clearInterval(interval)
+          }
+        },
+        error: function(e){
+          console.log("Error occurred");
+        }
+      });
+    }
+  });
+</script>
