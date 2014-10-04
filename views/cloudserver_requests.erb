@@ -1,0 +1,258 @@
+<!-- TODO Change this modal to reflect server creation form -->
+<div class="modal fade" id="CreateServersModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create Cloud Instance Request</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="CreateServerForm">
+          <div class="form-group">
+            <label for="NumberOfInstances">Number of Instances:</label>
+              <input type="text" class="form-control" id="NumberOfInstances" name="NumberOfInstances" placeholder="Number of instances to launch" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="InstanceType">Instance Type</label>
+            <select name="InstanceType" id="InstanceType" class="form-control">
+              <% flavors.each do |flavor| %>
+              <option value="<%= flavor.id %>"><%= flavor.flavor_name %> (vcpus: <%= flavor.vcpus %>, mem: <%= flavor.mem %>, disk: <%= flavor.disk %>)</option>
+              <% end %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="Image">Image to boot:</label>
+            <select name="Image" id="Image" class="form-control">
+              <% images.each do |image| %>
+              <option value="<%= image.id %>"><%= image.os %> (ver: <%= image.os_ver %>, arch: <%= image.os_arch %>)</option>
+              <% end %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ServerName">Server Name: </label>
+            <input type="text" class="form-control" id="ServerName" name="ServerName" placeholder="Name of the server (default: [username])." value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="DomainName">Domain Name: </label>
+            <input type="text" class="form-control" id="DomainName" name="DomainName" placeholder="Domain name to  use (default: '[servername].ankus.cloudwick.com')." value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="Purpose">Purpose: </label>
+            <input type="text" class="form-control" id="Purpose" name="Purpose" placeholder="Why do you need servers" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="CreateServersFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <button id="SubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary center-block">Create Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container theme-showcase" role="main">
+  <!-- page header -->
+  <div class="page-header">
+    <h2>
+      Cloud Server Requests <small>(Powered by <a href="http://github.com/ashrithr/ankus">Ankus</a>)</small>
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+          Start Here <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li><a id="CreateServers" data-toggle="modal" href="#CreateServersModal">Create Servers</a></li>
+          <li><a id="CreateClusters" data-toggle="modal" href="#CreateClusterModal">Create Cluster</a></li>
+          <li class="divider"></li>
+          <li><a href="/cloudservers/images">Manage Cloud Images</a></li>
+          <li><a href="/cloudservers/flavors">Manage Instance Flavors</a></li>
+        </ul>
+      </div>
+    </h2>
+  </div>
+  <!-- page body -->
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <strong>Pending Requests</strong>
+    </div>
+    <ul class="list-group">
+      <% if pending_requests.empty? %>
+        <li class="list-group-item"><span>No new requests ...</span></li>
+      <% else %>
+        <% pending_requests.each do |request| %>
+          <li class="list-group-item">
+            <button type="button" id="DisapproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span data-original-title="Disapprove this request"><i class="fa fa-times"></i></span></button>
+            <button type="button" data-toggle="modal" id="ApproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span data-original-title="Approve this request"><i class="fa fa-check"></i></span></button>
+            <span><%= request.requester %> has requested <%= request.cloud_instances.count %> servers for '<%= request.purpose %>'</span>
+          </li>
+        <% end %>
+      <% end %>
+    </ul>
+  </div>
+
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <strong>Initializing ...</strong>
+    </div>
+    <ul class="list-group">
+      <% if bootstrapping_requests.empty? %>
+        <li class="list-group-item"><span>Nothing is being bootstrapped now.</span></li>
+      <% else %>
+        <% bootstrapping_requests.each do |request| %>
+          <li class="list-group-item">
+            <span class="badge alert-warning"><a href="/cloudservers/request/<%= request.id %>"><i class="fa fa-cogs" data-toggle="tooltip" data-placement="bottom" title="Click here to view/modify instances."></i></a></span>
+            <span class="badge alert-success">Req Type: Servers</span>
+            <i class="fa fa-circle-o-notch fa-spin fa-lg"></i>
+            <span>Bootstrapping <%= request.cloud_instances.count %> servers for <%= request.requester %></span>
+          </li>
+        <% end %>
+      <% end %>
+    </ul>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <strong>Running Servers/Clusters</strong>
+    </div>
+    <ul class="list-group">
+      <% if running_requests.empty? %>
+        <li class="list-group-item"><span>There are no running servers/clusters.</span></li>
+      <% else %>
+        <% running_requests.each do |request| %>
+          <li class="list-group-item">
+            <span class="badge alert-warning"><a href="/cloudservers/request/<%= request.id %>"><i class="fa fa-cogs" data-toggle="tooltip" data-placement="bottom" title="Click here to view/modify instances."></i></a></span>
+            <span class="badge alert-success">Req Type: Servers</span>
+            <span>Bootstrapped <%= request.cloud_instances.count %> servers for <%= request.requester %></span>
+          </li>
+        <% end %>
+      <% end %>
+    </ul>
+  </div>
+
+  <p class="text-center"><i>To and view modify running and bootstrapped instances for a specific request click on <i class="fa fa-cogs"></i> icon of a specific request.</i></p>
+</div>
+
+<style>
+.badge-outline {
+  color: black;
+  border: 1px solid #999;
+  background-color: transparent;
+}
+.badge-outline.badge-success {
+  border-color: #468847;
+}
+</style>
+
+<script type="text/javascript">
+$(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip({'placement': 'bottom'});
+
+  $('#CreateServerForm').bootstrapValidator({
+    feedbackIcons: {
+        valid: 'glyphicon glyphicon-ok',
+        invalid: 'glyphicon glyphicon-remove',
+        validating: 'glyphicon glyphicon-refresh'
+      },
+    fields: {
+      NumberOfInstances: {
+        message: 'number of instances is not valid',
+        validators: {
+          notEmpty: {
+              message: 'number of servers is required and cannot be empty'
+          },
+          integer: {
+            message: 'expecting integer value'
+          },
+          between: {
+            min: 1,
+            max: 10,
+            message: 'can request only between 1 and 10 servers per request'
+          }
+        }
+      },
+      Purpose: {
+        message: 'required',
+        validators: {
+          notEmpty: {
+            message: 'purpose of the request is required'
+          }
+        }
+      }
+    }
+  });
+
+  $('#SubmitBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/cloudservers/<%= consultant.email %>/requests",
+      data: $('#CreateServerForm').serialize(),
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#CreateServersFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg)
+          _this.html("Submitted");
+          $('#CreateServersFormLabel').addClass('text-info').html(data.msg);
+          $('#CreateServersModal').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#CreateServersFormLabel').addClass('text-danger').html('Something went wrong creating a new request!!!');
+      }
+    });
+  });
+
+  // Disapprove requests
+  <% pending_requests.each do |request| %>
+    $('#DisapproveRequest-<%= request.id %>').click(function() {
+      console.log("Initializing call");
+      _this = $(this);
+      _this.html('<i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      $.ajax({
+        type: "POST",
+        url: "/cloudservers/requests/deny/<%= request.id %>",
+        success: function(data){
+          location.reload();
+        },
+        error: function(e){
+          alert("Error occurred!");
+        }
+      });
+    });
+    // approve requests
+    $('#ApproveRequest-<%= request.id %>').click(function() {
+      console.log("Initializing call");
+      _this = $(this);
+      _this.html('<i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      $.ajax({
+        type: "POST",
+        url: "/cloudservers/requests/approve/<%= request.id %>",
+        success: function(data){
+          location.reload();
+        },
+        error: function(e){
+          alert("Error occurred!");
+        }
+      });
+    });
+  <% end %>
+})
+</script>

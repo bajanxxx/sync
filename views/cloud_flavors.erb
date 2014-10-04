@@ -1,0 +1,136 @@
+<!-- Modal Definitions -->
+<div class="modal fade" id="AddCloudFlavorModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create a new cloud flavor</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="LLCreateForm">
+          <div class="form-group">
+            <label for="FlavorID">Flavor ID:</label>
+              <input type="text" class="form-control" id="FlavorID" name="FlavorID" placeholder="Name of the Flavor ID" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="FlavorName">FlavorName:</label>
+            <input type="text" class="form-control" id="FlavorName" name="FlavorName" placeholder="Name of the instance (ex: m1.small)" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="VCPUS">vCPUs:</label>
+            <input type="text" class="form-control" id="VCPUS" name="VCPUS" placeholder="Number of vCPUs" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="MEM">Memory:</label>
+            <input type="text" class="form-control" id="MEM" name="MEM" placeholder="Memory in the instance in MB" value="" required="required" />
+          </div>
+          <div class="form-group">
+            <label for="DISK">Disk Size: </label>
+            <input type="text" class="form-control" id="DISK" name="DISK" placeholder="Root Disk Size in instance in GB" value="" required="required" />
+          </div>
+        </form>
+        <p id="CreateCloudFlavorTypeFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <button id="SubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary center-block">Add Flavor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Manage Cloud Instance Flavors
+      <p class="pull-right">
+        <a id="AddCloudFlavor" class="btn btn-primary btn-md" data-toggle="modal" href="#AddCloudFlavorModal" role="button">Add Cloud Instance Flavor &raquo;</a>
+      </p>
+    </h2>
+  </div>
+  <% if !flavors.empty? %>
+  <ul class="list-group">
+    <% flavors.each do |flavor| %>
+    <li class="list-group-item">
+      <div class="pull-right button-group">
+        <button id="deletebtn<%= flavor.id %>" class="btn btn-xs btn-default"><i class="fa fa-times"></i></button>
+      </div>
+      <strong><%= flavor.flavor_name %></strong> (vcpus: <%= flavor.vcpus %>, mem: <%= flavor.mem %> MB, disk: <%= flavor.disk %> GB)
+    </li>
+    <% end %>
+  </ul>
+  <% else %>
+  <div class="bs-callout bs-callout-info">
+    <p class="lead">No cloud instance flavors have been added yet, add some using <code>'Add Cloud Flavor'</code> button.</p>
+  </div>
+  <% end %>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('#SubmitBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var flavorid = $("#FlavorID").val();
+    var flavorname = $("#FlavorName").val();
+    var vcpus = $("#VCPUS").val();
+    var mem = $("#MEM").val();
+    var disk = $("#DISK").val();
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/cloudservers/flavors",
+      data: {'flavorid': flavorid, 'flavorname': flavorname, 'vcpus': vcpus, 'mem': mem ,'disk': disk},
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#CreateCloudFlavorTypeFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg);
+          _this.html("Submitted");
+          $('#CreateCloudFlavorTypeFormLabel').addClass('text-info').html(data.msg);
+          $('#AddCloudFlavorModal').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#CreateCloudFlavorTypeFormLabel').addClass('text-danger').html('Something went wrong adding cloud instance flavor!!!');
+      }
+    });
+  });
+
+  <% flavors.each do |flavor| %>
+    $('#deletebtn<%= flavor.id %>').hover(
+      function(){ // mouseenter
+        $("#deletebtn<%= flavor.id %>").removeClass('btn-default').addClass('btn-danger');
+      },
+      function(){ // mouseleave
+        $('#deletebtn<%= flavor.id %>').removeClass('btn-danger').addClass('btn-default');
+      }
+    );
+
+    $('#deletebtn<%= flavor.id %>').click(function(){
+      $.ajax({
+        type: "DELETE",
+        url: "/cloudservers/flavors/<%= flavor.id %>",
+        success: function(data){
+          location.reload();
+        },
+        error: function(e){
+          alert("Error occurred");
+        }
+      });
+    });
+  <% end %>
+});
+</script>
