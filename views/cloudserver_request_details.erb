@@ -67,7 +67,7 @@
       <p>To log into the instance do this:</p>
       <ol>
         <li>
-          SSH into gateway using: <code>ssh <%= instance.user_id.split('@').first %>@sync.cloudwick.com</code>
+          SSH into gateway using: <code>ssh <%= instance.user_id.split('@').first.gsub('.', '_') %>@sync.cloudwick.com</code>
           <br>
           Your linux password is: <code><%= user.lpwd %></code>
         </li>
