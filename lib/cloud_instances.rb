@@ -139,12 +139,12 @@ class CloudInstances
         # puts "Creating a new linux user with username: #{user_name}"
         password = SecureRandom.base64(10)
         salt = "$5$a1"
-        passowrd_hash = password.crypt(salt)
+        password_hash = password.crypt(salt)
 
         result = system("useradd -m -p '#{password_hash}' #{user_name}")
         if result
           # create user in mongo
-          user_obj.update_attributes(
+          user_obj.update_attributes!(
             lun: user_name,
             lpwd: password
           )
