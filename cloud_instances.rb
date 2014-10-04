@@ -261,8 +261,8 @@ end
 if __FILE__ == $0
   puts "Initializing bootstrapper @ #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
 
-  Mongoid.load!(File.expand_path('config/mongoid.yml', File.dirname(__FILE__)), :development)
-  Settings.load!('config/config.yml')
+  Mongoid.load!(File.expand_path(File.join(File.dirname(__FILE__), 'config', 'mongoid.yml')), :development)
+  Settings.load!(File.expand_path(File.join(File.dirname(__FILE__), 'config', 'config.yml')))
   @settings = Settings._settings
 
   ci = CloudInstances.new(

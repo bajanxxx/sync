@@ -129,6 +129,7 @@ GEM
       tilt (~> 1.3)
     sinatra-flash (0.3.0)
       sinatra (>= 1.0.0)
+    sshkey (1.6.1)
     subexec (0.2.3)
     systemu (2.6.4)
     tilt (1.4.1)
@@ -176,6 +177,7 @@ DEPENDENCIES
   sinatra
   sinatra-contrib
   sinatra-flash
+  sshkey
   twilio-ruby
   unicorn
   uuid
