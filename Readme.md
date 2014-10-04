@@ -160,6 +160,8 @@ Create the following cron job's for the fetcher to run continuously & also to ba
 10 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_indeed_postings.rb --search cassandra --age-of-postings 1 --limit 100 >> /var/log/sync_fetcher.log 2>&1
 # mongo backup
 0 0 * * * /bin/bash /opt/sync/backup_mongo.sh -p "/mongo-backup-100 /mongo-backup-217" -d sync >> /var/log/sync_backup.log 2>&1
+# cloud server bootstrapper
+*/5 * * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/cloud_instances.rb >> /var/log/sync_cloud_bootstrapper.log 2>&1
 ```
 
 License and Authors
