@@ -2905,7 +2905,7 @@ Admin</a> </p>
             consultant: Consultant.find_by(email: @username),
             images: CloudImage.all,
             flavors: CloudFlavor.all,
-            pending_requests: CloudRequest.where(approved?: false),
+            pending_requests: CloudRequest.where(approved?: false, disapproved?: false),
             bootstrapping_requests: CloudRequest.where(approved?: true, fulfilled?: false),
             running_requests: CloudRequest.where(approved?: true, fulfilled?: true, active?: false)
           }
@@ -2920,7 +2920,7 @@ Admin</a> </p>
           consultant: Consultant.find_by(email: userid),
           images: CloudImage.all,
           flavors: CloudFlavor.all,
-          pending_requests: CloudRequest.where(requester: userid, approved?: false),
+          pending_requests: CloudRequest.where(requester: userid, approved?: false, disapproved?: false),
           bootstrapping_requests: CloudRequest.where(requester: userid, approved?: true, fulfilled?: false),
           running_requests: CloudRequest.where(requester: userid, approved?: true, fulfilled?: true, active?: false)
         }
