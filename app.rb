@@ -2914,7 +2914,7 @@ Admin</a> </p>
     end
   end
 
-  get '/cloudservers/:userid' do |userid|
+  get '/cloudservers/requests/:userid' do |userid|
     erb :consultant_cloudservers,
         locals: {
           consultant: Consultant.find_by(email: userid),
