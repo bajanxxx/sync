@@ -36,6 +36,8 @@ class CloudInstance
   field :state, type: String, default: 'NOTAPPROVED'
   field :uptime, type: String
   field :terminated, type: Boolean, default: false
+  # lock is used by various programs trying to update the state of the instance
+  field :lock?, type: Boolean, default: false
   field :hosted_on, type: String
 
   field :volumes_count, type: Integer, default: 0

@@ -80,6 +80,7 @@ require_relative 'lib/dj/generate_document'
 require_relative 'lib/dj/email_request_status'
 require_relative 'lib/dj/email_document_request'
 require_relative 'lib/dj/email_project_notification'
+require_relative 'lib/dj/create_cloud_instances'
 
 # Prawn PDF Generators
 require_relative 'lib/prawn/leave_letter'
@@ -2906,7 +2907,8 @@ Admin</a> </p>
             images: CloudImage.all,
             flavors: CloudFlavor.all,
             pending_requests: CloudRequest.where(approved?: false, disapproved?: false),
-            bootstrapping_requests: CloudRequest.where(approved?: true, fulfilled?: false),
+            bootstrapping_requests: CloudRequest.where(approved?: true, fulfilled?: false, connection_failed?: false),
+            failed_requests: CloudRequest.where(approved?: true, fulfilled?: false, connection_failed?: true),
             running_requests: CloudRequest.where(approved?: true, fulfilled?: true, active?: false)
           }
     else
@@ -2941,10 +2943,30 @@ Admin</a> </p>
   end
 
   post '/cloudservers/requests/approve/:id' do |rid|
-    dr = CloudRequest.find(rid)
-    dr.update_attributes(approved?: true, approved_by: @admin_name, approved_at: DateTime.now)
-    # TODO trigger a delayed job to send email update to user
+    cr = CloudRequest.find(rid)
+    cr.update_attributes(approved?: true, approved_by: @admin_name, approved_at: DateTime.now)
+
+    Delayed::Job.enqueue(
+      CreateCloudInstances.new(@settings, cr, User.find_by(email: cr.requester)),
+      queue: 'create_cloud_servers',
+      priority: 10
+    )
+
     flash[:info] = 'Sucessfully approved and scheduled the servers to bootstrap'
+    redirect "/cloudservers/requests"
+  end
+
+  post '/cloudservers/requests/retry/:id' do |rid|
+    cr = CloudRequest.find(rid)
+    cr.update_attributes!(connection_failed?: false)
+
+    Delayed::Job.enqueue(
+      CreateCloudInstances.new(@settings, cr, User.find_by(email: cr.requester)),
+      queue: 'create_cloud_servers',
+      priority: 10
+    )
+
+    flash[:info] = 'Sucessfully scheduled the servers to bootstrap (retry)'
     redirect "/cloudservers/requests"
   end
 

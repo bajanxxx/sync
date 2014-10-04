@@ -133,6 +133,25 @@
     </ul>
   </div>
 
+  <div class="panel panel-warning">
+    <div class="panel-heading">
+      <strong>Failed Servers/Clusters</strong>
+    </div>
+    <ul class="list-group">
+      <% if failed_requests.empty? %>
+        <li class="list-group-item"><span>There are no failed servers/clusters.</span></li>
+      <% else %>
+        <% failed_requests.each do |request| %>
+          <li class="list-group-item">
+            <button type="button" id="DisapproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span data-original-title="Disapprove this request"><i class="fa fa-times"></i></span></button>
+            <button type="button" data-toggle="modal" id="RetryRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span data-original-title="Retry this request"><i class="fa fa-refresh"></i></span></button>
+            <span>Failed Bootstrapping <%= request.cloud_instances.count %> servers for <%= request.requester %> (Openstack connectivity issue!)</span>
+          </li>
+        <% end %>
+      <% end %>
+    </ul>
+  </div>
+
   <p class="text-center"><i>To view and modify running or bootstrapped instances for a specific request click on <i class="fa fa-cogs"></i> icon of a specific request.</i></p>
 </div>
 
@@ -216,8 +235,8 @@ $(document).ready(function(){
     });
   });
 
-  // Disapprove requests
   <% pending_requests.each do |request| %>
+    // Disapprove requests
     $('#DisapproveRequest-<%= request.id %>').click(function() {
       console.log("Initializing call");
       _this = $(this);
@@ -245,6 +264,26 @@ $(document).ready(function(){
       $.ajax({
         type: "POST",
         url: "/cloudservers/requests/approve/<%= request.id %>",
+        success: function(data){
+          location.reload();
+        },
+        error: function(e){
+          alert("Error occurred!");
+        }
+      });
+    });
+  <% end %>
+
+  <% failed_requests.each do |request| %>
+    $('#RetryRequest-<%= request.id %>').click(function() {
+      console.log("Initializing call");
+      _this = $(this);
+      _this.html('<i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      $.ajax({
+        type: "POST",
+        url: "/cloudservers/requests/retry/<%= request.id %>",
         success: function(data){
           location.reload();
         },

@@ -1,20 +1,6 @@
-require 'pp'
-require 'pathname'
-require 'optparse'
-require 'ostruct'
-require 'mongoid'
-require 'mongoid_search'
-require 'parallel'
 require 'fog'
 require 'securerandom'
-require 'sshkey'
 require 'fileutils'
-
-require_relative 'lib/settings'
-
-require_relative 'models/cloud_request'
-require_relative 'models/cloud_instance'
-require_relative 'models/user'
 
 module OS
   def OS.windows?
@@ -76,7 +62,7 @@ class CloudInstances
 
   def create_sg!(conn, group)
     unless conn.security_groups.map {|x| x.name }.include?(group)
-      puts "Creating a new security group with name: #{group}"
+      # puts "Creating a new security group with name: #{group}"
       conn.security_groups.create(name: group, description: 'group managed by ankus')
     end
 
@@ -120,37 +106,37 @@ class CloudInstances
           ip_permission.ip_protocol == 'icmp'
     end
     unless open_ssh
-      puts "Opening SSH port in security group: #{group}"
+      # puts "Opening SSH port in security group: #{group}"
       conn.create_security_group_rule(sec_group_id, 'tcp', 22, 22, '0.0.0.0/0')
     end
     # TODO: authorize specific ports for hadoop, hbase
     unless open_all_tcp
-      puts "Opening all TCP port(s) in security group: #{group}"
+      # puts "Opening all TCP port(s) in security group: #{group}"
       conn.create_security_group_rule(sec_group_id, 'tcp', 1, 65535, '0.0.0.0/0')
     end
     unless open_all_udp
-      puts "Opening all UDP port(s) in security group: #{group}"
+      # puts "Opening all UDP port(s) in security group: #{group}"
       conn.create_security_group_rule(sec_group_id, 'udp', 1, 65535, '0.0.0.0/0')
     end
     unless open_all_icmp
       unless open_icmp_echo_req
-        puts "Opening all ICMP Req port(s) in security group: #{group}"
+        # puts "Opening all ICMP Req port(s) in security group: #{group}"
         conn.create_security_group_rule(sec_group_id, 'icmp', 0, -1, '0.0.0.0/0')
       end
       unless open_icmp_echo_rep
-        puts "Opening all ICMP Rep port(s) in security group: #{group}"
+        # puts "Opening all ICMP Rep port(s) in security group: #{group}"
         conn.create_security_group_rule(sec_group_id, 'icmp', 8, -1, '0.0.0.0/0')
       end
     end
   end
 
-  def create_user!(user_email)
+  def create_user!(user_email, user_obj)
     user_name = user_email.split('@').first.gsub('.', '_')
 
     if OS.linux?
       `grep -E '^#{user_name}' /etc/passwd`
       unless $?.exitstatus # user does not eixst in the gateway box
-        puts "Creating a new linux user with username: #{user_name}"
+        # puts "Creating a new linux user with username: #{user_name}"
         password = SecureRandom.base64(10)
         salt = "$5$a1"
         passowrd_hash = password.crypt(salt)
@@ -158,22 +144,21 @@ class CloudInstances
         result = system("useradd -m -p '#{password_hash}' #{user_name}")
         if result
           # create user in mongo
-          User.find_by(email: user_email)
-            .update_attributes(
-              lun: user_name,
-              lpwd: password
-            )
+          user_obj.update_attributes(
+            lun: user_name,
+            lpwd: password
+          )
         end
       end # end unless
     end
   end
 
-  def create_kp!(conn, user_email)
+  def create_kp!(conn, user_email, user_obj)
     # Check if the user already has key pair in the document
     user_name = user_email.split('@').first.gsub('.', '_')
 
     # create a linux user
-    create_user!(user_email)
+    create_user!(user_email, user_obj)
 
     if OS.linux?
       ssh_home  = "/home/#{user_name}/.ssh"
@@ -186,20 +171,20 @@ class CloudInstances
     end
 
     if conn.key_pairs.get(user_name) # key pair exists in openstack
-      puts "key_pair #{user_name} already exists in openstack"
+      # puts "key_pair #{user_name} already exists in openstack"
       unless File.exist?(ssh_pem) # file does alredy exists in local, lets get it from mongo
-        puts "But, key_pair does not exist on the gateway box, attempting to install the key..."
+        # puts "But, key_pair does not exist on the gateway box, attempting to install the key..."
         # Attempt to create the ssh home path if does not exist already on the box
         unless File.exist?(ssh_home)
           FileUtils.mkdir_p(ssh_home)
           FileUtils.chmod(0700, ssh_home)
         end
-        File.open(ssh_pem, 'w') { |file| file.write(User.find_by(email: user_email).pem) }
+        File.open(ssh_pem, 'w') { |file| file.write(user_obj.pem) }
       else
-        puts "key_pair #{user_name} file exists on the gateway box"
+        # puts "key_pair #{user_name} file exists on the gateway box"
       end
     else # key pair does not exist in openstack lets create one kp and update in mongo
-      puts "Creating a new key pair with name: #{user_name}"
+      # puts "Creating a new key pair with name: #{user_name}"
       kp = conn.key_pairs.create(name: user_name)
 
       FileUtils.mkdir_p(ssh_home)
@@ -212,13 +197,12 @@ class CloudInstances
       # FileUtils.chmod(0644, ssh_pub)
       # OS.linux? ? FileUtils.chown(user_name, user_name, ssh_pub) : FileUtils.chown(user_name, 'wheel', ssh_pub)
 
-      User.find_by(email: user_email)
-        .update_attributes(pem: kp.private_key, pub: kp.public_key, fin: kp.fingerprint)
+      user_obj.update_attributes(pem: kp.private_key, pub: kp.public_key, fin: kp.fingerprint)
     end
   end
 
   def create_server!(conn, name, flavor_id, ssh_key, image_id, sec_groups)
-    puts "Creating instance with name: #{name}, flavor: #{flavor_id}, image_id: #{image_id}"
+    # puts "Creating instance with name: #{name}, flavor: #{flavor_id}, image_id: #{image_id}"
     server = conn.servers.create(
       name: name,
       flavor_ref: flavor_id,
@@ -236,20 +220,20 @@ class CloudInstances
     server
   end
 
-  def update_server!(server, server_name)
+  def update_server!(server, cloud_instance_obj)
     # reload the server instance
-    puts "Reloading server object, acquiring lock on the server object ..."
-    CloudInstance.find_by(instance_name: server_name).update_attributes!(lock?: true)
+    # puts "Reloading server object, acquiring lock on the server object ..."
+    cloud_instance_obj.update_attributes!(lock?: true)
     server.reload
     # wait for the server to get created
-    puts "Waiting for the server #{server_name} to get ready ..."
+    # puts "Waiting for the server #{server_name} to get ready ..."
     begin
-      server.wait_for(600, 5) { ready? }
+      server.wait_for(100, 5) { ready? }
     rescue Fog::Errors::TimeoutError
-      CloudInstance.find_by(instance_name: server_name).update_attributes!(state: 'TIMEDOUT', lock?: false)
+      cloud_instance_obj.update_attributes!(state: 'TIMEDOUT', lock?: false)
     else
       # Update the instances details in db
-      CloudInstance.find_by(instance_name: server_name).update_attributes!(
+      cloud_instance_obj.update_attributes!(
         instance_id: server.id,
         ip_address: server.addresses['novanetwork'].first['addr'],
         hosted_on: server.os_ext_srv_attr_host,
@@ -257,72 +241,5 @@ class CloudInstances
         lock?: false
       )
     end
-  end
-end
-
-
-if __FILE__ == $0
-  puts "Initializing bootstrapper @ #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
-
-  Mongoid.load!(File.expand_path(File.join(File.dirname(__FILE__), 'config', 'mongoid.yml')), :development)
-  Settings.load!(File.expand_path(File.join(File.dirname(__FILE__), 'config', 'config.yml')))
-  @settings = Settings._settings
-
-  ci = CloudInstances.new(
-    @settings[:openstack_auth_url],
-    @settings[:openstack_username],
-    @settings[:openstack_api_key],
-    @settings[:openstack_tenant]
-  )
-
-  conn = ci.create_connection
-  unless conn
-    puts "Cannot connect to openstack cluster, failing silently."
-    exit 1
-  end
-
-  # moving on to check if there any requests that havn't been served yet
-  request = CloudRequest.where(approved?: true, active?: false, lock?: false, fulfilled?: false).first
-
-  if request
-    begin
-      puts "Getting lock on request: #{request}"
-      # now lets lock the request so that no other process can work on it
-      request.update_attributes!(lock?: true)
-
-      user_email = request.requester
-      user_name  = user_email.split('@').first.gsub('.', '_')
-
-      # try create linux user, a key pair to login to the instances and a security group
-      ci.create_kp!(conn, user_email)
-
-      # try creating a security group and update rules
-      ci.create_sg!(conn, 'ankus')
-
-      server_objs = {}
-
-      request.cloud_instances.each do |instance|
-        server_objs[instance.instance_name] = ci.create_server!(
-          conn,
-          instance.instance_name,
-          instance.flavor_id,
-          user_name,
-          instance.image_id,
-          ['ankus']
-        )
-      end
-
-      server_objs.each do |sn, so|
-        ci.update_server!(so, sn)
-      end
-    rescue
-      # something went wrong processing the request remove lock and exit
-      request.update_attributes!(fulfilled?: false, lock?: false)
-    else
-      # now we can safely update the request as fulfilled and release the lock
-      request.update_attributes!(fulfilled?: true, lock?: false)
-    end
-  else
-    puts "No requests to fulfill"
   end
 end

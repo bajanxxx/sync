@@ -11,6 +11,9 @@ class CloudRequest
   field :fulfilled?, type: Boolean, default: false
   # used to fix lock to check if a delayed job process is working on it
   field :lock?, type: Boolean, default: false
+  # used to verify is the previous request failed because of connection issue
+  field :connection_failed?, type: Boolean, default: false
+
   field :created_at, type: DateTime, default: DateTime.now
   field :approved_by, type: String
   field :approved_at, type: DateTime
