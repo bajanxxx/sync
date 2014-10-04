@@ -158,6 +158,10 @@
 			.container-fluid {
     			word-wrap: break-word;
 			}
+
+			.dropdown:hover .dropdown-menu {
+				display: block;
+			}
 		</style>
 		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -185,9 +189,8 @@
 	          <li><a href="/jobs">Jobs</a></li>
 	          <li><a href="/consultants">Consultants</a></li>
 						<li class="dropdown">
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown">Campaign <span class="caret"></span></a>
+							<a href="/campaign" class="dropdown-toggle disabled">Campaign <span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
-								<li><a href="/campaign">Campaign</a></li>
 								<li><a href="/vendors">Vendors</a></li>
 								<li><a href="/customers">Customers</a></li>
 							</ul>
@@ -197,7 +200,15 @@
 						<% else %>
 						<li><a href="/documents">Docs</a></li>
 						<% end %>
-						<li><a href="/timesheets">Timesheets</a></li>
+						<!-- <li><a href="/timesheets">Timesheets</a></li> -->
+						<li class="dropdown">
+							<a href="/cloudservers" class="dropdown-toggle disabled">CloudServers <span class="caret"></span></a>
+							<ul class="dropdown-menu" role="menu">
+								<li><a href="/cloudservers/requests">Requests</a></li>
+								<li><a href="#">Running Servers</a></li>
+								<li><a href="#">Running Clusters</a></li>
+							</ul>
+						</li>
 	        </ul>
 					<% else %>
 					<ul class="nav navbar-nav">
@@ -205,7 +216,7 @@
 						<li><a href="/consultant/<%= @username %>/projects">Projects</a></li>
 						<li><a href="/documents/<%= @username %>">DocReqs</a></li>
 						<li><a href="/timesheets">Timesheets</a></li>
-						<li><a href="/cloudservers">CloudServers</a></li>
+						<li><a href="/cloudservers/<%= @username %>">CloudServers</a></li>
 					</ul>
 					<% end %>
 					<ul class="nav navbar-nav pull-right">

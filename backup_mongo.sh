@@ -21,6 +21,7 @@
 ### !!! DONT CHANGE BEYOND THIS POINT. DOING SO MAY BREAK THE SCRIPT !!!
 declare destination_dirs
 declare database_name
+declare aws_access_key
 
 function check_for_root () {
   if [ "$(id -u)" != "0" ]; then
@@ -84,12 +85,15 @@ Syntax
 
 -p: destination directories
 -d: database name
--h: show help
+-k: aws access key
+-s: aws secret key
+-b: aws bucket name
+-r: aws region name
+-h: show this message
 
 Example:
-`basename ${script}` -d "/mongo_backup1 /mongo_backup2"
-`basename ${script}` -d /mongo_backup
-`basename ${script}` -d /mongo_backup -p database_name
+`basename ${script}` -p "/mongo_backup1 /mongo_backup2" -d database_name
+`basename ${script}` -p /mongo_backup -d database_name
 
 USAGE
   exit 1
@@ -97,7 +101,7 @@ USAGE
 
 
 export PATH="$PATH:/usr/local/bin"
-while getopts "p:d:h" opts
+while getopts "p:d:k:s:b:r:h" opts
 do
   case $opts in
     d)
@@ -105,6 +109,18 @@ do
       ;;
     p)
       destination_dirs=$OPTARG
+      ;;
+    k)
+      aws_access_key=$OPTARG
+      ;;
+    s)
+      aws_secret_key=$OPTARG
+      ;;
+    b)
+      aws_s3_bucket=$OPTARG
+      ;;
+    r)
+      aws_s3_region=$OPTARG
       ;;
     h)
       usage
@@ -114,6 +130,11 @@ do
       ;;
   esac
 done
+
+if [[ -z $database_name ]] || [[ -z $destination_dirs ]] || [[ -z $aws_access_key ]] || [[ -z $aws_secret_key ]] || [[ -z $aws_s3_bucket ]] || [[ -z $aws_s3_region ]]; then
+  usage
+  exit 1
+fi
 
 check_preqs
 backup_now
