@@ -23,10 +23,10 @@ require 'net/http'
 require 'twilio-ruby'
 require 'omniauth'
 require 'omniauth-google-oauth2'
-# require 'fog'
-# require 'securerandom'
-# require 'sshkey'
-# require 'fileutils'
+require 'fog'
+require 'securerandom'
+require 'sshkey'
+require 'fileutils'
 
 # Load the mongo models
 require_relative 'models/application'
@@ -59,6 +59,10 @@ require_relative 'models/document_template'
 require_relative 'models/document_signature'
 require_relative 'models/document_layout'
 require_relative 'models/document_request'
+require_relative 'models/cloud_image'
+require_relative 'models/cloud_request'
+require_relative 'models/cloud_instance'
+require_relative 'models/cloud_flavor'
 
 # Load core stuff
 require_relative 'lib/process_dice'
@@ -2734,7 +2738,7 @@ Admin</a> </p>
     redirect "/documents"
   end
 
-    get '/requests/documents' do
+  get '/requests/documents' do
     erb :doc_requests, :locals => {:error_msg => ''}
   end
 
@@ -2867,32 +2871,205 @@ Admin</a> </p>
   #
   # => CloudServers
   #
-  get '/cloudservers' do
-    # openstack_capacity = {}
 
-    # conn = create_openstack_connection
-    # if conn
-    #   user_limits = conn.get_limits
-    #   openstack_capacity[:current_instances] = user_limits.body['limits']['absolute']['totalInstancesUsed']
-    #   openstack_capacity[:max_instances]     = user_limits.body['limits']['absolute']['maxTotalInstances']
-    #   openstack_capacity[:max_cores]         = user_limits.body['limits']['absolute']['maxTotalCores']
-    #   openstack_capacity[:current_cores]     = user_limits.body['limits']['absolute']['totalCoresUsed']
-    #   openstack_capacity[:max_ram]           = user_limits.body['limits']['absolute']['maxTotalRAMSize']
-    #   openstack_capacity[:current_ram]       = user_limits.body['limits']['absolute']['totalRAMUsed']
-    #   openstack_capacity[:current_secgroups] = user_limits.body['limits']['absolute']['totalSecurityGroupsUsed']
-    #   openstack_capacity[:max_secgroups]     = user_limits.body['limits']['absolute']['maxSecurityGroups']
-    # end
-    # erb :cloudservers, locals: { oc: openstack_capacity }
-    erb :cloudservers
+  before '/cloudservers' do
+    redirect '/login' if !@username
   end
 
-  # get '/cloudservers/requests' do
-  #   erb :cloudserver_requests
-  # end
+  get '/cloudservers' do
+    if @admin_user
+      openstack_capacity = {}
 
-  # get '/cloudservers/request/:id' do |request_id|
-  #   erb :cloudserver_request_details
-  # end
+      conn = create_openstack_connection
+      if conn
+        user_limits = conn.get_limits
+        openstack_capacity[:current_instances] = user_limits.body['limits']['absolute']['totalInstancesUsed']
+        openstack_capacity[:max_instances]     = user_limits.body['limits']['absolute']['maxTotalInstances']
+        openstack_capacity[:max_cores]         = user_limits.body['limits']['absolute']['maxTotalCores']
+        openstack_capacity[:current_cores]     = user_limits.body['limits']['absolute']['totalCoresUsed']
+        openstack_capacity[:max_ram]           = user_limits.body['limits']['absolute']['maxTotalRAMSize']
+        openstack_capacity[:current_ram]       = user_limits.body['limits']['absolute']['totalRAMUsed']
+        openstack_capacity[:current_secgroups] = user_limits.body['limits']['absolute']['totalSecurityGroupsUsed']
+        openstack_capacity[:max_secgroups]     = user_limits.body['limits']['absolute']['maxSecurityGroups']
+      end
+      erb :cloudservers, locals: { oc: openstack_capacity }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  get '/cloudservers/requests' do
+    if @admin_user
+      erb :cloudserver_requests,
+          locals: {
+            consultant: Consultant.find_by(email: @username),
+            images: CloudImage.all,
+            flavors: CloudFlavor.all,
+            pending_requests: CloudRequest.where(approved?: false),
+            bootstrapping_requests: CloudRequest.where(approved?: true, fulfilled?: false),
+            running_requests: CloudRequest.where(approved?: true, fulfilled?: true, active?: false)
+          }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  get '/cloudservers/:userid' do |userid|
+    erb :consultant_cloudservers,
+        locals: {
+          consultant: Consultant.find_by(email: userid),
+          images: CloudImage.all,
+          flavors: CloudFlavor.all,
+          pending_requests: CloudRequest.where(requester: userid, approved?: false),
+          bootstrapping_requests: CloudRequest.where(requester: userid, approved?: true, fulfilled?: false),
+          running_requests: CloudRequest.where(requester: userid, approved?: true, fulfilled?: true, active?: false)
+        }
+  end
+
+  post '/cloudservers/requests/deny/:id' do |rid|
+    dr = CloudRequest.find(rid)
+    dr.update_attributes(disapproved?: true, disapproved_by: @admin_name, disapproved_at: DateTime.now)
+    # TODO write a delayed job
+    # Delayed::Job.enqueue(
+    #   EmailRequestStatus.new(@settings, @admin_name, dr),
+    #   queue: 'consultant_document_requests',
+    #   priority: 10,
+    #   run_at: 1.seconds.from_now
+    # )
+    flash[:info] = 'Sucessfully disapproved and updated the user status of the request'
+    redirect "/cloudservers/requests"
+  end
+
+  post '/cloudservers/requests/approve/:id' do |rid|
+    dr = CloudRequest.find(rid)
+    dr.update_attributes(approved?: true, approved_by: @admin_name, approved_at: DateTime.now)
+    # TODO trigger a delayed job to send email update to user
+    flash[:info] = 'Sucessfully approved and scheduled the servers to bootstrap'
+    redirect "/cloudservers/requests"
+  end
+
+  post '/cloudservers/:id/requests' do |consultant_id|
+    # ap params
+    success    = true
+    message    = "Successfully created a requests"
+
+    # {"NumberOfInstances"=>"1", "InstanceType"=>"1", "Image"=>"566b97d7-2ee9-4c1a-bc51-c25424215f7f", "DomainName"=>"", "Purpose"=>"", "splat"=>[], "captures"=>["ashrith@cloudwick.com"], "id"=>"ashrith@cloudwick.com"}
+    number_of_instances = params[:NumberOfInstances]
+    flavor_id = params[:InstanceType]
+    image_id = params[:Image]
+    server_name = params[:ServerName] || consultant_id.split('@').first.gsub('.', '_')
+    domain_name = params[:DomainName] || 'ankus.cloudwick.com'
+    purpose = params[:Purpose]
+
+    req = CloudRequest.create(requester: consultant_id, purpose: purpose)
+    flavor = CloudFlavor.find(flavor_id)
+
+    number_of_instances.to_i.times do |i|
+      os_type = CloudImage.find(image_id).os
+      req.cloud_instances << CloudInstance.new(
+                              user_id: consultant_id,
+                              instance_name: "#{server_name}#{i+1}.#{domain_name}",
+                              flavor_id: flavor_id,
+                              image_id: image_id,
+                              os_flavor: os_type.downcase,
+                              vcpus: flavor.vcpus,
+                              mem: flavor.mem,
+                              disk: flavor.disk
+                            )
+    end
+
+
+    @settings[:admin_phone].each do |to_phone|
+      twilio.account.messages.create(
+        from: @settings[:twilio_phone],
+        to: to_phone,
+        body: "SYNC: #{consultant_id} requested #{number_of_instances} servers. Purpose: #{purpose}"
+      )
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  get '/cloudservers/request/:id' do |request_id|
+    request = CloudRequest.find(request_id)
+    user    = User.find(request.requester)
+    erb :cloudserver_request_details, locals: { request: request, user: user }
+  end
+
+  get '/cloudservers/request/partial/:id' do |request_id|
+    erb :cloudserver_request_details_partial, locals: { request: CloudRequest.find(request_id) }
+  end
+
+  get '/cloudservers/request/progress/:id' do |request_id|
+    # returns how much progress has been made so far on instances
+    ff = CloudRequest.find(request_id).fulfilled?
+    if request.xhr? # if this is a ajax request
+      halt 200, {fulfilled: ff}.to_json
+    else
+      "#{ff}"
+    end
+  end
+
+  # cloud instance types
+  get '/cloudservers/flavors' do
+    erb :cloud_flavors, locals: { flavors: CloudFlavor.all }
+  end
+
+  post '/cloudservers/flavors' do
+    id = params[:flavorid]
+    name = params[:flavorname]
+    vcpus = params[:vcpus]
+    mem = params[:mem]
+    disk = params[:disk]
+
+    success    = true
+    message    = "Successfully added cloud flavor details"
+
+    CloudFlavor.find_or_create_by(
+      flavor_id: id,
+      flavor_name: name,
+      vcpus: vcpus,
+      mem: mem,
+      disk: disk
+    )
+
+    flash[:info] = message
+    { success: success, msg: message }.to_json
+  end
+
+  delete '/cloudservers/flavors/:id' do |id|
+    CloudFlavor.find_by(_id: id).delete
+  end
+
+  get '/cloudservers/images' do
+    erb :cloudimages, locals: { images: CloudImage.all }
+  end
+
+  post '/cloudservers/images' do
+    imageid = params[:imageid]
+    os = params[:os]
+    osver = params[:osver]
+    osarch = params[:osarch]
+    osloginname = params[:osloginname]
+
+    success    = true
+    message    = "Successfully added cloud image details"
+
+    CloudImage.find_or_create_by(
+      image_id: imageid,
+      os: os,
+      os_ver: osver,
+      os_arch: osarch,
+      username: osloginname
+    )
+
+    flash[:info] = message
+    { success: success, msg: message }.to_json
+  end
+
+  delete '/cloudservers/images/:id' do |id|
+    CloudImage.find_by(_id: id).delete
+  end
 
   #
   # => Test routes

@@ -3,7 +3,7 @@ class Vendor
 
   field :email, type: String
   field :company, type: String
-  field :first_name, type: String
+  field :first_name, type: String, default: ''
   field :last_name, type: String
   field :phone, type: String
   field :emails_sent, type: Integer, default: 0
