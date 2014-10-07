@@ -38,18 +38,18 @@ class CloudInstances
                        connection_options: { connect_timeout: 5 }
                      })
   rescue Excon::Errors::Unauthorized => ex
-    # puts 'Invalid OpenStack Credentials' + ex.message
-    # puts ex.backtrace.join("\n")
+    puts 'Invalid OpenStack Credentials' + ex.message
+    puts ex.backtrace.join("\n")
     return nil
   rescue Excon::Errors::BadRequest => ex
-    # puts 'Malformed connection options' + ex.message
-    # if ex.response.body
-    #   puts JSON.parse(ex.response.body)['badRequest']['message']
-    # end
-    # puts ex.backtrace.join("\n")
+    puts 'Malformed connection options' + ex.message
+    if ex.response.body
+      puts JSON.parse(ex.response.body)['badRequest']['message']
+    end
+    puts ex.backtrace.join("\n")
     return nil
   rescue Excon::Errors::Timeout
-    # puts 'Connection Timedout, cannot connect to openstack'
+    puts 'Connection Timedout, cannot connect to openstack'
     return nil
   end
 
@@ -62,7 +62,7 @@ class CloudInstances
 
   def create_sg!(conn, group)
     unless conn.security_groups.map {|x| x.name }.include?(group)
-      # puts "Creating a new security group with name: #{group}"
+      puts "Creating a new security group with name: #{group}"
       conn.security_groups.create(name: group, description: 'group managed by ankus')
     end
 
@@ -136,7 +136,7 @@ class CloudInstances
     if OS.linux?
       user_exist = system("grep -E '^#{user_name}' /etc/passwd")
       unless user_exist # user does not eixst in the gateway box
-        # puts "Creating a new linux user with username: #{user_name}"
+        puts "Creating a new linux user with username: #{user_name}"
         password = SecureRandom.base64(10)
         salt = "$5$a1"
         password_hash = password.crypt(salt)
@@ -159,6 +159,7 @@ class CloudInstances
 
     # create a linux user
     create_user!(user_email, user_obj)
+    uid = Etc.getpwnam("#{user_name}").uid
 
     if OS.linux?
       ssh_home  = "/home/#{user_name}/.ssh"
@@ -171,34 +172,34 @@ class CloudInstances
     end
 
     if conn.key_pairs.get(user_name) # key pair exists in openstack
-      # puts "key_pair #{user_name} already exists in openstack"
+      puts "key_pair #{user_name} already exists in openstack"
       unless File.exist?(ssh_pem) # file does alredy exists in local, lets get it from mongo
-        # puts "But, key_pair does not exist on the gateway box, attempting to install the key..."
+        puts "But, key_pair does not exist on the gateway box, attempting to install the key..."
         # Attempt to create the ssh home path if does not exist already on the box
         unless File.exist?(ssh_home)
           FileUtils.mkdir_p(ssh_home)
-          FileUtils.chmod(0700, ssh_home)
+          File.chmod(0700, ssh_home)
         end
-        File.open(ssh_pem, 'w') { |file| file.write(user_obj.pem) }
-        FileUtils.chown(user_name, user_name, ssh_pem) if OS.linux?
-        FileUtils.chmod(0600, ssh_pem)
+        File.open(ssh_pem, 'w') { |file|
+          file.write(user_obj.pem)
+          file.chown(uid, uid) # if OS.linux?
+          file.chmod(0400)
+        }
       else
-        # puts "key_pair #{user_name} file exists on the gateway box"
+        puts "key_pair #{user_name} file exists on the gateway box"
       end
     else # key pair does not exist in openstack lets create one kp and update in mongo
-      # puts "Creating a new key pair with name: #{user_name}"
+      puts "Creating a new key pair with name: #{user_name}"
       kp = conn.key_pairs.create(name: user_name)
 
       FileUtils.mkdir_p(ssh_home)
-      FileUtils.chmod(0700, ssh_home)
-      FileUtils.chown(user_name, user_name, ssh_home) if OS.linux? # : FileUtils.chown(user_name, 'wheel', ssh_home)
-      File.open(ssh_pem, 'w') { |file| file.write(kp.private_key) }
-      FileUtils.chown(user_name, 'root', ssh_pem) if OS.linux?
-      FileUtils.chmod(0400, ssh_pem)
-      # OS.linux? ? FileUtils.chown(user_name, user_name, ssh_pem) : FileUtils.chown(user_name, 'wheel', ssh_pem)
-      # File.open(ssh_pub, 'w') { |file| file.write(kp.ssh_public_key) }
-      # FileUtils.chmod(0644, ssh_pub)
-      # OS.linux? ? FileUtils.chown(user_name, user_name, ssh_pub) : FileUtils.chown(user_name, 'wheel', ssh_pub)
+      File.chmod(0700, ssh_home)
+      File.chown(uid, uid, ssh_home) if OS.linux? # : FileUtils.chown(user_name, 'wheel', ssh_home)
+      File.open(ssh_pem, 'w') { |file|
+        file.write(kp.private_key)
+        file.chown(uid, uid) # if OS.linux?
+        file.chmod(0400)
+      }
 
       user_obj.update_attributes(pem: kp.private_key, pub: kp.public_key, fin: kp.fingerprint)
     end
