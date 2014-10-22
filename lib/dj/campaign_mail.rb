@@ -42,9 +42,13 @@ class CampaignEmail < Struct.new(:user, :template_name, :type)
   end
 
   def perform
-    if user.sent_templates.include?(get_template.id)
-      # email for same template has already been sent out
-      # silently ignore it
+    if type == 'customer'
+      if user.sent_templates.include?(get_template.id)
+        # email for same template has already been sent out
+        # silently ignore it
+      else
+        send_mail
+      end
     else
       send_mail
     end
