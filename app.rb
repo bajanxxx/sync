@@ -2529,6 +2529,7 @@ Admin</a> </p>
           companyid: everify,
           company: company,
           location: location,
+          start_date: start_date,
           dated_as: dated
         )
         # Build an erb template and replace variables
