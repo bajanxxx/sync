@@ -7,6 +7,7 @@ Central portal which manages
 * Manages job applications for all the consultants
 * Central location for managing Cloudwick's Email Campaigning
 * Document Request Management
+* Manage (Create|Destroy|Upgrade|Start|Stop) cloud server's/cluster's both in public (AWS/RackSpace) adn in private (OpenStack) cloud environments.
 
 Get it
 ------
