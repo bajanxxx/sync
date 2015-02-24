@@ -64,7 +64,7 @@ class LeaveLetter
         pdf.text "To Whom It May Concern,", style: :bold
 
         pdf.move_down 20
-        pdf.text "RE: Leave approval letter for Mr. #{@name}", style: :bold
+        pdf.text "RE: Leave approval letter for #{@name}", style: :bold
 
         pdf.move_down 20
         pdf.text "Dear Sir/Madam,"
