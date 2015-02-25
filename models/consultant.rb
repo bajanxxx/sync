@@ -5,6 +5,8 @@ class Consultant
   field :last_name, type: String
   field :team, type: Integer
   field :email, type: String
+  field :phone, type: String
+  field :location, type: String
   field :image_url, type: String
   field :google_profile, type: String
   field :_id, type: String, default: -> { email }
