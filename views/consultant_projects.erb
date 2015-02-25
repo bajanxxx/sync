@@ -62,6 +62,18 @@
           </td>
         </tr>
         <tr>
+          <td width="35%"><strong>Phone</strong></td>
+          <td width="65%">
+            <a href="#" id="phone"><%= consultant.phone %></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Current Location</strong></td>
+          <td width="65%">
+            <a href="#" id="location"><%= consultant.location %></a>
+          </td>
+        </tr>
+        <tr>
           <td width="35%"><strong>Current Company</strong></td>
           <td width="65%">
             <a href="#" id="company"><%= details.current_company %></a>
@@ -485,6 +497,34 @@ $(document).ready(function() {
       },
   });
   <% end %>
+
+  $('#phone').editable({
+    type: 'text',
+    title: 'Enter your phone',
+    placement: 'right',
+    emptytext: 'Please enter the best number to contact you',
+    value: '<%= consultant.phone %>',
+    url: '/consultant/update',
+    pk: '<%= consultant.email %>',
+    name: 'phone',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  });
+
+  $('#location').editable({
+    type: 'text',
+    title: 'Enter your location',
+    placement: 'right',
+    emptytext: 'Please enter your current location (City, State)',
+    value: '<%= consultant.location %>',
+    url: '/consultant/update',
+    pk: '<%= consultant.email %>',
+    name: 'location',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  });
 
   $('#company').editable({
     type: 'text',

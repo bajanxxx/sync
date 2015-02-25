@@ -74,11 +74,11 @@
       <tbody>
       <% consultants.each_with_index do |consultant, count| %>
         <tr id="consultant<%= count+1 %>">
-          <td><a href="/consultant/<%= consultant.email %>/jobs"><%= consultant.email %></a></td>
+          <td><a href="/consultant/<%= consultant.email %>/projects"><%= consultant.email %></a></td>
           <td><%= consultant.first_name %></td>
           <td><%= consultant.last_name %></td>
           <td><%= consultant.team %></td>
-          <td><%= consultant.applications.count %></td>
+          <td><a href="/consultant/<%= consultant.email %>/jobs"><%= consultant.applications.count %></a></td>
           <td>
             <a href="/consultant/<%= consultant.email %>/projects">
               <%= consultant.has_details? &&
