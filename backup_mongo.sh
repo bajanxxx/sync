@@ -131,7 +131,7 @@ do
   esac
 done
 
-if [[ -z $database_name ]] || [[ -z $destination_dirs ]] || [[ -z $aws_access_key ]] || [[ -z $aws_secret_key ]] || [[ -z $aws_s3_bucket ]] || [[ -z $aws_s3_region ]]; then
+if [[ -z $database_name ]] || [[ -z $destination_dirs ]]; then
   usage
   exit 1
 fi
