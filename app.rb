@@ -3014,8 +3014,9 @@ Admin</a> </p>
   end
 
   get '/cloudservers/request/:id' do |request_id|
-    request = CloudRequest.find(request_id)
-    user    = User.find(request.requester)
+    request    = CloudRequest.find(request_id)
+    user       = User.find(request.requester)
+    # TODO: get the login user based on the image and push that to the login instructions modal
     erb :cloudserver_request_details, locals: { request: request, user: user }
   end
 

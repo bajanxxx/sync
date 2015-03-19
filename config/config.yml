@@ -57,9 +57,9 @@ twilio_phone: '+16506145955'
 # OpenStack Credentials (For CloudServers)
 #
 openstack_tenant: 'admin'
-openstack_api_key: 'balentine380'
+openstack_api_key: 'Balentine380'
 openstack_username: 'admin'
-openstack_auth_url: 'http://192.168.1.101:35357/v2.0/tokens'
+openstack_auth_url: 'http://172.16.4.5:35357/v2.0/tokens'
 #
 # Portal configuration
 #
