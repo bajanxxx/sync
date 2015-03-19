@@ -74,12 +74,12 @@
         <li>
           Once logged into cloudwick gateway server, ssh into the instance using:
           <br>
-          <code>ssh cloud-user@<%= instance.ip_address %></code>
+          <code>ssh root@<%= instance.ip_address %></code>
         </li>
         <li>
           Finally to open a web page on the instance like for example to view namenode web page, you have create a ssh tunnel like so:
           <br>
-          <code>ssh -L [local_bindport]:[ipaddress]:[remote_bindport] [username]@sync.cloudwick.com</code>
+          <code>ssh -L [local_bindport]:<%= instance.ip_address %>:[remote_bindport] [username]@sync.cloudwick.com</code>
           <br>
           More information on ssh tunneling can be found <a href="https://gist.github.com/ashrithr/3a83b42e3b658e742177" target="_blank">here</a>
         </li>
