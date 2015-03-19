@@ -161,7 +161,7 @@ DEPENDENCIES
   json
   mini_magick
   mongo
-  mongoid
+  mongoid (= 3.1.6)
   mongoid_search
   multi_json
   newrelic_rpm
