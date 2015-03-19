@@ -2939,6 +2939,8 @@ Admin</a> </p>
     #   priority: 10,
     #   run_at: 1.seconds.from_now
     # )
+    # Delete all the created requests associated with the user
+    dr.cloud_instances.delete_all
     flash[:info] = 'Sucessfully disapproved and updated the user status of the request'
     redirect "/cloudservers/requests"
   end
