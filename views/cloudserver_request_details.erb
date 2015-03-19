@@ -81,6 +81,8 @@
           <br>
           <code>ssh -L [local_bindport]:<%= instance.ip_address %>:[remote_bindport] <%= instance.user_id.split('@').first.gsub('.', '_') %>@sync.cloudwick.com</code>
           <br>
+          Example to establish a tunnel for CM port 7180: <code>ssh -L 7180:<%= instance.ip_address %>:7180 <%= instance.user_id.split('@').first.gsub('.', '_') %>@sync.cloudwick.com</code>
+          <br>
           More information on ssh tunneling can be found <a href="https://gist.github.com/ashrithr/3a83b42e3b658e742177" target="_blank">here</a>
         </li>
       </ol>
