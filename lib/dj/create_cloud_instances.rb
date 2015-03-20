@@ -45,9 +45,11 @@ class CreateCloudInstances < Struct.new(:settings, :request, :user)
           log "Waiting for server #{sn} to get created ... Timeout's in 100 seconds"
           ci.update_server!(so, CloudInstance.find_by(instance_name: sn))
         end
-      rescue
+      rescue Exception => ex
         # something went wrong processing the request remove lock and exit
         log "Something went wrong processing the request: #{request}, resetting flags (fulfilled -> false, lock? -> false)"
+        log "Exception: #{ex.message}"
+        log "Backtrace: " + ex.backtrace.join("\n")
         request.update_attributes!(fulfilled?: false, lock?: false)
       else
         # now we can safely update the request as fulfilled and release the lock
