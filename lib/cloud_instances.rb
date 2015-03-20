@@ -224,6 +224,9 @@ class CloudInstances
     server
   end
 
+  # Wait's till the server get's active and updates the instance state in db
+  # param server => OpenStack instance object
+  # param cloud_instance_obj => MongoId cloud instance object
   def update_server!(server, cloud_instance_obj)
     # reload the server instance
     # puts "Reloading server object, acquiring lock on the server object ..."
@@ -232,6 +235,7 @@ class CloudInstances
     # wait for the server to get created
     # puts "Waiting for the server #{server_name} to get ready ..."
     begin
+      cloud_instance_obj.update_attributes!(state: 'WAITING')
       server.wait_for(100, 5) { ready? }
     rescue Fog::Errors::TimeoutError
       cloud_instance_obj.update_attributes!(state: 'TIMEDOUT', lock?: false)

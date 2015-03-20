@@ -47,9 +47,11 @@ class CreateCloudInstances < Struct.new(:settings, :request, :user)
         end
       rescue
         # something went wrong processing the request remove lock and exit
+        log "Something went wrong processing the request: #{request}, resetting flags (fulfilled -> false, lock? -> false)"
         request.update_attributes!(fulfilled?: false, lock?: false)
       else
         # now we can safely update the request as fulfilled and release the lock
+        log "compelted request: #{request}"
         request.update_attributes!(fulfilled?: true, lock?: false, connection_failed?: false)
       end
     end
