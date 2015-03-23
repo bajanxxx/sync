@@ -63,6 +63,10 @@ require_relative 'models/cloud_image'
 require_relative 'models/cloud_request'
 require_relative 'models/cloud_instance'
 require_relative 'models/cloud_flavor'
+require_relative 'models/training_topic'
+require_relative 'models/training_sub_topic'
+require_relative 'models/content_slide'
+require_relative 'models/pdf_file'
 
 # Load core stuff
 require_relative 'lib/process_dice'
@@ -81,6 +85,8 @@ require_relative 'lib/dj/email_request_status'
 require_relative 'lib/dj/email_document_request'
 require_relative 'lib/dj/email_project_notification'
 require_relative 'lib/dj/create_cloud_instances'
+require_relative 'lib/dj/delete_cloud_instances'
+require_relative 'lib/dj/convert_to_pdf'
 
 # Prawn PDF Generators
 require_relative 'lib/prawn/leave_letter'
@@ -2973,6 +2979,23 @@ Admin</a> </p>
     redirect "/cloudservers/requests"
   end
 
+  post '/cloudservers/requests/delete/:id' do |rid|
+    cr = CloudRequest.find(rid)
+
+    Delayed::Job.enqueue(
+      DeleteCloudInstances.new(@settings, cr, User.find_by(email: cr.requester)),
+      queue: 'delete_cloud_servers',
+      priority: 10
+    )
+
+    flash[:info] = 'Sucessfully scheduled the servers to delete'
+    if @admin_user
+      redirect "/cloudservers/requests"
+    else
+      redirect "/cloudservers/request/#{@username}"
+    end
+  end
+
   post '/cloudservers/:id/requests' do |consultant_id|
     # ap params
     success    = true
@@ -3095,6 +3118,129 @@ Admin</a> </p>
 
   delete '/cloudservers/images/:id' do |id|
     CloudImage.find_by(_id: id).delete
+  end
+
+  #
+  # => Training routes
+  #
+  get '/training' do
+    erb :training, locals: {
+      training_topics: TrainingTopic.all
+    }
+  end
+
+  post '/training/topic/create' do
+    topic_name = params[:tname]
+    email = params[:email]
+
+    success    = true
+    message    = "Successfully added new training topic #{topic_name}"
+
+    TrainingTopic.find_or_create_by(
+      name: topic_name.downcase.tr(' ', '_'), # parse the topic to more referrable format
+      content_managed_by: email
+    )
+
+    flash[:info] = message
+    { success: success, msg: message }.to_json
+  end
+
+  # TODO deprecate this
+  post '/training/topic/delete/:id' do |id|
+    topic = TrainingTopic.find(id)
+    topic.training_sub_topics.delete_all
+    topic.delete
+  end
+
+  get '/training/topic/:id' do |id|
+    erb :training_topic, locals: {
+      topic: TrainingTopic.find(id)
+    }
+  end
+
+  post '/training/topic/:tid/subtopic/create' do |tid|
+    sub_topic_name = params[:tname]
+
+    success    = true
+    message    = "Successfully added new training sub topic #{sub_topic_name}"
+
+    TrainingTopic.find(tid).training_sub_topics.find_or_create_by(
+      name: sub_topic_name.downcase.tr(' ', '_'), # parse the topic to more referrable format
+    )
+
+    flash[:info] = message
+    { success: success, msg: message }.to_json
+  end
+
+  post '/training/topic/:tid/subtopic/delete/:stid' do |tid, stid|
+    sub_topic = TrainingSubTopic.find(stid)
+    grid_file = sub_topic.pdf_file.file_id
+    grid.delete(BSON::ObjectId(grid_file))
+    sub_topic.content_slides.delete_all
+    sub_topic.pdf_file.delete
+    sub_topic.delete
+  end
+
+  get '/training/topic/:tid/subtopic/:stid' do |tid, stid|
+    topic = TrainingTopic.find(tid)
+    erb :training_sub_topic, locals: {
+      topic: topic,
+      sub_topic: topic.training_sub_topics.find(stid)
+    }
+  end
+
+  post '/training/topic/:tid/subtopic/:stid/upload' do |tid, stid|
+    file = params[:file][:tempfile]
+    file_name = params[:file][:filename]
+    file_type = params[:file][:type]
+    file_id = upload_file(file, file_name)
+
+    topic = TrainingTopic.find(tid)
+    sub_topic = topic.training_sub_topics.find(stid)
+
+    if file_id
+      sub_topic.pdf_file = PdfFile.create(
+        file_id: file_id,
+        filename: file_name,
+        uploaded_date: DateTime.now,
+        type: file_type
+      )
+      sub_topic.update_attributes!(file: 'LINKED')
+      Delayed::Job.enqueue(
+        ConvertPdfToImages.new(sub_topic, file_id),
+        queue: 'pdf_convertions',
+        priority: 10,
+        run_at: 5.seconds.from_now
+      )
+      puts "Uploaded sucessfully #{file_id}"
+      flash[:info] = "Successfully uploaded presentation '#{file_id}'"
+    else
+      puts "Failed uploading pdf. pdf with #{file_name} already exists!."
+      flash[:warning] = "Failed uploading presentation. Presentation with name '#{file_name}' already exists!."
+    end
+    redirect back
+  end
+
+  get '/training/topic/:tid/subtopic/:stid/ss/:slideid' do |tid, stid, slideid|
+    topic = TrainingTopic.find(tid)
+    sub_topic = topic.training_sub_topics.find(stid)
+    total_slides = sub_topic.content_slides.count
+
+    if slideid == "0"
+      slide_id = "first"
+    elsif slideid == (total_slides-1).to_s
+      slide_id = "last"
+    else
+      slide_id = params[:slideid]
+    end
+    _sid = sub_topic.content_slides.find_by(name: slide_id).file_id
+    # redirect "/training/ss/#{params[:topic]}/#{_sid}"
+    image_file = download_file(_sid).read
+    erb :slider, layout: :layout_slider, :locals => {
+      :image_contents => Base64.encode64(image_file),
+      :slides_count => total_slides,
+      :current_slide => slideid
+    }
   end
 
   #
