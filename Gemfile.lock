@@ -14,11 +14,13 @@ GEM
       bson (~> 1.10.0)
     builder (3.0.4)
     colored (1.2)
+    daemons (1.1.9)
     delayed_job (4.0.1)
       activesupport (>= 3.0, < 4.2)
     delayed_job_mongoid (2.1.0)
       delayed_job (>= 3.0, < 5)
       mongoid (>= 3.0, < 5)
+    eventmachine (1.0.3)
     excon (0.34.0)
     faraday (0.9.0)
       multipart-post (>= 1.2, < 3)
@@ -116,6 +118,7 @@ GEM
     rake (10.3.1)
     rest-client (1.6.7)
       mime-types (>= 1.16)
+    rmagick (2.13.4)
     sinatra (1.4.5)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -132,6 +135,10 @@ GEM
     sshkey (1.6.1)
     subexec (0.2.3)
     systemu (2.6.4)
+    thin (1.6.2)
+      daemons (>= 1.0.9)
+      eventmachine (>= 1.0.0)
+      rack (>= 1.0.0)
     tilt (1.4.1)
     treetop (1.5.3)
       polyglot (~> 0.3)
@@ -174,10 +181,12 @@ DEPENDENCIES
   rack-flash
   rake
   rest-client
+  rmagick
   sinatra
   sinatra-contrib
   sinatra-flash
   sshkey
+  thin
   twilio-ruby
   unicorn
   uuid
