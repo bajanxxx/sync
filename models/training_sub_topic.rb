@@ -11,6 +11,8 @@ class TrainingSubTopic
   # SUCCESS -> dj process completed
   # FAILURE -> dj process failed converting pdf to images
   field :state, type: String, default: 'NIL'
+  # estimated time to teach this sub-topic in minutes
+  field :et, type: Integer, default: 0
   # specifies if any dj process is working on it
   field :lock?, type: Boolean, default: false
 

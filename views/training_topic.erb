@@ -14,6 +14,11 @@
               <input type="text" class="form-control" id="SubTopicName" name="SubTopicName" placeholder="Training sub topic to create (ex: hdfs, mapreduce, ...)" value="" required="required" />
               <span class="help-block"></span>
           </div>
+          <div class="form-group">
+            <label for="SubTopicEstimatedTime">Estimated Time to Complete (in mins):</label>
+              <input type="text" class="form-control" id="SubTopicEstimatedTime" name="SubTopicEstimatedTime" placeholder="Please enter estimated time to complete this training (in minutes)" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
         </form>
         <p id="CreateSubTopicFormLabel" class="text-center"></p>
         <hr />
@@ -89,12 +94,13 @@ $('#SubmitCreateTopicBtn').click(function() {
   _this.attr('disabled', true); // no double submit
 
   var tname = $("#SubTopicName").val();
+  var et = $("#SubTopicEstimatedTime").val();
 
   $.ajax({
     type: "POST",
     dataType: "json",
     url: "/training/topic/<%= topic.id %>/subtopic/create",
-    data: { 'tname': tname },
+    data: { 'tname': tname, 'et': et },
     success: function(data) {
       if(!data.success) {
         console.log("Error: " + data.msg);

@@ -25,6 +25,10 @@
               <% end %>
               <span>Presentation conversion status</span>
             </li>
+            <li class="list-group-item">
+              <span class="badge alert-info"><%= sub_topic.et %></span>
+              <span>Duration (in minutes)</span>
+            </li>
           </ul>
           <% if sub_topic.state == 'SUCCESS' %>
           <a class="btn btn-primary center-block" href="/training/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/ss/first">Start Presentation</a>
