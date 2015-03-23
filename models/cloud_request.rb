@@ -4,7 +4,7 @@ class CloudRequest
   field :requester, type: String
   field :purpose, type: String
   # specify whether a request is active (that means if the user has not deleted it)
-  field :active?, type: Boolean, default: false
+  field :active?, type: Boolean
   # specify whether a request is approved by admin
   field :approved?, type: Boolean, default: false
   # specify whether a reqest once approved has been processed by the background job

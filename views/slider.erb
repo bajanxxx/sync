@@ -1,0 +1,73 @@
+<div class="container theme-showcase" role="main">
+  <div style='text-align: center;'>
+    <img src='data:image/png;base64,<%= image_contents %>' style='height: 80%; width: 80%;'/>
+  </div>
+</div>
+
+<div id="footer">
+  <div class="container">
+    <p class="text-muted text-center"><b>slide count</b>: <%= current_slide.to_i + 1 %> | <%= slides_count %>. <b>Navigation legend</b>: &#8594; (next slide), &#8592; (prev slide), &#8593; (first slide), &#8595; (last slide), ESC (go back to topics)</p>
+  </div>
+</div>
+
+<script type='text/javascript'>
+  var cPos = 0
+
+  var slidesCount = <%= slides_count %>
+
+  var url = window.location.href
+
+  var currentPosition = url.split("/").pop()
+
+  console.log(currentPosition)
+
+  if (currentPosition == "first") {
+    cPos = 0
+  } else if (currentPosition == "last") {
+    cPos = parseInt(slidesCount)
+  } else {
+    cPos = parseInt(currentPosition)
+  }
+
+  console.log(cPos)
+
+  document.onkeydown = function() {
+    switch(window.event.keyCode) {
+      case 37:
+        // left key
+        cPos -= 1
+        if (cPos >= 0) {
+          window.location = url.substring(0,url.lastIndexOf("/")) + "/" + cPos
+        } else {
+          cPos = 0
+          console.log("reached the beginning of the slidedeck")
+        }
+        break;
+      case 38:
+        // up key
+        window.location = url.substring(0, url.lastIndexOf("/")) + "/" + 0
+        break;
+      case 39:
+        // right key
+        cPos += 1
+        if (cPos < slidesCount) {
+          window.location = url.substring(0,url.lastIndexOf("/")) + "/" + cPos
+        } else {
+          cPos = slidesCount - 1
+          console.log("reached the end of the slidedeck")
+        }
+        break;
+      case 40:
+        // down key pressed
+        cPos = slidesCount - 1
+        window.location = url.substring(0, url.lastIndexOf("/")) + "/" + cPos
+        break;
+      case 27:
+        // escape key
+        // http://localhost:9292/training/topic/:tid/subtopic/:stid/ss/1
+        window.location = url.substring(0, url.lastIndexOf("/") - 3)
+        break;
+    }
+  }
+
+</script>

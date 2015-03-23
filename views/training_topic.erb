@@ -1,0 +1,160 @@
+<!-- Modal Definitions -->
+<!-- Create a topic -->
+<div class="modal fade" id="CreateSubTopic" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create a new Training Sub Topic</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="LLCreateForm">
+          <div class="form-group">
+            <label for="SubTopicName">Sub Topic Name:</label>
+              <input type="text" class="form-control" id="SubTopicName" name="SubTopicName" placeholder="Training sub topic to create (ex: hdfs, mapreduce, ...)" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="CreateSubTopicFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="SubmitCreateTopicBtn" name="SubmitBtn" class="btn btn-large btn-primary">Create Sub Topic</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Training Content Management (Topic: <%= topic.name.tr('_', ' ').split.map(&:capitalize).join(' ') %>)
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+          Start Here <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li>
+            <a id="CreateTopicBtn" data-toggle="modal" href="#CreateSubTopic">
+              Create New Sub Topic
+            </a>
+          </li>
+          <li>
+            <a id="ManageSubTopics">
+              Manage Sub Topics
+            </a>
+          </li>
+        </ul>
+      </div>
+    </h2>
+  </div>
+  <!-- Training Topics -->
+  <h3>Sub Topics</h3>
+  <div class="panel panel-info">
+    <div class="panel-heading">
+      <strong>Sub topics for <b><%= topic.name.tr('_', ' ').split.map(&:capitalize).join(' ') %></b></strong>
+    </div>
+    <% if topic.training_sub_topics.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No sub topics have yet been created. Create a new one using <code>Start Here</code> button.</p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% topic.training_sub_topics.each do |sub_topic| %>
+        <li class="list-group-item">
+          <button type="button" id="DeleteTopic-<%= sub_topic.id %>" class="btn btn-default btn-xs pull-right deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
+          <% if sub_topic.file == 'NIL' %>
+            <span class="badge alert-warning">File not linked</span>
+          <% else %>
+            <span class="badge alert-success">File linked</span>
+          <% end %>
+          <span><b><a href="/training/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>"><%= sub_topic.name.tr('_', ' ').split.map(&:capitalize).join(' ') %></a></b></span>
+        </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+</div>
+
+<script type="text/javascript">
+$('.deletebutton').tooltip();
+
+$('#SubmitCreateTopicBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var tname = $("#SubTopicName").val();
+
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/training/topic/<%= topic.id %>/subtopic/create",
+    data: { 'tname': tname },
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#CreateSubTopicFormLabel').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Sucess: " + data.msg);
+        _this.html("Submitted");
+        $('#CreateSubTopicFormLabel').addClass('text-info').html(data.msg);
+        $('#CreateSubTopic').modal('hide');
+        location.reload();
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
+      $('#CreateSubTopicFormLabel').addClass('text-danger').html('Something went wrong adding creating new sub topic!!!');
+    }
+  });
+});
+
+// delete sub topics
+$(document).ready(function(){
+  var show = false;
+
+  $('.deleteicon').hide();
+
+  $('#ManageSubTopics').click(function() {
+    _this = $(this);
+
+    if(show) {
+      $('.deleteicon').hide();
+      show = false;
+      _this.html('Manage Templates');
+    } else {
+      $('.deleteicon').show();
+      show = true;
+      _this.html('Hide Delete');
+    }
+  })
+
+  <% topic.training_sub_topics.each do |sub_topic| %>
+  $('#DeleteTopic-<%= sub_topic.id %>').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/training/topic/<%= topic.id %>/subtopic/delete/<%= sub_topic.id %>",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  <% end %>
+});
+</script>
