@@ -250,4 +250,19 @@ class CloudInstances
       )
     end
   end
+
+  def delete_server!(conn, server_id, delete_volumes = false)
+    server = conn.servers.find { |i| i.id == server_id }
+    if server
+      server.all_addresses.each do |address|
+        begin
+          conn.disassociate_address(server,id, addressp['ip'])
+          conn.release_address(conn.address.find { |a| a.ip == address['ip'] }.id)
+        rescue Exception => ex
+          # fail silently
+        end
+      end
+    end
+    server.destroy
+  end
 end

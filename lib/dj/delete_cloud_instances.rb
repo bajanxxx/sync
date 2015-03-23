@@ -1,6 +1,6 @@
 require_relative '../cloud_instances'
 
-class CreateCloudInstances < Struct.new(:settings, :request, :user)
+class DeleteCloudInstances < Struct.new(:settings, :request, :user)
   def perform
     ci = CloudInstances.new(
       settings[:openstack_auth_url],
@@ -22,53 +22,39 @@ class CreateCloudInstances < Struct.new(:settings, :request, :user)
         user_email = request.requester
         user_name  = user_email.split('@').first.gsub('.', '_')
 
-        # try create linux user, a key pair to login to the instances and a security group
-        ci.create_kp!(conn, user_email, user)
-
-        # try creating a security group and update rules
-        ci.create_sg!(conn, 'ankus')
-
-        server_objs = {}
-
         request.cloud_instances.each do |instance|
-          server_objs[instance.instance_name] = ci.create_server!(
+          log "Deleting server #{instance.instance_id}"
+          ci.delete_server!(
             conn,
-            instance.instance_name,
-            instance.flavor_id,
-            user_name,
-            instance.image_id,
-            ['ankus']
+            instance.instance_id,
+            false
           )
-        end
-
-        server_objs.each do |sn, so|
-          log "Waiting for server #{sn} to get created ... Timeout's in 100 seconds"
-          ci.update_server!(so, CloudInstance.find_by(instance_name: sn))
         end
       rescue Exception => ex
         # something went wrong processing the request remove lock and exit
-        log "Something went wrong processing the request: #{request}, resetting flags (fulfilled -> false, lock? -> false)"
+        log "Something went wrong processing the request: #{request}"
         log "Exception: #{ex.message}"
         log "Backtrace: " + ex.backtrace.join("\n")
-        request.update_attributes!(fulfilled?: false, lock?: false)
+        request.update_attributes!(lock?: false)
       else
         # now we can safely update the request as fulfilled and release the lock
         log "compelted request: #{request}"
-        request.update_attributes!(fulfilled?: true, lock?: false, connection_failed?: false, active?: true)
+        request.cloud_instances.delete_all
+        request.update_attributes!(fulfilled?: true, lock?: false, active?: false)
       end
     end
   end
 
   def success
-    log "sucessfully completed request for #{request.requester} to create #{request.cloud_instances.count} instances"
+    log "sucessfully completed request for #{request.requester} to delete #{request.cloud_instances.count} instances"
   end
 
   def error
-    log "something went wrong processing request for #{request.requester} to create #{request.cloud_instances.count} instances"
+    log "something went wrong processing request for #{request.requester} to delete #{request.cloud_instances.count} instances"
   end
 
   def failure
-    log "something went wrong processing request for #{request.requester} to create #{request.cloud_instances.count} instances. Giving up!"
+    log "something went wrong processing request for #{request.requester} to delete #{request.cloud_instances.count} instances. Giving up!"
   end
 
   # overrides the Delayed::Worker.max_attempts only for this job
