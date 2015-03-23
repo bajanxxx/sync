@@ -3160,15 +3160,22 @@ Admin</a> </p>
 
   post '/training/topic/:tid/subtopic/create' do |tid|
     sub_topic_name = params[:tname]
+    et_topic = params[:et]
 
-    success    = true
-    message    = "Successfully added new training sub topic #{sub_topic_name}"
+    if et_topic.to_i > 180
+      success = false
+      message = "It's not recommended to put sub topics greater than 3 hours"
+    else
+      TrainingTopic.find(tid).training_sub_topics.find_or_create_by(
+        name: sub_topic_name.downcase.tr(' ', '_'), # parse the topic to more referrable format
+        et: et_topic.to_i
+      )
+      success    = true
+      message    = "Successfully added new training sub topic #{sub_topic_name}"
 
-    TrainingTopic.find(tid).training_sub_topics.find_or_create_by(
-      name: sub_topic_name.downcase.tr(' ', '_'), # parse the topic to more referrable format
-    )
+      flash[:info] = message
+    end
 
-    flash[:info] = message
     { success: success, msg: message }.to_json
   end
 
