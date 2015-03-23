@@ -1,3 +1,19 @@
+<div class="modal fade" id="DeleteServersModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Are you sure you want to delete the intsances ?</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row-fluid">
+          <button id="ConfirmDeleteBtn" name="ConfirmDeleteBtn" class="btn btn-large btn-primary center-block">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="container theme-showcase" role="main">
   <!-- page header -->
   <div class="page-header">
@@ -9,7 +25,7 @@
         </button>
         <ul class="dropdown-menu" role="menu">
           <li><a id="CreateServers" data-toggle="modal" href="#CreateServersModal">Add new server</a></li>
-          <li><a id="CreateClusters" data-toggle="modal" href="#CreateClusterModal">Destroy instances</a></li>
+          <li><a id="CreateClusters" data-toggle="modal" href="#DeleteServersModal">Destroy instances</a></li>
         </ul>
       </div>
     </h2>
@@ -145,5 +161,27 @@ hr {
         }
       });
     }
+
+    $('#ConfirmDeleteBtn').click(function() {
+      _this = $(this);
+      _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "/cloudservers/requests/delete/<%= request.id %>",
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg);
+          } else {
+            console.log("Sucess: " + data.msg)
+            _this.html("Submitted");
+          }
+        },
+        error: function(data) {
+          console.log("Failed!")
+        }
+      });
+    });
   });
 </script>
