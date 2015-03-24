@@ -2916,7 +2916,7 @@ Admin</a> </p>
             pending_requests: CloudRequest.where(approved?: false, disapproved?: false),
             bootstrapping_requests: CloudRequest.where(approved?: true, fulfilled?: false, connection_failed?: false),
             failed_requests: CloudRequest.where(approved?: true, fulfilled?: false, connection_failed?: true),
-            running_requests: CloudRequest.where(approved?: true, fulfilled?: true, active?: false)
+            running_requests: CloudRequest.where(approved?: true, fulfilled?: true, active?: true)
           }
     else
       erb :admin_access_req
@@ -2980,6 +2980,9 @@ Admin</a> </p>
   end
 
   post '/cloudservers/requests/delete/:id' do |rid|
+    success = true
+    message = "Successfully schedulted instance(s) to be deleted"
+
     cr = CloudRequest.find(rid)
 
     Delayed::Job.enqueue(
@@ -2988,12 +2991,13 @@ Admin</a> </p>
       priority: 10
     )
 
+    # we nologer need this request as the instances associated with the request
+    # are deleted
+    cr.delete
+
     flash[:info] = 'Sucessfully scheduled the servers to delete'
-    if @admin_user
-      redirect "/cloudservers/requests"
-    else
-      redirect "/cloudservers/request/#{@username}"
-    end
+
+    { success: success, msg: message }.to_json
   end
 
   post '/cloudservers/:id/requests' do |consultant_id|
@@ -3026,14 +3030,14 @@ Admin</a> </p>
                             )
     end
 
-
-    @settings[:admin_phone].each do |to_phone|
-      twilio.account.messages.create(
-        from: @settings[:twilio_phone],
-        to: to_phone,
-        body: "SYNC: #{consultant_id} requested #{number_of_instances} servers. Purpose: #{purpose}"
-      )
-    end
+    # TODO remove comments - enable sending email alerts
+    # @settings[:admin_phone].each do |to_phone|
+    #   twilio.account.messages.create(
+    #     from: @settings[:twilio_phone],
+    #     to: to_phone,
+    #     body: "SYNC: #{consultant_id} requested #{number_of_instances} servers. Purpose: #{purpose}"
+    #   )
+    # end
 
     { success: success, msg: message }.to_json
   end
@@ -3123,6 +3127,10 @@ Admin</a> </p>
   #
   # => Training routes
   #
+  before '/training' do
+    redirect '/login' if !@username
+  end
+
   get '/training' do
     erb :training, locals: {
       training_topics: TrainingTopic.all
@@ -3181,11 +3189,15 @@ Admin</a> </p>
 
   post '/training/topic/:tid/subtopic/delete/:stid' do |tid, stid|
     sub_topic = TrainingSubTopic.find(stid)
-    grid_file = sub_topic.pdf_file.file_id
-    grid.delete(BSON::ObjectId(grid_file))
-    sub_topic.content_slides.delete_all
-    sub_topic.pdf_file.delete
-    sub_topic.delete
+    if sub_topic
+      if sub_topic.pdf_file.respond_to?(:file_id)
+        grid_file = sub_topic.pdf_file.file_id
+        grid.delete(BSON::ObjectId(grid_file))
+        sub_topic.content_slides.delete_all
+        sub_topic.pdf_file.delete
+      end
+      sub_topic.delete
+    end
   end
 
   get '/training/topic/:tid/subtopic/:stid' do |tid, stid|

@@ -29,7 +29,9 @@ class DeleteCloudInstances < Struct.new(:settings, :request, :user)
             instance.instance_id,
             false
           )
+          instance.update_attributes!(terminated: true)
         end
+        log "Compelted request to delete servers: #{request}"
       rescue Exception => ex
         # something went wrong processing the request remove lock and exit
         log "Something went wrong processing the request: #{request}"
@@ -38,8 +40,6 @@ class DeleteCloudInstances < Struct.new(:settings, :request, :user)
         request.update_attributes!(lock?: false)
       else
         # now we can safely update the request as fulfilled and release the lock
-        log "compelted request: #{request}"
-        request.cloud_instances.delete_all
         request.update_attributes!(fulfilled?: true, lock?: false, active?: false)
       end
     end
