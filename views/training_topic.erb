@@ -69,7 +69,7 @@
     </div>
     <% else %>
     <ul class="list-group">
-      <% topic.training_sub_topics.each do |sub_topic| %>
+      <% topic.training_sub_topics.order_by(:name.asc).each do |sub_topic| %>
         <li class="list-group-item">
           <button type="button" id="DeleteTopic-<%= sub_topic.id %>" class="btn btn-default btn-xs pull-right deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
           <% if sub_topic.file == 'NIL' %>

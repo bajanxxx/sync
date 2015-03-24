@@ -162,10 +162,19 @@ hr {
       });
     }
 
+    // if @admin_user
+    //   redirect "/cloudservers/requests"
+    // else
+    //   redirect "/cloudservers/request/#{@username}"
+    // end
+
     $('#ConfirmDeleteBtn').click(function() {
       _this = $(this);
       _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
       _this.attr('disabled', true); // no double submit
+
+      var adminuser = <%= user.admin %>;
+
       $.ajax({
         type: "POST",
         dataType: "json",
@@ -176,6 +185,12 @@ hr {
           } else {
             console.log("Sucess: " + data.msg)
             _this.html("Submitted");
+            $('#DeleteServersModal').modal('hide');
+            if (adminuser) {
+              window.location = "/cloudservers/requests"
+            } else {
+              window.location = "/cloudservers/request/<%= user.id %>"
+            }
           }
         },
         error: function(data) {
