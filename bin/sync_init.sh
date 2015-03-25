@@ -5,7 +5,8 @@
 #
 
 # Get the script's path
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+echo "Working DIR: ${DIR}"
 LOG="/var/log/job_portal.log"
 BIND_IP="0.0.0.0"
 BIND_PORT="9292"
