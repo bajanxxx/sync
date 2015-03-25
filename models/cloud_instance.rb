@@ -33,6 +33,7 @@ class CloudInstance
   # VERIFY_RESIZE. The system awaits confirmation that the server is operational after a move or resize.
   # REVERT_RESIZE. Because a server resize or migration failed, the destination server is being cleaned up as the original source server restarts.
   # TIMEDOUT. waiting for the server to come live
+  # TERMINATED
   field :state, type: String, default: 'NOTAPPROVED'
   field :uptime, type: String
   field :terminated, type: Boolean, default: false

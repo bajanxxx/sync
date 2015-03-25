@@ -29,7 +29,7 @@ class DeleteCloudInstances < Struct.new(:settings, :request, :user)
             instance.instance_id,
             false
           )
-          instance.update_attributes!(terminated: true)
+          instance.update_attributes!(terminated: true, state: 'TERMINATED')
         end
         log "Compelted request to delete servers: #{request}"
       rescue Exception => ex
