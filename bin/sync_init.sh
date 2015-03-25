@@ -22,7 +22,7 @@ function start_unicorn () {
     echo "Service ${UNICORN_PROCESS} is already running... skipping."
   else
     echo "Starting ${UNICORN_PROCESS} in ${ENVIRONMENT} environment..."
-    cd $DIR && RAILS_ENV=${ENVIRONMENT} ${UNICORN_PROCESS} --config-file config/unicorn.rb --host ${BIND_IP} --port ${BIND_PORT} --env development --daemonize config.ru >> $LOG 2>&1 &
+    cd $DIR && RAILS_ENV=${ENVIRONMENT} ${UNICORN_PROCESS} --config-file config/unicorn.rb --host ${BIND_IP} --port ${BIND_PORT} --env development --daemonize config.ru >> $LOG 2>&1
     echo "Starting ${UNICORN_PROCESS} ... [DONE]"
   fi
 }
