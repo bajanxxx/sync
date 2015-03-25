@@ -17,6 +17,7 @@ class CloudRequest
   # INSTANCE_FAILED
   # REQUEST_FAILED
   # REQUEST_SUCCEEDED
+  # DELETED (user has triggered a delete)
   # NIL (default)
   field :state, type: String, default: 'NIL'
   field :created_at, type: DateTime, default: DateTime.now
