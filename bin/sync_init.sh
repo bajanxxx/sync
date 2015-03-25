@@ -56,7 +56,7 @@ function start_delayedjob () {
     echo "Service ${DELAYEDJOB_PROCESS} is already running... skipping."
   else
     echo "Starting ${DELAYEDJOB_PROCESS} in ${ENVIRONMENT} environment..."
-    cd $DIR && RAILS_ENV=${ENVIRONMENT} bin/delayed_job.rb -n ${DELAYEDJOB_PROCESS_COUNT} start >> $LOG 2>&1 &
+    cd $DIR && RAILS_ENV=${ENVIRONMENT} bin/delayed_job.rb -n ${DELAYEDJOB_PROCESS_COUNT} start >> $LOG 2>&1
     echo "Starting ${DELAYEDJOB_PROCESS} ... [DONE]"
   fi
 }
@@ -64,7 +64,7 @@ function start_delayedjob () {
 function stop_delayedjob () {
   if ps aux | grep -v grep | grep -v $0 | grep ${DELAYEDJOB_PROCESS} > /dev/null; then
     echo "Stopping ${DELAYEDJOB_PROCESS} ..."
-    cd $DIR && RAILS_ENV=${ENVIRONMENT} bin/delayed_job.rb stop
+    cd $DIR && RAILS_ENV=${ENVIRONMENT} bin/delayed_job.rb stop >> $LOG 2>&1
     echo "Stopping ${DELAYEDJOB_PROCESS} ... [DONE]"
   else
     echo "Service ${DELAYEDJOB_PROCESS} is not running"
@@ -90,7 +90,7 @@ function start_nginx () {
     echo "Service ${NGINX_PROCESS} is already running... skipping."
   else
     echo "Starting ${NGINX_PROCESS} in ${ENVIRONMENT} environment..."
-    service nginx start >> $LOG 2>&1 &
+    service nginx start >> $LOG 2>&1
     echo "Starting ${NGINX_PROCESS} ... [DONE]"
   fi
 }
@@ -98,7 +98,7 @@ function start_nginx () {
 function stop_nginx () {
   if ps aux | grep -v grep | grep -v $0 | grep ${NGINX_PROCESS} > /dev/null; then
     echo "Stopping ${NGINX_PROCESS} ..."
-    service nginx stop >> $LOG 2>&1 &
+    service nginx stop >> $LOG 2>&1
     echo "Stopping ${NGINX_PROCESS} ... [DONE]"
   else
     echo "Service ${NGINX_PROCESS} is not running"
