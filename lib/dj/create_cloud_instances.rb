@@ -43,18 +43,26 @@ class CreateCloudInstances < Struct.new(:settings, :request, :user)
 
         server_objs.each do |sn, so|
           log "Waiting for server #{sn} to get created ... Timeout's in 100 seconds"
-          ci.update_server!(so, CloudInstance.find_by(instance_name: sn))
+          cloud_instance = CloudInstance.find_by(instance_name: sn)
+          begin
+            ci.update_server!(so, cloud_instance)
+          rescue Exception => ex
+            log "Somethign went updating the server state: #{cloud_instance}"
+            log "Exception: #{ex.message}"
+            log "Backtrace: " + ex.backtrace.join("\n")
+            request.update_attributes!(state: 'INSTANCE_FAILED')
+          end
         end
       rescue Exception => ex
         # something went wrong processing the request remove lock and exit
         log "Something went wrong processing the request: #{request}, resetting flags (fulfilled -> false, lock? -> false)"
         log "Exception: #{ex.message}"
         log "Backtrace: " + ex.backtrace.join("\n")
-        request.update_attributes!(fulfilled?: false, lock?: false)
+        request.update_attributes!(fulfilled?: true, lock?: false, state: 'REQUEST_FAILED')
       else
         # now we can safely update the request as fulfilled and release the lock
         log "compelted request: #{request}"
-        request.update_attributes!(fulfilled?: true, lock?: false, connection_failed?: false, active?: true)
+        request.update_attributes!(fulfilled?: true, lock?: false, connection_failed?: false, active?: true, state: 'REQUEST_SUCCEEDED')
       end
     end
   end
