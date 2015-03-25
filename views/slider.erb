@@ -1,6 +1,6 @@
 <div class="container theme-showcase" role="main">
   <div style='text-align: center;'>
-    <img src='data:image/png;base64,<%= image_contents %>' style='height: 80%; width: 80%;'/>
+    <img src='data:image/png;base64,<%= image_contents %>' style='height: 80%; width:80%;'/>
   </div>
 </div>
 
@@ -70,4 +70,10 @@
     }
   }
 
+  window.onresize = function(){
+    $('img').css({
+      maxHeight: window.innerHeight * 0.8,
+      maxWidth: window.innerWidth * 0.8
+    });
+  };
 </script>
