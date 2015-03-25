@@ -2981,7 +2981,7 @@ Admin</a> </p>
 
   post '/cloudservers/requests/delete/:id' do |rid|
     success = true
-    message = "Successfully schedulted instance(s) to be deleted"
+    message = "Successfully scheduled instance(s) to be deleted"
 
     cr = CloudRequest.find(rid)
 
@@ -2990,10 +2990,6 @@ Admin</a> </p>
       queue: 'delete_cloud_servers',
       priority: 10
     )
-
-    # we nologer need this request as the instances associated with the request
-    # are deleted
-    cr.delete
 
     flash[:info] = 'Sucessfully scheduled the servers to delete'
 

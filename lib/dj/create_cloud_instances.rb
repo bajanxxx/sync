@@ -42,7 +42,7 @@ class CreateCloudInstances < Struct.new(:settings, :request, :user)
         end
 
         server_objs.each do |sn, so|
-          log "Waiting for server #{sn} to get created ... Timeout's in 100 seconds"
+          log "Waiting for server #{sn} to get created ... Timeout's in 200 seconds"
           cloud_instance = CloudInstance.find_by(instance_name: sn)
           begin
             ci.update_server!(so, cloud_instance)

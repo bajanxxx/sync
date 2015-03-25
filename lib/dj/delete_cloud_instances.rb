@@ -16,7 +16,7 @@ class DeleteCloudInstances < Struct.new(:settings, :request, :user)
     else
       begin
         log "Acquiring lock on request: #{request}"
-        # now lets lock the request so that no other process can work on it
+        # lock the request so that no other process can work on it
         request.update_attributes!(lock?: true)
 
         user_email = request.requester
@@ -40,7 +40,7 @@ class DeleteCloudInstances < Struct.new(:settings, :request, :user)
         request.update_attributes!(lock?: false)
       else
         # now we can safely update the request as fulfilled and release the lock
-        request.update_attributes!(fulfilled?: true, lock?: false, active?: false)
+        request.update_attributes!(fulfilled?: true, lock?: false, active?: false, state: 'DELETED')
       end
     end
   end
