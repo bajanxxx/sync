@@ -113,7 +113,7 @@ function status_nginx () {
   fi
 }
 
-function restart_delayedjob () {
+function restart_nginx () {
   stop_nginx
   sleep 5
   start_nginx
