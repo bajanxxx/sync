@@ -13,7 +13,12 @@ class CloudRequest
   field :lock?, type: Boolean, default: false
   # used to verify is the previous request failed because of connection issue
   field :connection_failed?, type: Boolean, default: false
-
+  # state
+  # INSTANCE_FAILED
+  # REQUEST_FAILED
+  # REQUEST_SUCCEEDED
+  # NIL (default)
+  field :state, type: String, default: 'NIL'
   field :created_at, type: DateTime, default: DateTime.now
   field :approved_by, type: String
   field :approved_at, type: DateTime
