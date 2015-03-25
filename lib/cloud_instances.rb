@@ -236,8 +236,8 @@ class CloudInstances
     # puts "Waiting for the server #{server_name} to get ready ..."
     begin
       cloud_instance_obj.update_attributes!(state: 'WAITING')
-      server.wait_for(100, 5) { ready? }
-    rescue Fog::Errors::TimeoutError
+      server.wait_for(200, 5) { ready? }
+    rescue Fog::Errors::TimeoutError, Excon::Errors::Timeout
       cloud_instance_obj.update_attributes!(state: 'TIMEDOUT', lock?: false)
     else
       # Update the instances details in db
