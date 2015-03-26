@@ -74,7 +74,11 @@
       <% training_topics.each do |topic| %>
       <li class="list-group-item">
         <button type="button" id="DeleteTopic-<%= topic.id %>" class="btn btn-default btn-xs pull-right deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this topic"></span></button>
+        <% if @admin_user %>
         <span><b><a href="/training/topic/<%= topic.id %>"><%= topic.name.tr('_', ' ').split.map(&:capitalize).join(' ') %></a></b> (it's content managed by <%= topic.content_managed_by %>)</span>
+        <% else %>
+        <span><b><a href="/training/topic/<%= topic.id %>"><%= topic.name.tr('_', ' ').split.map(&:capitalize).join(' ') %></a></b></span>
+        <% end %>
       </li>
       <% end %>
     </ul>
