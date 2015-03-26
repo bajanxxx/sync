@@ -38,23 +38,25 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2>Training Content Management (Topic: <%= topic.name.tr('_', ' ').split.map(&:capitalize).join(' ') %>)
-      <div class="btn-group pull-right">
-        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-          Start Here <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu" role="menu">
-          <li>
-            <a id="CreateTopicBtn" data-toggle="modal" href="#CreateSubTopic">
-              Create New Sub Topic
-            </a>
-          </li>
-          <li>
-            <a id="ManageSubTopics">
-              Manage Sub Topics
-            </a>
-          </li>
-        </ul>
-      </div>
+      <% if @admin_user %>
+        <div class="btn-group pull-right">
+          <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+            Start Here <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" role="menu">
+            <li>
+              <a id="CreateTopicBtn" data-toggle="modal" href="#CreateSubTopic">
+                Create New Sub Topic
+              </a>
+            </li>
+            <li>
+              <a id="ManageSubTopics">
+                Manage Sub Topics
+              </a>
+            </li>
+          </ul>
+        </div>
+      <% end %>
     </h2>
   </div>
   <!-- Training Topics -->
