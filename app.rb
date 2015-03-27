@@ -2932,7 +2932,7 @@ Admin</a> </p>
           flavors: CloudFlavor.all,
           pending_requests: CloudRequest.where(requester: userid, approved?: false, disapproved?: false),
           bootstrapping_requests: CloudRequest.where(requester: userid, approved?: true, fulfilled?: false),
-          running_requests: CloudRequest.where(requester: userid, approved?: true, fulfilled?: true, active?: false)
+          running_requests: CloudRequest.where(requester: userid, approved?: true, fulfilled?: true, active?: true)
         }
   end
 
