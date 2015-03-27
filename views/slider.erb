@@ -5,7 +5,7 @@
       <li class="sidebar-brand">
         <a href="#">Slides Overview</a>
       </li>
-      <% slides.each_with_index do |slide, index| %>
+      <% thumbnails.each_with_index do |slide, index| %>
         <li><a href="#" class="slide-<%= index %>"><img src='data:image/png;base64,<%= slide[:data] %>' data-src="holder.js/200x200" class="img-rounded img-responsive" width="200" height="200"></a></li>
         <p></p>
       <% end %>
@@ -42,7 +42,7 @@
     $("#wrapper").toggleClass("toggled");
   });
 
-  <% slides.each_with_index do |slide, index| %>
+  <% thumbnails.each_with_index do |slide, index| %>
   $(function(){
     $(".slide-<%= index %>").click(function(){
       $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/<%= index %>");
