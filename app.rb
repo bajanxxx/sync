@@ -3273,14 +3273,11 @@ Admin</a> </p>
         slide_id = _sid
       end
 
-      p download_file(sub_topic.content_thumbnails.find_by(name: slide_id).file_id).read
       thumbnails << {
         name: slide_id,
         data: Base64.encode64(download_file(sub_topic.content_thumbnails.find_by(name: slide_id).file_id).read)
       }
     end
-
-    p thumbnails
 
     erb :slider,
       layout: :layout_slider,
