@@ -128,6 +128,7 @@
           <li class="list-group-item">
             <span class="badge alert-warning"><a href="/cloudservers/request/<%= request.id %>"><i class="fa fa-cogs" data-toggle="tooltip" data-placement="bottom" title="Click here to view/modify instances."></i></a></span>
             <span class="badge alert-success">Req Type: Servers</span>
+            <span class="badge alert-success">Approved: <%= request.approved_at %></span>
             <span>Bootstrapped <%= request.cloud_instances.count %> servers for <%= request.requester %></span>
           </li>
         <% end %>
