@@ -32,7 +32,7 @@
               </li>
             </ul>
             <% if sub_topic.state == 'SUCCESS' %>
-            <a class="btn btn-primary center-block" href="/training/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/ss/first">Start Presentation</a>
+            <a class="btn btn-primary center-block" href="/training/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/ss">Start Presentation</a>
             <% end %>
           </div>
         </div>
@@ -60,7 +60,7 @@
             <div class="panel-body">
               <!-- upload new resumes -->
               <form role="form" id="upload" method="post" action="/training/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/upload" enctype="multipart/form-data">
-                <input type="file" class="form-control" title="Select pdf to upload" name="file" data-filename-placement="inside"/>
+                <input type="file" class="form-control" title="Select pdf to upload" name="pdf" data-filename-placement="inside"/>
                 <ul id="fileList"></ul>
                 <button type="submit" class="btn btn-primary center-block" id="SubmitBtn"><i class="fa fa-cloud-upload fa-lg"></i> Upload Presentation</button>
               </form>
@@ -105,7 +105,7 @@
               </li>
             </ul>
             <% if sub_topic.state == 'SUCCESS' %>
-            <a class="btn btn-primary center-block" href="/training/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/ss/first">Start Presentation</a>
+            <a class="btn btn-primary center-block" href="/training/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/ss">Start Presentation</a>
             <% end %>
           </div>
         </div>

@@ -3205,9 +3205,9 @@ Admin</a> </p>
   end
 
   post '/training/topic/:tid/subtopic/:stid/upload' do |tid, stid|
-    file = params[:file][:tempfile]
-    file_name = params[:file][:filename]
-    file_type = params[:file][:type]
+    file = params[:pdf][:tempfile]
+    file_name = params[:pdf][:filename]
+    file_type = params[:pdf][:type]
     file_id = upload_file(file, file_name)
 
     topic = TrainingTopic.find(tid)
@@ -3236,6 +3236,38 @@ Admin</a> </p>
     redirect back
   end
 
+  get '/training/topic/:tid/subtopic/:stid/ss' do |tid, stid|
+    topic = TrainingTopic.find(tid)
+    sub_topic = topic.training_sub_topics.find(stid)
+    total_slides = sub_topic.content_slides.count
+
+    slides = []
+
+    total_slides.times do |_sid|
+      if _sid.to_i == 0
+        slide_id = "first"
+      elsif _sid.to_i == total_slides - 1
+        slide_id = "last"
+      else
+        slide_id = _sid
+      end
+
+      slides << {
+        name: slide_id,
+        data: Base64.encode64(download_file(sub_topic.content_slides.find_by(name: slide_id).file_id).read)
+      }
+    end
+
+    erb :slider,
+      layout: :layout_slider,
+      locals: {
+        slides_count: total_slides,
+        slides: slides,
+        tid: tid,
+        stid: stid
+      }
+  end
+
   get '/training/topic/:tid/subtopic/:stid/ss/:slideid' do |tid, stid, slideid|
     topic = TrainingTopic.find(tid)
     sub_topic = topic.training_sub_topics.find(stid)
@@ -3249,13 +3281,13 @@ Admin</a> </p>
       slide_id = params[:slideid]
     end
     _sid = sub_topic.content_slides.find_by(name: slide_id).file_id
-    # redirect "/training/ss/#{params[:topic]}/#{_sid}"
+
     image_file = download_file(_sid).read
-    erb :slider, layout: :layout_slider, :locals => {
-      :image_contents => Base64.encode64(image_file),
-      :slides_count => total_slides,
-      :current_slide => slideid
-    }
+    erb :slide,
+      layout: :layout_slider,
+      locals: {
+        image_contents: Base64.encode64(image_file)
+      }
   end
 
   #
