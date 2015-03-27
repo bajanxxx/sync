@@ -26,7 +26,7 @@
           <div id="footer navbar-fixed-bottom">
             <div class="container">
               <p class="text-muted text-center">
-                <b>Navigation legend</b>: &#8594; (next slide), &#8592; (prev slide), &#8593; (first slide), &#8595; (last slide), ESC (go back to topics) | <a href="#menu-toggle" id="menu-toggle">Slider</a>
+                <b>Slides count:</b> <span id="slidecounter"></span>/<%= slides_count - 1 %> | <b>Navigation legend</b>: &#8594; (next slide), &#8592; (prev slide), &#8593; (first slide), &#8595; (last slide), ESC (go back to topics) | <b><a href="#menu-toggle" id="menu-toggle">Slider</a></b>
               </p>
             </div>
           </div>
@@ -46,6 +46,7 @@
   $(function(){
     $(".slide-<%= index %>").click(function(){
       $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/<%= index %>");
+      $("#slidecounter").html(<%= index %>);
     });
   });
   <% end %>
@@ -60,6 +61,7 @@
 
   // load the first slide of the slide deck
   $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/0");
+  $("#slidecounter").html("0");
 
   document.onkeydown = function() {
     switch(window.event.keyCode) {
@@ -68,6 +70,7 @@
         cPos -= 1
         if (cPos >= 0) {
           $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
+          $("#slidecounter").html(cPos);
           // window.location = url.substring(0,url.lastIndexOf("/")) + "/" + cPos
         } else {
           cPos = 0
@@ -78,12 +81,14 @@
         // up key
         cPos = 0 // reset the current position
         $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/0");
+        $("#slidecounter").html(cPos);
         break;
       case 39:
         // right key
         cPos += 1
         if (cPos < slidesCount) {
           $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
+          $("#slidecounter").html(cPos);
         } else {
           cPos = slidesCount - 1
           console.log("reached the end of the slidedeck")
@@ -93,6 +98,7 @@
         // down key pressed
         cPos = slidesCount - 1
         $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
+        $("#slidecounter").html(cPos);
         break;
       case 27:
         // escape key
