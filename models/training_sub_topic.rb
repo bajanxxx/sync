@@ -19,4 +19,5 @@ class TrainingSubTopic
   belongs_to :training_topic
   has_one :pdf_file
   has_many :content_slides
+  has_many :content_thumbnails
 end

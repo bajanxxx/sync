@@ -66,6 +66,7 @@ require_relative 'models/cloud_flavor'
 require_relative 'models/training_topic'
 require_relative 'models/training_sub_topic'
 require_relative 'models/content_slide'
+require_relative 'models/content_thumbnail'
 require_relative 'models/pdf_file'
 
 # Load core stuff
@@ -3186,10 +3187,30 @@ Admin</a> </p>
   post '/training/topic/:tid/subtopic/delete/:stid' do |tid, stid|
     sub_topic = TrainingSubTopic.find(stid)
     if sub_topic
+      content_slide_files = []
+      content_thumbnail_files = []
+
       if sub_topic.pdf_file.respond_to?(:file_id)
         grid_file = sub_topic.pdf_file.file_id
-        grid.delete(BSON::ObjectId(grid_file))
+        grid.delete(BSON::ObjectId(grid_file)) if grid_file
+        sub_topic.content_slides.each do |slide|
+          content_slide_files << slide.file_id if slide.respond_to?(:file_id)
+        end
+        unless content_slide_files.empty?
+          content_slide_files.each do |slide_file|
+            grid.delete(BSON::ObjectId(slide_file)) if slide_file
+          end
+        end
+        sub_topic.content_thumbnails.each do |thumb|
+          content_thumbnail_files << thumb.file_id if thumb.respond_to?(:file_id)
+        end
+        unless content_thumbnail_files.empty?
+          content_thumbnail_files.each do |thumb_file|
+            grid.delete(BSON::ObjectId(thumb_file)) if thumb_file
+          end
+        end
         sub_topic.content_slides.delete_all
+        sub_topic.content_thumbnails.delete_all
         sub_topic.pdf_file.delete
       end
       sub_topic.delete
@@ -3241,7 +3262,7 @@ Admin</a> </p>
     sub_topic = topic.training_sub_topics.find(stid)
     total_slides = sub_topic.content_slides.count
 
-    slides = []
+    thumbnails = []
 
     total_slides.times do |_sid|
       if _sid.to_i == 0
@@ -3252,17 +3273,20 @@ Admin</a> </p>
         slide_id = _sid
       end
 
-      slides << {
+      p download_file(sub_topic.content_thumbnails.find_by(name: slide_id).file_id).read
+      thumbnails << {
         name: slide_id,
-        data: Base64.encode64(download_file(sub_topic.content_slides.find_by(name: slide_id).file_id).read)
+        data: Base64.encode64(download_file(sub_topic.content_thumbnails.find_by(name: slide_id).file_id).read)
       }
     end
+
+    p thumbnails
 
     erb :slider,
       layout: :layout_slider,
       locals: {
         slides_count: total_slides,
-        slides: slides,
+        thumbnails: thumbnails,
         tid: tid,
         stid: stid
       }
