@@ -12,6 +12,15 @@
 		<link href="/css/bootstrap-responsive.min.css" rel="stylesheet">
 
     <style>
+		.borderless tbody tr td, .borderless tbody tr th, .borderless thead tr th {
+    	border: none;
+		}
+
+		#slideimg {
+			height: 75%;
+			width: 75%;
+		}
+
 		#wrapper {
 			padding-left: 0;
 			-webkit-transition: all 0.5s ease;
@@ -21,16 +30,16 @@
 		}
 
 		#wrapper.toggled {
-			padding-left: 250px;
+			padding-left: 220px;
 		}
 
 		#sidebar-wrapper {
 			z-index: 1000;
 			position: fixed;
-			left: 250px;
+			left: 220px;
 			width: 0;
 			height: 100%;
-			margin-left: -250px;
+			margin-left: -220px;
 			overflow-y: auto;
 			background: #000;
 			-webkit-transition: all 0.5s ease;
@@ -40,7 +49,7 @@
 		}
 
 		#wrapper.toggled #sidebar-wrapper {
-			width: 250px;
+			width: 220px;
 		}
 
 		#page-content-wrapper {
@@ -51,7 +60,7 @@
 
 		#wrapper.toggled #page-content-wrapper {
 			position: absolute;
-			margin-right: -250px;
+			margin-right: -220px;
 		}
 
 		/* Sidebar Styles */
@@ -59,9 +68,9 @@
 		.sidebar-nav {
 			position: absolute;
 			top: 0;
-			width: 250px;
+			width: 220px;
 			margin: 0;
-			padding: 0;
+			padding: 0px 10px; /* left slide thumbnail padding */
 			list-style: none;
 		}
 
@@ -104,7 +113,7 @@
 
 		@media(min-width:768px) {
 			#wrapper {
-				padding-left: 250px;
+				padding-left: 220px;
 			}
 
 			#wrapper.toggled {
@@ -112,7 +121,7 @@
 			}
 
 			#sidebar-wrapper {
-				width: 250px;
+				width: 220px;
 			}
 
 			#wrapper.toggled #sidebar-wrapper {
