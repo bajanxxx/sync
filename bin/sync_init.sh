@@ -146,6 +146,7 @@ case $1 in
         start_delayedjob
         ;;
     esac
+    ;;
   'stop')
     case $2 in
       'all')
@@ -161,6 +162,7 @@ case $1 in
         stop_delayedjob
         ;;
     esac
+    ;;
   'status')
     case $2 in
       'all')
@@ -176,6 +178,7 @@ case $1 in
         status_delayedjob
         ;;
     esac
+    ;;
   'restart')
     case $2 in
       'all')
@@ -191,4 +194,5 @@ case $1 in
         restart_dj
         ;;
     esac
+    ;;
 esac
