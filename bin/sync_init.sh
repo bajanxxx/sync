@@ -119,31 +119,76 @@ function restart_nginx () {
   start_nginx
 }
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -ne 2 ]]; then
   echo "Argument required."
-  echo "Usage: `basename $0` start|stop|restart"
+  echo "Usage: `basename $0` start|stop|restart all"
+  echo "  all -> start|stop|restart unicorn, nginx, dj"
+  echo "Usage: `basename $0` start|stop|restart web"
+  echo "  web -> start|stop|restart unicorn, nginx"
+  echo "Usage: `basename $0` start|stop|restart dj"
+  echo "  dj -> start|stop|restart dj"
   exit
 fi
 
 case $1 in
   'start')
-    start_unicorn
-    start_delayedjob
-    start_nginx
-    ;;
+    case $2 in
+      'all')
+        start_unicorn
+        start_delayedjob
+        start_nginx
+        ;;
+      'web')
+        start_unicorn
+        start_nginx
+        ;;
+      'dj')
+        start_delayedjob
+        ;;
+    esac
   'stop')
-    stop_unicorn
-    stop_delayedjob
-    stop_nginx
-    ;;
+    case $2 in
+      'all')
+        stop_unicorn
+        stop_delayedjob
+        stop_nginx
+        ;;
+      'web')
+        stop_unicorn
+        stop_nginx
+        ;;
+      'dj')
+        stop_delayedjob
+        ;;
+    esac
   'status')
-    status_unicorn
-    status_delayedjob
-    status_nginx
-    ;;
+    case $2 in
+      'all')
+        status_unicorn
+        status_delayedjob
+        status_nginx
+        ;;
+      'web')
+        status_unicorn
+        status_nginx
+        ;;
+      'dj')
+        status_delayedjob
+        ;;
+    esac
   'restart')
-    restart_unicorn
-    restart_delayedjob
-    restart_nginx
-    ;;
+    case $2 in
+      'all')
+        restart_unicorn
+        restart_delayedjob
+        restart_nginx
+        ;;
+      'web')
+        restart_unicorn
+        restart_nginx
+        ;;
+      'dj')
+        restart_dj
+        ;;
+    esac
 esac
