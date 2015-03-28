@@ -26,7 +26,7 @@
           <div id="footer navbar-fixed-bottom">
             <div class="container">
               <p class="text-muted text-center">
-                <b>Slides count:</b> <span id="slidecounter"></span>/<%= slides_count - 1 %> | <b>Navigation legend</b>: &#8594; (next slide), &#8592; (prev slide), &#8593; (first slide), &#8595; (last slide), ESC (go back to topics) | <b><a href="#menu-toggle" id="menu-toggle">Slider</a></b>
+                <b>Slides:</b> <span id="slidecounter"></span>/<%= slides_count - 1 %> | <b>Legend</b>: &#8594; (next slide), &#8592; (prev slide), &#8593; (first slide), &#8595; (last slide), ESC (go back to topics), &#47; Slider
               </p>
             </div>
           </div>
@@ -37,11 +37,6 @@
 </div>
 
 <script type='text/javascript'>
-  $("#menu-toggle").click(function(e) {
-    e.preventDefault();
-    $("#wrapper").toggleClass("toggled");
-  });
-
   <% thumbnails.each_with_index do |slide, index| %>
   $(function(){
     $(".slide-<%= index %>").click(function(){
@@ -58,6 +53,7 @@
   var url = window.location.href
 
   console.log(cPos)
+  console.log(document.getElementById('page-content-wrapper').clientHeight + "x" + document.getElementById('page-content-wrapper').clientWidth);
 
   // load the first slide of the slide deck
   $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/0");
@@ -100,6 +96,10 @@
         $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
         $("#slidecounter").html(cPos);
         break;
+      case 191:
+        // forward slash pressed
+        $("#wrapper").toggleClass("toggled");
+        break;
       case 27:
         // escape key
         window.location = url.substring(0, url.lastIndexOf("/"))
@@ -109,8 +109,8 @@
 
   window.onresize = function(){
     $('img').css({
-      maxHeight: window.innerHeight * 0.8,
-      maxWidth: window.innerWidth * 0.8
+      maxHeight: window.innerHeight * 0.75,
+      maxWidth: window.innerWidth * 0.75
     });
   };
 </script>
