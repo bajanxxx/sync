@@ -523,6 +523,10 @@ Admin</a> </p>
     redirect '/login' if !@username
   end
 
+  before '/consultants/*' do
+    redirect '/login' if !@username
+  end
+
   # Display consultants available
   get '/consultants' do
     if @admin_user
@@ -1555,6 +1559,10 @@ Admin</a> </p>
     redirect '/login' if !@username
   end
 
+  before '/vendors/*' do
+    redirect '/login' if !@username
+  end
+
   # Display vendors available
   get '/vendors' do
     if @admin_user
@@ -1663,6 +1671,10 @@ Admin</a> </p>
   ### Customers
   ###
   before '/customers' do
+    redirect '/login' if !@username
+  end
+
+  before '/customers/*' do
     redirect '/login' if !@username
   end
 
@@ -1812,6 +1824,10 @@ Admin</a> </p>
   ### Email Campaigning
   ###
   before '/campaign' do
+    redirect '/login' if !@username
+  end
+
+  before '/campaign/*' do
     redirect '/login' if !@username
   end
 
@@ -2149,6 +2165,10 @@ Admin</a> </p>
   # => Documents Management
   #
   before '/documents' do
+    redirect '/login' if !@username
+  end
+
+  before '/documents/*' do
     redirect '/login' if !@username
   end
 
@@ -2885,6 +2905,10 @@ Admin</a> </p>
     redirect '/login' if !@username
   end
 
+  before '/cloudservers/*' do
+    redirect '/login' if !@username
+  end
+
   get '/cloudservers' do
     if @admin_user
       openstack_capacity = {}
@@ -3125,6 +3149,10 @@ Admin</a> </p>
   # => Training routes
   #
   before '/training' do
+    redirect '/login' if !@username
+  end
+
+  before '/training/*' do
     redirect '/login' if !@username
   end
 
