@@ -1,4 +1,4 @@
-name := "Cloudwick Sync"
+name := "cloudwick-sync"
 
 version := "1.0"
 
