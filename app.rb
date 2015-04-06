@@ -1181,7 +1181,9 @@ Admin</a> </p>
           j[source.to_sym][search_term.to_sym] = {}
           # _j = {} # [{:date => {:total => 0, :read => 0, :unread => 0, :followup => 0}}]
           jobs = Job.where(:search_term => search_term, :source => source, :date_posted.lte => Date.today, :date_posted.gt => (Date.today-7), :hide => false)
-          dates = jobs.distinct(:date_posted)
+          # TODO distinct is not giving back all the dates ?
+          # dates = jobs.distinct(:date_posted)
+          dates = jobs.only(:date_posted).map { |j| j.date_posted }.uniq
           # initialize map for each date
           dates.each do |date|
             j[source.to_sym][search_term.to_sym][date.strftime('%Y-%m-%d').to_sym] = {:total => 0, :read => 0, :followup => 0}
