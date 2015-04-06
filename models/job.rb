@@ -7,7 +7,7 @@ class Job
   field :search_term, type: String
   field :source,      type: String # Specify what the source is DICE, INDEED, INTERNAL
   field :url,         type: String
-  field :date_posted, type: Date
+  field :date_posted, type: DateTime
   field :title,       type: String
   field :company,     type: String
   field :location,    type: String
@@ -21,6 +21,7 @@ class Job
   field :link_active, type: Boolean, default: true # specify whether a job posting link is active or not
   field :repeated,    type: Boolean, default: false # specify if this job posting is repeated
   field :pdates,      type: Array, default: [] # if this is a repeated job posting store the previous data_posted's in here
+  field :version,     type: Numeric # 1 and 2. v2 (version 2) is for jobs from scala fetcher
 
   index({ url: 1 }, { unique: true, name: "url_index" })
 

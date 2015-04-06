@@ -366,52 +366,53 @@ class Sync < Sinatra::Base
                  end
     if @username
       if @admin_user
-        jobs_to_render = []
-        jobs_to_render_interviews = []
-        follow_up_jobs = Application.where(
-                           :status.in => %w(FOLLOW_UP APPLIED)
-                         ).select { |a| a.hide == false }
-        follow_up_jobs && follow_up_jobs.each do |application|
-          jobs_to_render << Job.where(url: application.job_url, hide: false)
-        end
-        interviews_scheduled = Application.where(:status.in => ['INTERVIEW_SCHEDULED']).select {|a| a.hide == false }
-        interviews_scheduled && interviews_scheduled.each do |application|
-          jobs_to_render_interviews << Job.where(url: application.job_url, hide: false)
-        end
-        # remove empty records
-        jobs_to_render.map!{ |job| job.entries }.reject(&:empty?)
-        jobs_to_render_interviews.map!{ |job| job.entries }.reject(&:empty?)
+        # TODO don't render anything for admin, we are not using this feature actively
+        # jobs_to_render = []
+        # jobs_to_render_interviews = []
+        # follow_up_jobs = Application.where(
+        #                    :status.in => %w(FOLLOW_UP APPLIED)
+        #                  ).select { |a| a.hide == false }
+        # follow_up_jobs && follow_up_jobs.each do |application|
+        #   jobs_to_render << Job.where(url: application.job_url, hide: false)
+        # end
+        # interviews_scheduled = Application.where(:status.in => ['INTERVIEW_SCHEDULED']).select {|a| a.hide == false }
+        # interviews_scheduled && interviews_scheduled.each do |application|
+        #   jobs_to_render_interviews << Job.where(url: application.job_url, hide: false)
+        # end
+        # # remove empty records
+        # jobs_to_render.map!{ |job| job.entries }.reject(&:empty?)
+        # jobs_to_render_interviews.map!{ |job| job.entries }.reject(&:empty?)
+        #
+        # # jobs_to_render
+        # jobs = jobs_to_render.flatten.uniq {|e| e[:url] }
+        # jobs_interview = jobs_to_render_interviews.flatten.uniq {|e| e[:url]}
+        #
+        # # list of users tracking a job
+        # tracking_applied = {}
+        # tracking_interview = {}
+        # jobs.each do |job|
+        #   job_url = Job.find(job.id).url
+        #   Application.where(job_url: job_url).entries.each do |app|
+        #     consultant = Consultant.find_by(email: app.consultant_id)
+        #     (tracking_applied[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
+        #   end
+        # end
+        # jobs_interview.each do |job|
+        #   job_url = Job.find(job.id).url
+        #   Application.where(job_url: job_url).select{|a| a.hide == true}.entries.each do |app|
+        #     consultant = Consultant.find_by(email: app.consultant_id)
+        #     (tracking_interview[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
+        #   end
+        # end
 
-        # jobs_to_render
-        jobs = jobs_to_render.flatten.uniq {|e| e[:url] }
-        jobs_interview = jobs_to_render_interviews.flatten.uniq {|e| e[:url]}
-
-        # list of users tracking a job
-        tracking_applied = {}
-        tracking_interview = {}
-        jobs.each do |job|
-          job_url = Job.find(job.id).url
-          Application.where(job_url: job_url).entries.each do |app|
-            consultant = Consultant.find_by(email: app.consultant_id)
-            (tracking_applied[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
-          end
-        end
-        jobs_interview.each do |job|
-          job_url = Job.find(job.id).url
-          Application.where(job_url: job_url).select{|a| a.hide == true}.entries.each do |app|
-            consultant = Consultant.find_by(email: app.consultant_id)
-            (tracking_interview[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
-          end
-        end
-
-        erb :index,
-            :locals => {
-              # Only send the unique jobs by url
-              :jobs => jobs,
-              :jobs_interview => jobs_interview,
-              :tracking_applied => tracking_applied,
-              :tracking_interview => tracking_interview
-            }
+        erb :index
+            # :locals => {
+            #   # Only send the unique jobs by url
+            #   :jobs => jobs,
+            #   :jobs_interview => jobs_interview,
+            #   :tracking_applied => tracking_applied,
+            #   :tracking_interview => tracking_interview
+            # }
       elsif @username == consultant
         redirect "/consultant/#{@username}"
       else
@@ -766,14 +767,12 @@ Admin</a> </p>
   post '/consultant/send_posting/:email/:job_id' do |email, job_id|
     job = Job.find(job_id)
     notes = params[:notes]
-    # Add consultant to list of 'applications' in the 'consultant' document to keep track of
-    user = Consultant.find_by(email: email)
 
     # mark the job posting as read
     job.update_attribute(:read, true)
 
     Delayed::Job.enqueue(
-      EmailJobPosting.new(@settings, @admin_name, job, user, notes),
+      EmailJobPosting.new(@settings, @admin_name, job, Consultant.find_by(email: email), notes),
       queue: 'consultant_emails',
       priority: 5,
       run_at: 1.seconds.from_now
@@ -1166,88 +1165,46 @@ Admin</a> </p>
     redirect '/login' if !@username
   end
 
+  before '/jobs/*' do
+    redirect '/login' if !@username
+  end
+
   get '/jobs' do
     if @admin_user
-      dice_jobs = {}
-      indeed_jobs = {}
-      internal_jobs = {}
+      search_terms = Job.distinct(:search_term).sort
+      job_sources  =  Job.distinct(:source).sort
+      j = {}
 
-      Job.distinct(:search_term).sort.each do |search_term|
-        dice_jobs[search_term] = []
-        Job.where(:search_term => search_term, :source => 'DICE').distinct(:date_posted).sort.reverse[0..6].each do |date|
-          total_jobs = Job.where(:search_term => search_term, :source => 'DICE', date_posted: date, hide: false).count
-          read_jobs  = Job.where(:search_term => search_term, :source => 'DICE', date_posted: date, read: true, hide: false).count
-          unread_jobs = total_jobs - read_jobs
-          imp_postings = []
-          Job.where(:search_term => search_term, :source => 'DICE', date_posted: date, hide: false).each do |job|
-            Application.where(job_url: Job.find(job.id).url).entries.each do |app|
+      job_sources.each do |source|
+        j[source.to_sym] = {}
+        search_terms.each do |search_term|
+          j[source.to_sym][search_term.to_sym] = {}
+          # _j = {} # [{:date => {:total => 0, :read => 0, :unread => 0, :followup => 0}}]
+          jobs = Job.where(:search_term => search_term, :source => source, :date_posted.lte => Date.today, :date_posted.gt => (Date.today-7), :hide => false)
+          dates = jobs.distinct(:date_posted)
+          # initialize map for each date
+          dates.each do |date|
+            j[source.to_sym][search_term.to_sym][date.strftime('%Y-%m-%d').to_sym] = {:total => 0, :read => 0, :followup => 0}
+          end
+          jobs.each do |job|
+            date = job.date_posted.strftime('%Y-%m-%d').to_sym
+            j[source.to_sym][search_term.to_sym][date][:total] += 1
+            # _j[date][:total] += 1
+            if job.read == true
+              j[source.to_sym][search_term.to_sym][date][:read] += 1
+            end
+            job.applications.each do |app|
               if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-                imp_postings << job
+                j[source.to_sym][search_term.to_sym][date][:followup] += 1
               end
             end
           end
-          dice_jobs[search_term] << {
-            date_url: date.strftime('%Y-%m-%d'),
-            date:     date.strftime('%A, %b %d'),
-            count:    total_jobs,
-            read:     read_jobs,
-            unread:   unread_jobs,
-            followup: imp_postings.count
-          }
-        end
-
-        indeed_jobs[search_term] = []
-        Job.where(:search_term => search_term, :source => 'INDEED').distinct(:date_posted).sort.reverse[0..6].each do |date|
-          total_jobs = Job.where(:search_term => search_term, :source => 'INDEED', date_posted: date, hide: false).count
-          read_jobs  = Job.where(:search_term => search_term, :source => 'INDEED', date_posted: date, read: true, hide: false).count
-          unread_jobs = total_jobs - read_jobs
-          imp_postings = []
-          Job.where(:search_term => search_term, :source => 'INDEED', date_posted: date, hide: false).each do |job|
-            Application.where(job_url: Job.find(job.id).url).entries.each do |app|
-              if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-                imp_postings << job
-              end
-            end
-          end
-          indeed_jobs[search_term] << {
-            date_url: date.strftime('%Y-%m-%d'),
-            date:     date.strftime('%A, %b %d'),
-            count:    total_jobs,
-            read:     read_jobs,
-            unread:   unread_jobs,
-            followup: imp_postings.count
-          }
-        end
-
-        internal_jobs[search_term] = []
-        Job.where(:search_term => search_term, :source => 'INTERNAL').distinct(:date_posted).sort.reverse[0..6].each do |date|
-          total_jobs = Job.where(:search_term => search_term, :source => 'INTERNAL', date_posted: date, hide: false).count
-          read_jobs  = Job.where(:search_term => search_term, :source => 'INTERNAL', date_posted: date, read: true, hide: false).count
-          unread_jobs = total_jobs - read_jobs
-          imp_postings = []
-          Job.where(:search_term => search_term, :source => 'INTERNAL', date_posted: date, hide: false).each do |job|
-            Application.where(job_url: Job.find(job.id).url).entries.each do |app|
-              if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-                imp_postings << job
-              end
-            end
-          end
-          internal_jobs[search_term] << {
-            date_url: date.strftime('%Y-%m-%d'),
-            date:     date.strftime('%A, %b %d'),
-            count:    total_jobs,
-            read:     read_jobs,
-            unread:   unread_jobs,
-            followup: imp_postings.count
-          }
         end
       end
 
       erb :jobs,
           :locals => {
-            :dice_jobs => dice_jobs,
-            :indeed_jobs => indeed_jobs,
-            :internal_jobs => internal_jobs,
+            :jobs => j,
             :fetcher => Fetcher.last
           }
     else
@@ -1258,90 +1215,134 @@ Admin</a> </p>
   # Process and show the jobs for a given date
   get '/jobs/:date' do |date|
     if @admin_user
-      # Create a hash to store read, unread & attention_required jobs
+      #
+      # TODO add priority logic later
+      #
+      search_terms = Job.distinct(:search_term).sort
+      job_sources  =  Job.distinct(:source).sort.map {|s| s.downcase}
       categorized_jobs = Hash.new { |hash, key| hash[key] = {} }
-      tracking = {}
-      p2_search_params = %w(bigdata big-data nosql hbase hive pig storm kafka hadoop cassandra)
 
-      %w(DICE INDEED INTERNAL).each do |source|
-        Job.distinct(:search_term).sort.each do |search_term|
-          read_jobs = Job.where(search_term: search_term, source: source, date_posted: date, read: true, hide: false)
-          unread_jobs = Job.where(search_term: search_term, source: source, date_posted: date, read: false, hide: false)
+      job_sources.each do |source|
+        search_terms.each do |search_term|
+          jobs = Job.where(search_term: search_term, source: source.upcase, date_posted: date, hide: false)
 
-          # seperate postings that are read from unread
-          read_postings = []
-          read_jobs.each do |job|
-            read_postings << job
-          end
-          unread_postings = []
-          unread_jobs.each do |job|
-            unread_postings << job
-          end
-          # priority 1 search terms
-          p1 = Regexp.new(search_term)
-          # priority 2 search terms
-          p2 = Regexp.new((p2_search_params - [search_term]).join('|'))
-          # sort un-read jobs by priority, p1 postings are which directly have hadoop
-          # in title, and p2 postings are which have a big-date realted keyword in the
-          # title
-          unread_repeated_jobs = unread_postings.select { |post| Job.where(url: post.url).count > 1 }
-          unread_jobs_without_repeated = unread_postings - unread_repeated_jobs # unread less priority jobs
-          unread_p1_jobs = unread_jobs_without_repeated.find_all { |post| p1.match(post.title.downcase) }
-          unread_p2_jobs = unread_jobs_without_repeated.find_all { |post| p2.match(post.title.downcase) }
-
-          unread_lp_jobs  = unread_jobs_without_repeated - ( unread_p1_jobs + unread_p2_jobs )
-          # unread jobs sorted by priority
-          unread_jobs_sorted = unread_p1_jobs + unread_p2_jobs + unread_lp_jobs
-
-          # Sort read jobs based on follow-up and applied priority
-          # gather postings that require attention which are basically are the
-          # job postings which are marked as follow_up or applied
-          postings_req_attention = []
-          # TODO for now commenting this, figure out a better way to implement this with out complex looping quries
-          # Job.where(search_term: search_term, source: source, date_posted: date, hide: false).each do |job|
-          #   Application.where(job_url: Job.find(job.id).url).entries.each do |app|
-          #     if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
-          #       postings_req_attention << job
-          #     end
-          #   end
-          # end
-          # rest_jobs = read_postings - postings_req_attention
-          # read_jobs_sorted = postings_req_attention + rest_jobs
-
-          categorized_jobs[source][search_term] = {
-            # read_jobs:      read_jobs_sorted,
-            read_jobs:            read_postings,
-            unread_jobs:          unread_jobs_sorted,
-            unread_repeated_jobs: unread_repeated_jobs,
-            atten_req_jobs:       postings_req_attention
-          }
-        end
-      end
-
-      # list of users tracking a job
-      categorized_jobs.each do |source, categorized|
-        categorized.each do |search_term, category|
-          category.each do |job_category, jobs|
-            jobs.each do |job|
-              job_url = Job.find(job.id).url
-              Application.where(job_url: job_url).entries.each do |app|
-                consultant = Consultant.find_by(email: app.consultant_id)
-                (tracking[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
+          read_postings = Hash.new { |hash, key| hash[key] = {} }
+          unread_postings = Hash.new { |hash, key| hash[key] = {} }
+          jobs.each do |job|
+            job_sym = job.id.to_s.to_sym
+            if job.read == true
+              read_postings[job_sym][:o] = job
+              read_postings[job_sym][:tracking] = []
+              job.applications.each do |app|
+                c = app.consultant
+                read_postings[job_sym][:tracking] << c.first_name[0..0].capitalize + c.last_name[0..0].capitalize
+              end
+            else
+              unread_postings[job_sym][:o] = job
+              unread_postings[job_sym][:tracking] = []
+              job.applications.each do |app|
+                c = app.consultant
+                unread_postings[job_sym][:tracking] << c.first_name[0..0].capitalize + c.last_name[0..0].capitalize
               end
             end
-          end
-        end
-      end
+          end # end jobs.each
 
-      # ap categorized_jobs
-
-      # finally render the page
-      erb :jobs_by_date,
-          :locals => {
-            :date => date,
-            :categorized_jobs => categorized_jobs,
-            :tracking => tracking
+          categorized_jobs[source.to_sym][search_term.to_sym] = {
+            read_jobs: read_postings,
+            unread_jobs: unread_postings
           }
+        end # end search_terms.each
+      end # end job_sources.each
+
+      erb :jobs_by_date, locals: {
+        date: date,
+        categorized_jobs: categorized_jobs
+      }
+
+
+      # Create a hash to store read, unread & attention_required jobs
+      # categorized_jobs = Hash.new { |hash, key| hash[key] = {} }
+      # tracking = {}
+      # p2_search_params = %w(bigdata big-data nosql hbase hive pig storm kafka hadoop cassandra)
+      # %w(DICE INDEED INTERNAL).each do |source|
+      #   Job.distinct(:search_term).sort.each do |search_term|
+      #     read_jobs = Job.where(search_term: search_term, source: source, date_posted: date, read: true, hide: false)
+      #     unread_jobs = Job.where(search_term: search_term, source: source, date_posted: date, read: false, hide: false)
+      #
+      #     # seperate postings that are read from unread
+      #     read_postings = []
+      #     read_jobs.each do |job|
+      #       read_postings << job
+      #     end
+      #     unread_postings = []
+      #     unread_jobs.each do |job|
+      #       unread_postings << job
+      #     end
+      #     # priority 1 search terms
+      #     p1 = Regexp.new(search_term)
+      #     # priority 2 search terms
+      #     p2 = Regexp.new((p2_search_params - [search_term]).join('|'))
+      #     # sort un-read jobs by priority, p1 postings are which directly have hadoop
+      #     # in title, and p2 postings are which have a big-date realted keyword in the
+      #     # title
+      #     unread_repeated_jobs = unread_postings.select { |post| Job.where(url: post.url).count > 1 }
+      #     unread_jobs_without_repeated = unread_postings - unread_repeated_jobs # unread less priority jobs
+      #     unread_p1_jobs = unread_jobs_without_repeated.find_all { |post| p1.match(post.title.downcase) }
+      #     unread_p2_jobs = unread_jobs_without_repeated.find_all { |post| p2.match(post.title.downcase) }
+      #
+      #     unread_lp_jobs  = unread_jobs_without_repeated - ( unread_p1_jobs + unread_p2_jobs )
+      #     # unread jobs sorted by priority
+      #     unread_jobs_sorted = unread_p1_jobs + unread_p2_jobs + unread_lp_jobs
+      #
+      #     # Sort read jobs based on follow-up and applied priority
+      #     # gather postings that require attention which are basically are the
+      #     # job postings which are marked as follow_up or applied
+      #     postings_req_attention = []
+      #     # TODO for now commenting this, figure out a better way to implement this with out complex looping quries
+      #     # Job.where(search_term: search_term, source: source, date_posted: date, hide: false).each do |job|
+      #     #   Application.where(job_url: Job.find(job.id).url).entries.each do |app|
+      #     #     if app.status.include?('FOLLOW_UP') || app.status.include?('APPLIED')
+      #     #       postings_req_attention << job
+      #     #     end
+      #     #   end
+      #     # end
+      #     # rest_jobs = read_postings - postings_req_attention
+      #     # read_jobs_sorted = postings_req_attention + rest_jobs
+      #
+      #     categorized_jobs[source][search_term] = {
+      #       # read_jobs:      read_jobs_sorted,
+      #       read_jobs:            read_postings,
+      #       unread_jobs:          unread_jobs_sorted,
+      #       unread_repeated_jobs: unread_repeated_jobs,
+      #       atten_req_jobs:       postings_req_attention
+      #     }
+      #   end
+      # end
+      #
+      # # list of users tracking a job
+      # categorized_jobs.each do |source, categorized|
+      #   categorized.each do |search_term, category|
+      #     category.each do |job_category, jobs|
+      #       jobs.each do |job|
+      #         job_url = Job.find(job.id).url
+      #         Application.where(job_url: job_url).entries.each do |app|
+      #           consultant = Consultant.find_by(email: app.consultant_id)
+      #           (tracking[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
+      #         end
+      #       end
+      #     end
+      #   end
+      # end
+      #
+      # # ap categorized_jobs
+      #
+      # # finally render the page
+      # erb :jobs_by_date,
+      #     :locals => {
+      #       :date => date,
+      #       :categorized_jobs => categorized_jobs,
+      #       :tracking => tracking
+      #     }
     else
       erb :admin_access_req
     end
@@ -1358,10 +1359,10 @@ Admin</a> </p>
     erb :job_by_id,
         :locals =>
         {
-          :job         => Job.find(id),
+          :job         => job,
           :consultants => consultant_emails, # for sending emails
           :resumes     => resumes,
-          :tracking    => Application.where(job_url: job.url)
+          :tracking    => job.applications
         }
   end
 

@@ -130,7 +130,8 @@ class ProcessJobPosting(url: String,
                 "phone_nums" -> phoneNums,
                 "read" -> false,
                 "hide" -> false,
-                "_keywords" -> keywords
+                "_keywords" -> keywords,
+                "version" -> 2
               )
               log.info("Inserting: [{}]", iObj.toString)
               collection.insert(iObj)

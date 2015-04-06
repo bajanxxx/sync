@@ -30,9 +30,9 @@ object Start extends App {
       conn(config.getString("sync.mongo.db")),
       config.getString("sync.api.dice.url"),
       "spark",
-      1,
-      1,
-      1,
+      config.getInt("sync.api.dice.fetch.daily.age"),
+      config.getInt("sync.api.dice.fetch.daily.depth"),
+      config.getInt("sync.api.dice.fetch.daily.sort"),
       "CON_CORP"),
     name="jobs")
 
