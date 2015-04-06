@@ -55,6 +55,7 @@ EOBODY
     user.applications.find_or_create_by(job_url: job.url) do |application|
       application.add_to_set(:comments, 'Forwarded to consultant')
       application.add_to_set(:status, 'AWAITING_UPDATE_FROM_USER')
+      application.job_id = job._id # to get the search job.applications.method
     end
   end
 

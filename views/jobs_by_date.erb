@@ -4,91 +4,75 @@
   </div>
 
   <ul class="nav nav-tabs nav-justified">
-    <li class="active"><a data-toggle="tab" href="#dice">Dice</a></li>
-    <li><a data-toggle="tab" href="#indeed">Indeed</a></li>
-    <li><a data-toggle="tab" href="#internal">Internal</a></li>
+    <% categorized_jobs.each do |source, categorized| %>
+      <% if source.to_s.upcase == 'DICE' %>
+      <li class="active"><a data-toggle="tab" href="#<%= source.to_s %>"><%= source.to_s.upcase %></a></li>
+      <% else %>
+      <li><a data-toggle="tab" href="#<%= source.to_s %>"><%= source.to_s.upcase %></a></li>
+      <% end %>
+    <% end %>
   </ul>
 
   <br/>
 
   <div class="tab-content">
     <% categorized_jobs.each do |source, categorized| %>
-    <% if source == 'DICE' %>
-    <div id="<%= source.downcase %>" class="tab-pane active">
+    <% if source.to_s.upcase == 'DICE' %>
+    <div id="<%= source.to_s.downcase %>" class="tab-pane active">
     <% else %>
-    <div id="<%= source.downcase %>" class="tab-pane">
+    <div id="<%= source.to_s.downcase %>" class="tab-pane">
     <% end %>
       <% categorized.each do |search_term, category| %>
       <div class="panel panel-info">
         <div class="panel-heading">
-          <strong><%= search_term.capitalize %></strong>
+          <strong><%= search_term.to_s.capitalize %></strong>
         </div>
 
         <div class="panel-body">
-          <p class="lead text-left">New Job listings found: <b><%= category[:unread_jobs].count %></b></p>
+          <p class="lead text-left">New Job listings found: <b><%= category[:unread_jobs].keys.count %></b></p>
           <ul class="list-group">
-            <% category[:unread_jobs].each do |job| %>
+            <% category[:unread_jobs].each do |job_id, job_h| %>
             <li class="list-group-item">
               <div class="pull-right button-group">
                 <!-- Initials of users who are tracking it -->
-                <% if tracking.keys.include?(job.url) %>
-                <% tracking[job.url].uniq.each do |user| %>
-                <span class="badge alert-default"><%= user %></span>
+                <% if job_h[:tracking].length > 0 %>
+                  <% job_h[:tracking].uniq.each do |user| %>
+                  <span class="badge alert-default"><%= user %></span>
+                  <% end %>
                 <% end %>
+                <% if job_h[:o].repeated %>
+                  <span class="badge alert-warning">repeated</span>
                 <% end %>
-                <span class="badge alert-info"><%= job.location %></span>
-                <span class="badge alert-success"><%= job.company %></span>
-                <button id="deletebtn<%= job.id %>" class="btn btn-xs btn-default"><i class="fa fa-times"></i></button>
+                <span class="badge alert-info"><%= job_h[:o].location %></span>
+                <span class="badge alert-success"><%= job_h[:o].company %></span>
+                <button id="deletebtn<%= job_id.to_s %>" class="btn btn-xs btn-default"><i class="fa fa-times"></i></button>
               </div>
-              <a href="/job/<%= job._id %>">
-                <%= job.title %>
+              <a href="/job/<%= job_id.to_s %>">
+                <%= job_h[:o].title %>
               </a>
             </li>
             <% end %>
           </ul> <!-- list-group (unread) -->
-          <p class="text-left lead">Repeated Job listings found: <b><%= category[:unread_repeated_jobs].count %></b></p>
+          <p class="text-left lead">Read Job listings found: <b><%= category[:read_jobs].keys.count %></b></p>
           <ul class="list-group">
-            <% category[:unread_repeated_jobs].each do |job| %>
-            <li class="list-group-item">
+            <% category[:read_jobs].each do |job_id, job_h| %>
+            <li class="list-group-item" href="/job/<%= job_id.to_s %>">
               <div class="pull-right button-group">
                 <!-- Initials of users who are tracking it -->
-                <% if tracking.keys.include?(job.url) %>
-                  <% tracking[job.url].uniq.each do |user| %>
-                    <span class="badge alert-default"><%= user %></span>
+                <% if job_h[:tracking].length > 0 %>
+                  <% job_h[:tracking].uniq.each do |user| %>
+                  <span class="badge alert-default"><%= user %></span>
                   <% end %>
                 <% end %>
-                <span class="badge alert-warning">repeated</span>
-                <span class="badge alert-info"><%= job.location %></span>
-                <span class="badge alert-success"><%= job.company %></span>
-                <button id="deletebtn<%= job.id %>" class="btn btn-xs btn-default"><i class="fa fa-times"></i></button>
-              </div>
-              <a href="/job/<%= job._id %>">
-                <%= job.title %>
-              </a>
-            </li>
-            <% end %>
-          </ul> <!-- list-group (unread) -->
-          <p class="text-left lead">Read Job listings found: <b><%= category[:read_jobs].count %></b></p>
-          <ul class="list-group">
-            <% category[:read_jobs].each do |job| %>
-            <% if category[:atten_req_jobs].include?(job) %>
-            <li class="list-group-item list-group-item-danger">
-            <% else %>
-            <li class="list-group-item" href="/job/<%= job._id %>">
-            <% end %>
-              <div class="pull-right button-group">
-                <!-- Initials of users who are tracking it -->
-                <% if tracking.keys.include?(job.url) %>
-                  <% tracking[job.url].uniq.each do |user| %>
-                    <span class="badge alert-info"><%= user %></span>
-                  <% end %>
+                <% if job_h[:o].repeated %>
+                  <span class="badge alert-warning">repeated</span>
                 <% end %>
-                <span class="badge"><%= job.location %></span>
-                <span class="badge"><%= job.company %></span>
-                <button id="deletebtn<%= job.id %>" class="btn btn-xs btn-default"><i class="fa fa-times"></i></button>
+                <span class="badge"><%= job_h[:o].location %></span>
+                <span class="badge"><%= job_h[:o].company %></span>
+                <button id="deletebtn<%= job_id.to_s %>" class="btn btn-xs btn-default"><i class="fa fa-times"></i></button>
               </div>
-              <a  href="/job/<%= job._id %>">
-                <%= job.title %>
+              <a  href="/job/<%= job_id.to_s %>">
+                <%= job_h[:o].title %>
               </a>
             </li>
             <% end %>
@@ -105,25 +89,24 @@
 $(document).ready(function(){
   <% categorized_jobs.each do |source, categorized| %>
     <% categorized.each do |search_term, jobs_info| %>
-      <% jobs_info[:read_jobs].each do |job| %>
-      $('#deletebtn<%= job.id %>').hover(
+      <% jobs_info[:read_jobs].each do |job_id, job_h| %>
+      $('#deletebtn<%= job_id.to_s %>').hover(
         function(){ // mouseenter
-          // $('#delete-<%= job.id %>').removeClass('btn-default').addClass('btn-danger');
-          $("#deletebtn<%= job.id %>").removeClass('btn-default').addClass('btn-danger');
+          $("#deletebtn<%= job_id.to_s %>").removeClass('btn-default').addClass('btn-danger');
         },
         function(){ // mouseleave
-          $('#deletebtn<%= job.id %>').removeClass('btn-danger').addClass('btn-default');
+          $('#deletebtn<%= job_id.to_s %>').removeClass('btn-danger').addClass('btn-default');
         }
       );
 
-      $('#deletebtn<%= job.id %>').click(function(){
+      $('#deletebtn<%= job_id.to_s %>').click(function(){
         _this = $(this);
         _this.html('<i class="fa fa-spinner fa-spin"></i>');
         _this.attr('disabled', true); // no double submit
 
         $.ajax({
           type: "POST",
-          url: "/job/<%= job.id %>/forget",
+          url: "/job/<%= job_id.to_s %>/forget",
           success: function(data){
             location.reload();
           },
@@ -136,25 +119,24 @@ $(document).ready(function(){
       });
       <% end %>
 
-      <% jobs_info[:unread_jobs].each do |job| %>
-      $('#deletebtn<%= job.id %>').hover(
+      <% jobs_info[:unread_jobs].each do |job_id, job_h| %>
+      $('#deletebtn<%= job_id.to_s %>').hover(
         function(){ // mouseenter
-          // $('#delete-<%= job.id %>').removeClass('btn-default').addClass('btn-danger');
-          $("#deletebtn<%= job.id %>").removeClass('btn-default').addClass('btn-danger');
+          $("#deletebtn<%= job_id.to_s %>").removeClass('btn-default').addClass('btn-danger');
         },
         function(){ // mouseleave
-          $('#deletebtn<%= job.id %>').removeClass('btn-danger').addClass('btn-default');
+          $('#deletebtn<%= job_id.to_s %>').removeClass('btn-danger').addClass('btn-default');
         }
       );
 
-      $('#deletebtn<%= job.id %>').click(function(){
+      $('#deletebtn<%= job_id.to_s %>').click(function(){
         _this = $(this);
         _this.html('<i class="fa fa-spinner fa-spin"></i>');
         _this.attr('disabled', true); // no double submit
 
         $.ajax({
           type: "POST",
-          url: "/job/<%= job.id %>/forget",
+          url: "/job/<%= job_id.to_s %>/forget",
           success: function(data){
             location.reload();
           },
