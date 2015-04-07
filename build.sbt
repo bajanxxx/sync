@@ -21,3 +21,7 @@ libraryDependencies += "org.mongodb" %% "casbah" % "2.8.0"
 libraryDependencies += "joda-time" % "joda-time" % "2.7"
 
 libraryDependencies += "com.typesafe" % "config" % "1.2.1"
+
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
+
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.6.0"

@@ -5,6 +5,9 @@ import akka.event.Logging
 import com.mongodb.casbah.MongoCollection
 import com.mongodb.casbah.commons.MongoDBObject
 import com.mongodb.casbah.Imports._
+import com.mongodb.casbah.commons.conversions.scala._
+import org.joda.time.{DateTimeZone, DateTime}
+import org.joda.time.format.DateTimeFormat
 
 import scalaj.http.{Http, HttpOptions, HttpResponse}
 
@@ -26,7 +29,8 @@ class ProcessJobPosting(url: String,
                        |[02-9])\s*\)|([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?
                        |([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{4})
                        |(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?""".r
-  val dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd")
+  RegisterJodaTimeConversionHelpers()
+  val dateFormat = DateTimeFormat.forPattern("yyyy-MM-dd").withZone(DateTimeZone.forID("UTC"))
 
   override def preStart() = {
     log.debug("Starting ProcessRequest")
@@ -81,6 +85,7 @@ class ProcessJobPosting(url: String,
   def receive = {
     case Messages.Job(iUrl, title, company, location, date, searchTerm, grepWord) =>
       // log.info("Processing [{}]", iUrl)
+      val qDate = DateTime.parse(date, dateFormat)
       try {
         val urlContent = processRequest(iUrl).toString
         if (keepPosting(urlContent, grepWord)) {
@@ -99,7 +104,7 @@ class ProcessJobPosting(url: String,
 
           collection.findOne(sObj) match {
             case Some(obj) =>
-              val dObj = sObj ++ ("date_posted" -> dateFormat.parse(date))
+              val dObj = sObj ++ ("date_posted" -> qDate)
               collection.findOne(dObj) match {
                 // check if the url exists with same date posted then ignore it
                 case Some(o) =>
@@ -109,7 +114,7 @@ class ProcessJobPosting(url: String,
                   val existingDate = obj.as[java.util.Date]("date_posted")
                   val update = MongoDBObject(
                     "$set" ->
-                      MongoDBObject("date_posted" -> dateFormat.parse(date), "repeated" -> true),
+                      MongoDBObject("date_posted" -> qDate, "repeated" -> true),
                     "$addToSet" -> MongoDBObject("pdates" -> existingDate)
                   )
                   collection.update(sObj, update)
@@ -119,7 +124,7 @@ class ProcessJobPosting(url: String,
               val iObj = MongoDBObject(
                 "url" -> iUrl,
                 "link_active" -> true,
-                "date_posted" -> dateFormat.parse(date),
+                "date_posted" -> qDate,
                 "search_term" -> searchTerm,
                 "source" -> "DICE", // TODO replace this with the parameter
                 "title" -> title,
