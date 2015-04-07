@@ -25,10 +25,7 @@ class ProcessJobPosting(url: String,
 
   val skillsPattern = """\s+<dt.*>Skills:<\/dt>\s+<dd.*>(.*)<\/dd>""".r
   val emailPattern = """\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b""".r
-  val phonePattern = """(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8]
-                       |[02-9])\s*\)|([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?
-                       |([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{4})
-                       |(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?""".r
+  val phonePattern = """(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{4})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?""".r
   RegisterJodaTimeConversionHelpers()
   val dateFormat = DateTimeFormat.forPattern("yyyy-MM-dd").withZone(DateTimeZone.forID("UTC"))
 
@@ -110,11 +107,10 @@ class ProcessJobPosting(url: String,
                 case Some(o) =>
                   log.info("Document with url: [{}] and date: [{}] already exists", url, date)
                 case None =>
-                  log.info("Repeated job posting fond: [{url}]", url)
-                  val existingDate = obj.as[java.util.Date]("date_posted")
+                  log.info("Repeated job posting fond: [{}]", url)
+                  val existingDate = obj("date_posted")
                   val update = MongoDBObject(
-                    "$set" ->
-                      MongoDBObject("date_posted" -> qDate, "repeated" -> true),
+                    "$set" -> MongoDBObject("date_posted" -> qDate, "repeated" -> true),
                     "$addToSet" -> MongoDBObject("pdates" -> existingDate)
                   )
                   collection.update(sObj, update)
@@ -150,7 +146,8 @@ class ProcessJobPosting(url: String,
         }
       } catch {
         case ex: Exception =>
-          log.error("Failed parsing url: [{}] because of [{}]", iUrl, ex.getMessage)
+          // exception as the first arg will print the stack trace
+          log.error(ex, "Failed parsing url: [{}] because of [{}]", iUrl, ex.getMessage)
           sender() ! Messages.JobUrlProcessed
       }
     case x =>

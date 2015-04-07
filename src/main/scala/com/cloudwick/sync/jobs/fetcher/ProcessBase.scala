@@ -85,7 +85,7 @@ class ProcessBase(baseUrl: String,
             + age.toString + "&page=" + pageNum.toString + "&sort=" + sort.toString + "&sd=d]")
       }
     case Messages.JobUrlProcessed =>
-      context.actorSelection("/user/jobs") ! Messages.Counter
+      context.actorSelection(s"/user/${searchTerm}jobs") ! Messages.Counter
     case x =>
       log.warning("Message not recognized: [{}]", x)
   }
