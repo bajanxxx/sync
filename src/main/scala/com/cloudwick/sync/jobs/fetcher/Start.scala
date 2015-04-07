@@ -28,7 +28,7 @@ object Start extends App {
   val searchTerm = args(2)
   val config = ConfigFactory.load()
   val system = ActorSystem("JobProcessing")
-  implicit val timeout = Timeout(5 minutes)
+  implicit val timeout = Timeout(10 minutes)
 
 
   def conn: MongoClient = {
@@ -43,7 +43,7 @@ object Start extends App {
       conn(config.getString("sync.mongo.db")).command("serverStatus")
     } catch {
       case ex: MongoTimeoutException =>
-        logger.error("Failed connecting to MongoDB. Reason: " + ex.getMessage)
+        logger.error("Failed connecting to MongoDB. Reason: " + ex.getMessage, ex)
         System.exit(1)
     }
   }
@@ -59,7 +59,7 @@ object Start extends App {
         config.getInt(s"sync.api.dice.fetch.$fType.depth"),
         config.getInt(s"sync.api.dice.fetch.$fType.sort"),
         "CON_CORP"),
-      name="jobs")
+      name=s"${sTerm}jobs")
 
     val future = actor ? Messages.Start
 

@@ -13,7 +13,7 @@ VERSION="1.0"
 ASSEMBLY_JAR="${DIR}/target/scala-2.10/${PROJECT_NAME}-assembly-${VERSION}.jar"
 
 function usage () {
-  echo "Usage: `basename $0` [dice|indeed] [daily|weekly|hourly] [hadoop|spark|cassandra]"
+  echo "Usage: `basename $0` [dice|indeed] [hourly|daily|deep] [hadoop|spark|cassandra]"
   exit 1
 }
 
