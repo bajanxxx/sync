@@ -1830,9 +1830,10 @@ Admin</a> </p>
     redirect '/login' if !@username
   end
 
-  before '/campaign/*' do
-    redirect '/login' if !@username
-  end
+  # NOTE: This is causing the mailgun /campign/opens to fail
+  # before '/campaign/*' do
+  #   redirect '/login' if !@username
+  # end
 
   get '/campaign' do
     if @admin_user
