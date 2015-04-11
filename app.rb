@@ -29,6 +29,7 @@ require 'sshkey'
 require 'fileutils'
 
 # Load the mongo models
+require_relative 'models/air_ticket_request'
 require_relative 'models/application'
 require_relative 'models/attachment'
 require_relative 'models/attachments'
@@ -267,6 +268,8 @@ class Sync < Sinatra::Base
                   end
 
     @doc_requests = DocumentRequest.where(status: 'pending').count
+    @air_requests = AirTicketRequest.where(status: 'pending').count
+    @requests_count = @doc_requests + @air_requests
 
     # we do not want to redirect to twitter when the path info starts
     # with /auth/
@@ -2762,7 +2765,7 @@ Admin</a> </p>
     dr = DocumentRequest.find(rid)
     dr.update_attributes(status: 'disapproved', disapproved_by: @admin_name, disapproved_at: DateTime.now)
     Delayed::Job.enqueue(
-      EmailRequestStatus.new(@settings, @admin_name, dr),
+      EmailRequestStatus.new(@settings, @admin_name, dr, "Document (#{dr.document_type})"),
       queue: 'consultant_document_requests',
       priority: 10,
       run_at: 1.seconds.from_now
@@ -2874,13 +2877,12 @@ Admin</a> </p>
         )
       end
       # Send email to the admin group
-      # TODO remove this comments once testing is done
-      # Delayed::Job.enqueue(
-      #   EmailDocumentRequest.new(@settings, @admin_name, dr),
-      #   queue: 'consultant_document_requests',
-      #   priority: 10,
-      #   run_at: 1.seconds.from_now
-      # )
+      Delayed::Job.enqueue(
+        EmailDocumentRequest.new(@settings, @admin_name, dr),
+        queue: 'consultant_document_requests',
+        priority: 10,
+        run_at: 1.seconds.from_now
+      )
       # Send an sms to the admin
       @settings[:admin_phone].each do |to_phone|
         twilio.account.messages.create(
@@ -2892,6 +2894,108 @@ Admin</a> </p>
     end
 
     { success: success, msg: message }.to_json
+  end
+
+  #
+  # => Air Tickets Request Management
+  #
+  before '/airtickets' do
+    redirect '/login' if !@username
+  end
+
+  before '/airtickets/*' do
+    redirect '/login' if !@username
+  end
+
+  get '/airtickets' do
+    file = File.read(File.expand_path("../public/assets/us_airports.json", __FILE__))
+    ap_hash = JSON.parse(file)
+    if @admin_user
+      erb :airtickets,
+          locals: {
+            ap_hash: ap_hash,
+            pending_requests: AirTicketRequest.where(status: 'pending'),
+            approved_requests: AirTicketRequest.where(status: 'approved'),
+            disapproved_requests: AirTicketRequest.where(status: 'disapproved')
+          }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  post '/airtickets/submit' do
+    cname = params[:name]
+    cemail = params[:email]
+    travel_date = params[:tdate]
+    from_iata_code = params[:fiata]
+    to_iata_code = params[:tiata]
+    flexibility_in_days = params[:flexibility]
+    purpose = params[:purpose]
+
+    success    = true
+    message    = "Air Ticket Request submitted."
+
+    %w(name email tdate flexibility purpose).each do |param|
+      if params[param.to_sym].empty?
+        success = false
+        message = "Param '#{param}' cannot be empty"
+      end
+      return { success: success, msg: message }.to_json unless success
+    end
+
+    # unless amount =~ /^\d{1,4}\.\d{0,2}$/
+    #   success = false
+    #   message = "Amount is not properly formatted"
+    # end
+
+    if success
+      # process the request
+      ar =  AirTicketRequest.create(
+              consultant_name: cname,
+              consultant_email: cemail,
+              travel_date: travel_date,
+              purpose: purpose,
+              from_apc: from_iata_code,
+              to_apc: to_iata_code,
+              flexibility: flexibility_in_days.to_i,
+              admin_created: true
+            )
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  # 2way: https://www.google.com/flights/#search;f=SFO;t=BWI;d=2015-04-26;r=2015-04-30
+  # 1way: https://www.google.com/flights/#search;f=SFO;t=BWI;d=2015-04-26;tt=o
+
+  post '/airtickets/approve/:rid' do |rid|
+    success    = true
+    message    = "Air Ticket Request Approved."
+
+    # check for amount
+    amount = params[:amount]
+
+    unless amount =~ /^\d{1,4}\.\d{0,2}$/
+      success = false
+      message = "Amount is not properly formatted"
+    end
+
+    p params
+    { success: success, msg: message }.to_json
+  end
+
+  post '/airtickets/deny/:rid' do |rid|
+    ar = AirTicketRequest.find(rid)
+    ar.update_attributes(status: 'disapproved', disapproved_by: @admin_name, disapproved_at: DateTime.now)
+    Delayed::Job.enqueue(
+      EmailRequestStatus.new(@settings, @admin_name, ar, "AirTicket (from: #{ar.from_apc} -> to: #{ar.to_apc})"),
+      queue: 'consultant_airticket_requests',
+      priority: 10,
+      run_at: 1.seconds.from_now
+    )
+
+    flash[:info] = 'Sucessfully disapproved and updated the user status of the request'
+    redirect "/airtickets"
   end
 
   #
