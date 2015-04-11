@@ -1,0 +1,217 @@
+<script src="/js/bootstrap-datepicker.js"></script>
+
+<!-- Modal definitions -->
+<div class="modal fade" id="MakeRequest" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create a Air Ticket Request</h4>
+      </div>
+      <div id="requestModal" class="modal-body">
+        <form role="form" id="RequestForm">
+           <div class="form-group">
+            <label for="FullName">FullName</label>
+            <input type="text" class="form-control" name="fullname" id="fullname" placeholder="Full Name as it should appear on iternary" required="required">
+           </div>
+           <div class="form-group">
+            <label for="From">From:</label>
+            <select class="form-control" id="from" name="from" required="required">
+              <option selected value=''>Start typing the city name</option>
+              <% ap_hash.each do |aph| %>
+                <option value="<%= aph['iata'] %>"><%= aph['name'] %></option>
+              <% end %>
+            </select>
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="To">To:</label>
+            <select class="form-control" id="to" name="to" required="required">
+              <option selected value=''>Start typing the city name</option>
+              <% ap_hash.each do |aph| %>
+                <option value="<%= aph['iata'] %>"><%= aph['name'] %></option>
+              <% end %>
+            </select>
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group date">
+            <label for="traveldate">Date of travel: </label>
+            <input type="text" class="form-control" name="traveldate" id="traveldate" placeholder="travel date in the format (mm/dd/yyyy)">
+          </div>
+          <div class="form-group date">
+            <label for="flexibility">Flexibility: </label>
+            <input type="text" class="form-control" id="flexibility" name="flexibility" placeholder="specify in days (0 - not flexible)">
+          </div>
+          <div class="form-group">
+            <label for="purpose">Purpose: </label>
+            <input type="text" class="form-control" id="purpose" name="purpose" placeholder="Why do you need this ticket for" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="MakeRequestFormLabel" class="text-center"></p>
+        <hr />
+        <button id="SubmitRequestBtn" name="SubmitBtn" class="btn btn-large btn-primary center-block">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Air Ticket Request Portal
+      <div class="btn-group pull-right">
+        <a id="NewRequest" class="btn btn-primary btn-md" data-toggle="modal" href="#MakeRequest" role="button">Create New Request &raquo;</a>
+      </div>
+    </h2>
+  </div>
+
+  <p class="lead">
+    Welcome to the air ticket request portal, from here you'll be able to request for booking of air tickets.
+  </p>
+
+  <!-- Updates & Notifications -->
+  <div class="page-header">
+    <h3>Notifications</h3>
+  </div>
+  <div class="panel panel-info">
+    <div class="panel-heading">
+      <strong>Current Requests</strong>
+    </div>
+    <% if pending_requests.empty? %>
+      <div class="bs-callout bs-callout-info">
+        <p class="lead">You don't have any current requests. To create one use the button 'Create New Request'</p>
+      </div>
+    <% else %>
+      <ul class="list-group">
+        <% pending_requests.each do |request| %>
+        <li class="list-group-item">
+          <span class="badge alert-info">Created At: <%= request.created_at %></a></span>
+          <span>Request from: <%= request.from_apc %>, to: <%= request.to_apc %></span>
+        </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <strong>Previous Requests</strong>
+    </div>
+    <% if previous_requests.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">You don't have any previous requests.</p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% previous_requests.each do |request| %>
+      <li class="list-group-item">
+        <% if request.status == 'approved' %>
+        <span class="badge alert-success">Approved At: <%= request.approved_at %></a></span>
+        <% else %>
+        <span class="badge alert-warning">DisApproved At: <%= request.disapproved_at %></a></span>
+        <% end %>
+        <span>Request from: <%= request.from_apc %>, to: <%= request.to_apc %></span>
+      </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+</div>
+
+
+<script type="text/javascript">
+$(document).ready(function(){
+  $('#from').select2();
+  $('#to').select2();
+  $('#traveldate').datepicker({});
+  $('#RequestForm').bootstrapValidator({
+    feedbackIcons: {
+        valid: 'glyphicon glyphicon-ok',
+        invalid: 'glyphicon glyphicon-remove',
+        validating: 'glyphicon glyphicon-refresh'
+    },
+    fields: {
+      fullname: {
+        message: 'The name is not valid',
+        validators: {
+          notEmpty: {
+              message: 'The name is required and cannot be empty'
+          },
+          stringLength: {
+              min: 6,
+              max: 100,
+              message: 'The name must be more than 6 and less than 100 characters long'
+          },
+        }
+      },
+      purpose: {
+        message: 'purpose is not valid',
+        validators: {
+          notEmpty: {
+              message: 'purpose of the travel is required and cannot be empty'
+          },
+          stringLength: {
+              min: 10,
+              max: 1000,
+              message: 'purpose must be more than 10 and less than 1000 characters long'
+          },
+        }
+      },
+      flexibility: {
+        message: 'flexibility is not valid',
+        validators: {
+          notEmpty: {
+            message: 'flexibility of the travel is required and cannot be empty'
+          },
+          between: {
+            min: 0,
+            max: 30,
+            message: 'specify fliexibility in between 0 and 30'
+          },
+        }
+      },
+      company: {
+        message: 'Company name is not valid',
+        validators: {
+          notEmpty: {
+              message: 'Company name is required and cannot be empty'
+          }
+        }
+      },
+    }
+  });
+
+
+  $('#SubmitRequestBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/airtickets/<%= consultant.email %>/request",
+      data: $('#RequestForm').serialize(),
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#MakeRequestFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg)
+          _this.html("Submitted");
+          $('#MakeRequestFormLabel').addClass('text-info').html(data.msg);
+          $('#MakeRequest').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#MakeRequestFormLabel').addClass('text-danger').html('Something went wrong creating a new request!!!');
+      }
+    });
+  });
+});
+</script>

@@ -85,6 +85,7 @@ require_relative 'lib/dj/email_job_posting_remainder'
 require_relative 'lib/dj/generate_document'
 require_relative 'lib/dj/email_request_status'
 require_relative 'lib/dj/email_document_request'
+require_relative 'lib/dj/email_airticket_request'
 require_relative 'lib/dj/email_project_notification'
 require_relative 'lib/dj/create_cloud_instances'
 require_relative 'lib/dj/delete_cloud_instances'
@@ -2943,11 +2944,6 @@ Admin</a> </p>
       return { success: success, msg: message }.to_json unless success
     end
 
-    # unless amount =~ /^\d{1,4}\.\d{0,2}$/
-    #   success = false
-    #   message = "Amount is not properly formatted"
-    # end
-
     if success
       # process the request
       ar =  AirTicketRequest.create(
@@ -2965,9 +2961,6 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
-  # 2way: https://www.google.com/flights/#search;f=SFO;t=BWI;d=2015-04-26;r=2015-04-30
-  # 1way: https://www.google.com/flights/#search;f=SFO;t=BWI;d=2015-04-26;tt=o
-
   post '/airtickets/approve/:rid' do |rid|
     success    = true
     message    = "Air Ticket Request Approved."
@@ -2980,7 +2973,17 @@ Admin</a> </p>
       message = "Amount is not properly formatted"
     end
 
-    p params
+    if success
+      ar = AirTicketRequest.find(rid)
+      ar.update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
+      Delayed::Job.enqueue(
+        EmailRequestStatus.new(@settings, @admin_name, ar, "AirTicket (from: #{ar.from_apc} -> to: #{ar.to_apc})"),
+        queue: 'consultant_airticket_requests',
+        priority: 10,
+        run_at: 1.seconds.from_now
+      )
+    end
+
     { success: success, msg: message }.to_json
   end
 
@@ -2996,6 +2999,73 @@ Admin</a> </p>
 
     flash[:info] = 'Sucessfully disapproved and updated the user status of the request'
     redirect "/airtickets"
+  end
+
+  #
+  # => AirTicket Requests (Consultant Routes)
+  #
+
+  get '/airtickets/:userid' do |userid|
+    file = File.read(File.expand_path("../public/assets/us_airports.json", __FILE__))
+    ap_hash = JSON.parse(file)
+
+    erb :consultant_airtickets,
+        locals: {
+          ap_hash: ap_hash,
+          consultant: Consultant.find_by(email: userid),
+          pending_requests: AirTicketRequest.where(consultant_email: userid, status: 'pending'),
+          previous_requests: AirTicketRequest.where(consultant_email: userid, :status.ne => 'pending')
+        }
+  end
+
+  post '/airtickets/:userid/request' do |userid|
+    cname = params[:fullname]
+    from_apc = params[:from]
+    to_apc = params[:to]
+    travel_date = params[:traveldate]
+    flexibility = params[:flexibility]
+    purpose = params[:purpose]
+
+    success    = true
+    message    = "Air Ticket Request submitted."
+
+    %w(fullname from to traveldate flexibility purpose).each do |param|
+      if params[param.to_sym].empty?
+        success = false
+        message = "Param '#{param}' cannot be empty"
+      end
+      return { success: success, msg: message }.to_json unless success
+    end
+
+    if success
+      # process the request
+      ar =  AirTicketRequest.create(
+              consultant_name: cname,
+              consultant_email: userid,
+              travel_date: travel_date,
+              purpose: purpose,
+              from_apc: from_apc,
+              to_apc: to_apc,
+              flexibility: flexibility.to_i
+            )
+      # Send email to the admin group
+      Delayed::Job.enqueue(
+        EmailAirTicketRequest.new(@settings, @admin_name, ar),
+        queue: 'consultant_airticket_requests',
+        priority: 10,
+        run_at: 1.seconds.from_now
+      )
+      # Send an sms to the admin
+      @settings[:admin_phone].each do |to_phone|
+        twilio.account.messages.create(
+          from: @settings[:twilio_phone],
+          to: to_phone,
+          body: "SYNC: #{cname} air ticket booking"
+        )
+      end
+    end
+
+    { success: success, msg: message }.to_json
   end
 
   #

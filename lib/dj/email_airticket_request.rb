@@ -1,21 +1,25 @@
-class EmailDocumentRequest < Struct.new(:settings, :admin, :request)
+class EmailAirTicketRequest < Struct.new(:settings, :admin, :request)
   def perform
     email_body = <<EOBODY
       <p>This is a nofication from Sync portal:</p>
-      <p><strong>#{request.consultant_name}</strong> requested <strong>#{request.document_type}</strong></p>
+      <p><strong>#{request.consultant_name}</strong> requested <strong>air ticket booking</strong></p>
       <p>Request Details:</p>
       <table width="100%" border="0" cellspacing="0" cellpading="0">
         <tr>
-          <td align="left" width="20%" valign="top"><strong>Request Type:</strong></td>
-          <td align="left" width="20%" valign="top">#{request.document_type}</td>
+          <td align="left" width="20%" valign="top"><strong>Travel date:</strong></td>
+          <td align="left" width="20%" valign="top">#{request.travel_date}</td>
         <tr>
         <tr>
-          <td align="left" width="20%" valign="top"><strong>Company:</strong></td>
-          <td align="left" width="20%" valign="top">#{request.company}</td>
+          <td align="left" width="20%" valign="top"><strong>From:</strong></td>
+          <td align="left" width="20%" valign="top">#{request.from_apc}</td>
+        <tr>
+        <tr>
+          <td align="left" width="20%" valign="top"><strong>To:</strong></td>
+          <td align="left" width="20%" valign="top">#{request.to_apc}</td>
         <tr>
       </table>
       <br/>
-      <p><strong>Things to do</strong>: Log in to sync portal (<a href="http://sync.cloudwick.com/documents">sync.cloudwick.com</a>) and approve the document request.</p>
+      <p><strong>Things to do</strong>: Log in to sync portal (<a href="http://sync.cloudwick.com/documents">sync.cloudwick.com</a>) to approve the request.</p>
       <p>Thanks for using <strong>Cloudwick Sync.</strong></p>
 EOBODY
     Pony.mail(

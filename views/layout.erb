@@ -231,8 +231,13 @@
 					<ul class="nav navbar-nav">
 						<li><a href="/consultant/<%= @username %>/jobs">Jobs</a></li>
 						<li><a href="/consultant/<%= @username %>/projects">Projects</a></li>
-						<li><a href="/documents/<%= @username %>">DocReqs</a></li>
-						<!-- <li><a href="/timesheets">Timesheets</a></li> -->
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle disabled">Requests <span class="caret"></span></a>
+							<ul class="dropdown-menu" role="menu">
+								<li><a href="/documents/<%= @username %>">Documents</a></li>
+								<li><a href="/airtickets/<%= @username %>">AirTickets</a></li>
+							</ul>
+						</li>
 						<li><a href="/cloudservers/requests/<%= @username %>">CloudServers</a></li>
 						<li><a href="/training">Training</a></li>
 					</ul>
