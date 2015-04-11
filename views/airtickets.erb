@@ -126,6 +126,8 @@
             </div>
             <div class="form-group">
               <label>Flight Search:</label>
+              <!-- # 2way: https://www.google.com/flights/#search;f=SFO;t=BWI;d=2015-04-26;r=2015-04-30 -->
+              <!-- # 1way: https://www.google.com/flights/#search;f=SFO;t=BWI;d=2015-04-26;tt=o -->
               <a target="_blank" href="https://www.google.com/flights/#search;f=<%= request.from_apc %>;t=<%= request.to_apc %>;d=<%= Date.strptime(request.travel_date, '%m/%d/%Y').strftime('%Y-%m-%d') %>;tt=o">Google Flights</a>
               <span class="help-block"></span>
             </div>

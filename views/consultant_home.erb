@@ -1,23 +1,23 @@
 <div class="container theme-showcase" role="main">
   <div class="bs-callout bs-callout-info">
-    <p class="lead">Hello <code><%= @userfullname.split.map(&:capitalize).join(' ') %></code>!! Welcome to Cloudwick's sync</p>
+    <p class="lead">Hello <code><%= @userfullname.split.map(&:capitalize).join(' ') %></code>. Welcome to Cloudwick's SYNC Portal.</p>
   </div>
 
   <div class="bs-callout bs-callout-warning">
   <p class="lead">
-    This project is in active development so expect to see a lot of changes. Please take a look at the following specific component readiness.
+    This project is in active development so expect to see a lot of changes. Please take a look at the following specific module readiness.
   </p>
   </div>
 
-  <p><code>Suggestions</code>: We will be happy to hear back from you on how to better build this platform. Contact Sync admin's <a href="mailto:shiva@cloudwick.com?subject=Suggestion from <%= @userfullname %> about Sync.">Shiva</a> or <a href="mailto:vinay@cloudwick.com?subject=Suggestion from <%= @userfullname %> about Sync.">Vinay</a> for more information or to send suggestions.</p>
+  <p><code>Suggestions</code>: We will be happy to hear back from you on how to better build this platform. Contact Sync <a href="mailto:syncadmin@cloudwick.com?subject:Suggestion about Sync from <%= @userfullname %>">admin(s)</a> for more information or to send suggestions.</p>
 
   <div class="page-header">
-    <h3>Components ready</h3>
+    <h3>Modules ready</h3>
   </div>
   <div class="list-group">
     <a href="/consultant/<%= @username %>/jobs" class="list-group-item">
       <h4 class="list-group-item-heading">Job portal</h4>
-        <p class="list-group-item-text">Management of job applications forwarded by Shiva | Vinay.</p>
+        <p class="list-group-item-text">Management of job applications forwarded by our admin(s).</p>
     </a>
     <a href="/consultant/<%= @username %>/projects" class="list-group-item">
       <h4 class="list-group-item-heading">Projects Information</h4>
@@ -25,15 +25,33 @@
     </a>
     <a href="/documents/<%= @username %>" class="list-group-item">
       <h4 class="list-group-item-heading">Document Requests</h4>
-        <p class="list-group-item-text">You'll be able to request the documents you need by filling out a form and able to track any of your current or previous requests</p>
+        <p class="list-group-item-text">You'll be able to request the documents you need by filling out a form and able to track any of your current or previous requests. Once a request is made admin(s) will be able to generate and forward the PDF version of the document.</p>
+    </a>
+    <a href="/airtickets/<%= @username %>" class="list-group-item">
+      <h4 class="list-group-item-heading">AirTicket Requests</h4>
+        <p class="list-group-item-text">You'll be able to request the air ticket bookings you need by filling out a form and able to track any of your current or previous requests. Once the request is made admin(s) will be able book a ticket on your behalf.</p>
     </a>
     <a href="/cloudservers/requests/<%= @username %>" class="list-group-item">
       <h4 class="list-group-item-heading">Cloud Servers</h4>
-        <p class="list-group-item-text">Portal for creating servers (virtual machines) in openstack hosted by cloudwick.</p>
+        <p class="list-group-item-text">Portal for creating/managing servers (virtual machines) in openstack hosted by cloudwick.</p>
     </a>
     <a href="/training" class="list-group-item">
       <h4 class="list-group-item-heading">Training Content</h4>
-        <p class="list-group-item-text">Portal for viewing the training content.</p>
+        <p class="list-group-item-text">Portal for viewing/presenting the training content.</p>
+    </a>
+  </div>
+
+  <div class="page-header">
+    <h3>Modules in development</h3>
+  </div>
+  <div class="list-group">
+    <a href="#" class="list-group-item">
+      <h4 class="list-group-item-heading">Timesheets</h4>
+        <p class="list-group-item-text">Manage your timesheet's.</p>
+    </a>
+    <a href="#" class="list-group-item">
+      <h4 class="list-group-item-heading">Expenses</h4>
+        <p class="list-group-item-text">Manage your expenses.</p>
     </a>
   </div>
 </div>
