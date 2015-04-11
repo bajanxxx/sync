@@ -1,0 +1,348 @@
+<script src="/js/bootstrap-datepicker.js"></script>
+
+<!-- Modal Definitions -->
+<!-- Create AirTicket Request -->
+<div class="modal fade" id="CreateAirTicketRequest" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create New AirTicket Request</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="CreateForm">
+          <div class="form-group">
+            <label for="ConsultantName">Consultant Name:</label>
+              <input type="text" class="form-control" id="ConsultantName" name="ConsultantName" placeholder="Name of the Consultant" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="Email">Email Address of Consultant:</label>
+            <input type="email" class="form-control" id="Email" name="Email" placeholder="Email" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="From">From:</label>
+            <select class="form-control" id="From" name="From" required="required">
+              <option selected value=''>Start typing the city name</option>
+              <% ap_hash.each do |aph| %>
+                <option value="<%= aph['iata'] %>"><%= aph['name'] %></option>
+              <% end %>
+            </select>
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="To">To:</label>
+            <select class="form-control" id="To" name="To" required="required">
+              <option selected value=''>Start typing the city name</option>
+              <% ap_hash.each do |aph| %>
+                <option value="<%= aph['iata'] %>"><%= aph['name'] %></option>
+              <% end %>
+            </select>
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group date">
+            <label>Date of travel: </label>
+            <input type="text" class="form-control" id="TravelDate" placeholder="mm/dd/yyyy">
+          </div>
+          <div class="form-group date">
+            <label>Flexibity: </label>
+            <input type="text" class="form-control" id="Flexibity" placeholder="specify in days">
+          </div>
+          <div class="form-group">
+            <label for="Purpose">Purpose: </label>
+            <input type="text" class="form-control" id="Purpose" name="Purpose" placeholder="Why do you need this ticket for" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+           <!-- <div class="form-group">
+            <label for="Amount">Amount:</label>
+              <input type="text" class="form-control" id="Amount" name="Amount" placeholder="Price for the air ticket" value="" required="required" />
+              <span class="help-block"></span>
+          </div> -->
+        </form>
+        <p id="CreateAirTicketRequestLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="SubmitCreateBtn" name="SubmitBtn" class="btn btn-large btn-primary">Submit Request</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dynamic Modals (Requests made by user) -->
+<!-- dynamic air ticket request modals -->
+<% pending_requests.each do |request| %>
+  <div class="modal fade" id="ApproveAirTicketRequest-<%= request.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="myModalLabel">Create New AirTicket Request</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="CreateForm-<%= request.id %>">
+            <div class="form-group">
+              <label for="ConsultantName">Consultant Name:</label>
+                <input type="text" class="form-control" id="ConsultantName-<%= request.id %>" name="ConsultantName-<%= request.id %>" placeholder="Name of the Consultant" value="<%= request.consultant_name %>" required="required" />
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Email">Email Address of Consultant:</label>
+              <input type="email" class="form-control" id="Email-<%= request.id %>" name="Email-<%= request.id %>" placeholder="Email" value="<%= request.consultant_email %>" required="required" />
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="From">From:</label>
+              <input type="text" class="form-control" id="From-<%= request.id %>" value="<%= request.from_apc %>">
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="To">To:</label>
+              <input type="text" class="form-control" id="To-<%= request.id %>" value="<%= request.from_apc %>">
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group date">
+              <label>Date of travel: </label>
+              <input type="text" class="form-control" id="TravelDate-<%= request.id %>" value="<%= request.travel_date %>">
+            </div>
+            <div class="form-group date">
+              <label>Flexibity: </label>
+              <input type="text" class="form-control" id="Flexibity-<%= request.id %>" value="<%= request.flexibility %>">
+            </div>
+            <div class="form-group">
+              <label for="Purpose">Purpose: </label>
+              <input type="text" class="form-control" id="Purpose-<%= request.id %>" name="Purpose" value="<%= request.purpose %>" value="" required="required" />
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Amount">Amount:</label>
+              <input type="text" class="form-control" id="Amount-<%= request.id %>" name="Amount-<%= request.id %>" placeholder="Price for the air ticket" value="" required="required" />
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label>Flight Search:</label>
+              <a target="_blank" href="https://www.google.com/flights/#search;f=<%= request.from_apc %>;t=<%= request.to_apc %>;d=<%= Date.strptime(request.travel_date, '%m/%d/%Y').strftime('%Y-%m-%d') %>;tt=o">Google Flights</a>
+              <span class="help-block"></span>
+            </div>
+          </form>
+          <p id="ApproveAirTicketRequestLabel-<%= request.id %>" class="text-center"></p>
+          <hr />
+          <div class="row-fluid">
+            <div class="span3"></div>
+            <div class="span6 text-center">
+              <button id="ApproveBtn-<%= request.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Approve</button>
+            </div>
+            <div class="span3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Air Ticket Request(s)
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+          Start Here <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li>
+            <a id="CreateAirTicketRequestBtn" data-toggle="modal" href="#CreateAirTicketRequest">
+              Create New AirTicket Request
+            </a>
+          </li>
+        </ul>
+      </div>
+    </h2>
+  </div>
+  <!-- Notifications -->
+  <h3>Notifications</h3>
+  <div class="panel panel-info">
+    <div class="panel-heading">
+      <strong>Pending Requests</strong>
+    </div>
+    <% if pending_requests.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No new requests have been made. So, right now <code>chill!</code></p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% pending_requests.each do |request| %>
+      <li class="list-group-item">
+        <button type="button" id="DisapproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-remove disapprovebutton" data-original-title="Disapprove this request"></span></button>
+        <button type="button" data-toggle="modal" data-target="#ApproveAirTicketRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok approvebutton" data-original-title="Approve this request"></span></button>
+        <span><%= request.consultant_name %> has requested air ticket booking</span>
+      </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <strong>Previously Approved Requests</strong>
+    </div>
+    <% if approved_requests.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No requests have been so far marked as approved!</p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% approved_requests.each do |request| %>
+      <li class="list-group-item">
+        <span class="badge alert-info">Approved At: <%= request.approved_at %></a></span>
+        <span class="badge alert-success">Approved By: <%= request.approved_by %></a></span>
+        <span><%= request.consultant_name %> has requested air ticket booking</span>
+      </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <strong>Previously DisApproved Requests</strong>
+    </div>
+    <% if disapproved_requests.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No new requests have been so far marked as disapproved!</p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% disapproved_requests.each do |request| %>
+      <li class="list-group-item">
+        <span class="badge alert-info">DisApproved At: <%= request.disapproved_at %></a></span>
+        <span class="badge alert-success">DisApproved By: <%= request.disapproved_by %></a></span>
+        <span><%= request.consultant_name %> has requested air ticket booking</span>
+      </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+  $('.approvebutton').tooltip();
+  $('.disapprovebutton').tooltip();
+  $('#From').select2();
+  $('#To').select2();
+
+  $('#TravelDate').datepicker({});
+  $('#SubmitCreateBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var consultantName = $("#ConsultantName").val();
+    var email = $("#Email").val();
+    var tdate = $("#TravelDate").val();
+    var fromiata = $("#From").val();
+    var toiata = $("#To").val();
+    var flexibility = $("#Flexibity").val();
+    var purpose = $("#Purpose").val();
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/airtickets/submit",
+      data: {'name': consultantName, 'email': email, 'tdate': tdate, 'fiata': fromiata, 'tiata': toiata, 'flexibility': flexibility, 'purpose': purpose },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#CreateAirTicketRequestLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg);
+          _this.html("Submitted");
+          $('#CreateAirTicketRequestLabel').addClass('text-info').html(data.msg);
+          $('#CreateAirTicketRequest').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#CreateAirTicketRequestLabel').addClass('text-danger').html('Something went wrong requesting air ticket!!!');
+      }
+    });
+  });
+
+  <% pending_requests.each do |request| %>
+  $('#TravelDate-<%= request.id %>').datepicker({});
+  $('#ApproveBtn-<%= request.id %>').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var consultantName = $("#ConsultantName-<%= request.id %>").val();
+    var email = $("#Email-<%= request.id %>").val();
+    var tdate = $("#TravelDate-<%= request.id %>").val();
+    var fromiata = $("#From-<%= request.id %>").val();
+    var toiata = $("#To-<%= request.id %>").val();
+    var flexibility = $("#Flexibity-<%= request.id %>").val();
+    var amount = $("#Amount-<%= request.id %>").val();
+    var purpose = $("#Purpose-<%= request.id %>").val();
+    var rid = '<%= request.id %>';
+
+    console.log("amount: " + amount);
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/airtickets/approve/<%= request.id %>",
+      data: {'name': consultantName, 'email': email, 'tdate': tdate, 'fiata': fromiata, 'tiata': toiata, 'flexibility': flexibility, 'amount': amount, 'purpose': purpose },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#ApproveAirTicketRequestLabel-<%= request.id %>').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg);
+          _this.html("Submitted");
+          $('#ApproveAirTicketRequestLabel-<%= request.id %>').addClass('text-info').html(data.msg);
+          $('#ApproveAirTicketRequest-<%= request.id %>').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#ApproveAirTicketRequestLabel-<%= request.id %>').addClass('text-danger').html('Something went wrong requesting air ticket!!!');
+      }
+    });
+  });
+  <% end %>
+
+  // Disapprove requests
+  <% pending_requests.each do |request| %>
+  $('#DisapproveRequest-<%= request.id %>').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/airtickets/deny/<%= request.id %>",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  <% end %>
+});
+</script>

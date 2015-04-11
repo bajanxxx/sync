@@ -1,21 +1,21 @@
-class EmailRequestStatus < Struct.new(:settings, :admin, :request)
+class EmailRequestStatus < Struct.new(:settings, :admin, :request, :request_type)
   def perform
     email_body = <<EOBODY
       <p>Hi,</p>
-      <p>This update is to let you know that <strong>#{admin}</strong> has <strong>#{request.status}</strong> your request for documents.</p>
+      <p>This update is to let you know that <strong>#{admin}</strong> has <strong>#{request.status}</strong> your request for #{request_type}.</p>
       <p>Request Details:</p>
       <table width="100%" border="0" cellspacing="0" cellpading="0">
         <tr>
           <td align="left" width="20%" valign="top"><strong>Request Made on</strong></td>
-          <td align="left" width="20%" valign="top">#{request.create_at}</td>
+          <td align="left" width="20%" valign="top">#{request.created_at}</td>
         <tr>
         <tr>
           <td align="left" width="20%" valign="top"><strong>Request Type:</strong></td>
-          <td align="left" width="20%" valign="top">#{request.document_type}</td>
+          <td align="left" width="20%" valign="top">#{request_type}</td>
         <tr>
         <tr>
-          <td align="left" width="20%" valign="top"><strong>Company:</strong></td>
-          <td align="left" width="20%" valign="top">#{request.company}</td>
+          <td align="left" width="20%" valign="top"><strong>Approved/Disapproved By:</strong></td>
+          <td align="left" width="20%" valign="top">#{admin}</td>
         <tr>
       </table>
       <br/>
@@ -27,7 +27,7 @@ EOBODY
       from: 'Cloudwick Sync' + "<" + settings[:email] + ">",
       to: request.consultant_email,
       cc: settings[:cc],
-      subject: "Status of the document request (#{request.document_type}) you made",
+      subject: "Status of the #{request_type} request you made",
       headers: { 'Content-Type' => 'text/html' },
       body: email_body,
       via: :smtp,
