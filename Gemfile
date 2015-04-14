@@ -31,6 +31,5 @@ gem 'fog'
 gem 'sshkey'
 # rmagick requires ghostscript, imagemagick, imagemagick-devel
 gem 'rmagick'
-gem 'newrelic_rpm'
 # Development for `rerun 'rackup --server thin'`
 gem 'thin'
