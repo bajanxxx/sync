@@ -2975,6 +2975,7 @@ Admin</a> </p>
 
     if params.key?("RoundTrip")
       round_trip = true
+      one_way = false
       if params[:ReturnDate].empty?
         success = false
         message = "Param 'return_date' cannot be empty"
@@ -3115,6 +3116,7 @@ Admin</a> </p>
 
     if params.key?("roundtrip")
       round_trip = true
+      one_way = false
       if params[:returndate].empty?
         success = false
         message = "Param 'return_date' cannot be empty"
