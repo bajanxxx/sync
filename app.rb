@@ -1,6 +1,5 @@
 require 'sinatra/base'
 require 'sinatra/flash'
-require 'newrelic_rpm'
 require 'mongo'
 require 'mongoid'
 require 'mongoid_search'
@@ -27,6 +26,7 @@ require 'fog'
 require 'securerandom'
 require 'sshkey'
 require 'fileutils'
+require 'active_support/all'
 
 # Load the mongo models
 require_relative 'models/air_ticket_request'
@@ -3071,8 +3071,33 @@ Admin</a> </p>
   #
   # => Timesheets
   #
+  before '/timesheets' do
+    redirect '/login' if !@username
+  end
+
+  before '/timesheets/*' do
+    redirect '/login' if !@username
+  end
+
   get '/timesheets' do
-    erb :timesheets
+    if @admin_user
+      erb :timesheets, locals: { projectscount: 2, currentweek: dates_week(Date.today) {|d| d} }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  get '/timesheets/:userid/:weeknum' do |userid, weeknum|
+    # take a week number and convert that to list of dates in that week
+    date = Date.commercial(2015, weeknum.to_i)
+    dates = dates_week(date) { |d| d }
+
+    erb :consultant_timesheets,
+    locals: {
+      projectscount:2,
+      weekdates: dates,
+      weeknum: weeknum
+    }
   end
 
   #
@@ -3545,6 +3570,16 @@ Admin</a> </p>
   #
   # => HELPERS
   #
+
+  # Gives back a list of dates from a week of specified date
+  #
+  # Usage:
+  # dates_week(Date.today) { |d| d }
+  def dates_week(d)
+    (d.beginning_of_week...d.beginning_of_week+7).map{|a|
+      yield a
+    }
+  end
 
   # Creates an openstack connection
   def create_openstack_connection
