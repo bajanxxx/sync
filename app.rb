@@ -2925,23 +2925,67 @@ Admin</a> </p>
   end
 
   post '/airtickets/submit' do
-    cname = params[:name]
-    cemail = params[:email]
-    travel_date = params[:tdate]
-    from_iata_code = params[:fiata]
-    to_iata_code = params[:tiata]
-    flexibility_in_days = params[:flexibility]
-    purpose = params[:purpose]
+    # {"ConsultantName"=>"Ashrith", "Email"=>"ashrith@cloudwick.com", "From"=>"SFO", "FlexibleFrom"=>"on", "From2"=>"", "To"=>"BWI", "To2"=>"", "ReturnDate"=>"", "Purpose"=>"i dont kow"}
+    cname = params[:ConsultantName]
+    cemail = params[:Email]
+    travel_date = params[:TravelDate]
+    from_iata_code = params[:From]
+    from_iata_code2 = params[:From2]
+    to_iata_code = params[:To]
+    to_iata_code2 = params[:To2]
+    round_trip = params[:RoundTrip]
+    return_date = params[:ReturnDate]
+    purpose = params[:Purpose]
+    flexible_from = false
+    flexible_to = false
+    one_way = true
+    round_trip = false
+    flexibility = false
 
     success    = true
     message    = "Air Ticket Request submitted."
 
-    %w(name email tdate flexibility purpose).each do |param|
+    p params
+
+    %w(ConsultantName Email TravelDate From To Purpose).each do |param|
       if params[param.to_sym].empty?
         success = false
         message = "Param '#{param}' cannot be empty"
       end
       return { success: success, msg: message }.to_json unless success
+    end
+
+    if params.key?("FlexibleFrom")
+      flexible_from = true
+      if params[:From2].empty?
+        success = false
+        message = "Param 'flexible_from' cannot be empty"
+        return { success: success, msg: message }.to_json
+      end
+    end
+
+    if params.key?("FlexibleTo")
+      flexible_to = true
+      if params[:To2].empty?
+        success = false
+        message = "Param 'flexible_to' cannot be empty"
+        return { success: success, msg: message }.to_json
+      end
+    end
+
+    if params.key?("RoundTrip")
+      round_trip = true
+      if params[:ReturnDate].empty?
+        success = false
+        message = "Param 'return_date' cannot be empty"
+        return { success: success, msg: message }.to_json
+      end
+    else
+      one_way = true
+    end
+
+    if params.key?("Flexibility")
+      flexibility = true
     end
 
     if success
@@ -2952,8 +2996,15 @@ Admin</a> </p>
               travel_date: travel_date,
               purpose: purpose,
               from_apc: from_iata_code,
+              flexible_from: flexible_from,
+              from_apc2: from_iata_code2,
               to_apc: to_iata_code,
-              flexibility: flexibility_in_days.to_i,
+              flexible_to: flexible_to,
+              to_apc2: to_iata_code2,
+              one_way: one_way,
+              round_trip: round_trip,
+              return_date: return_date,
+              flexibility: flexibility,
               admin_created: true
             )
     end
@@ -3021,20 +3072,60 @@ Admin</a> </p>
   post '/airtickets/:userid/request' do |userid|
     cname = params[:fullname]
     from_apc = params[:from]
+    from_apc2 = params[:from2]
     to_apc = params[:to]
+    to_apc2 = params[:to2]
     travel_date = params[:traveldate]
-    flexibility = params[:flexibility]
+    flexible_from = false
+    flexible_to = false
+    one_way = false
+    round_trip = false
+    return_date = params[:returndate]
+    flexibility = false
     purpose = params[:purpose]
 
     success    = true
     message    = "Air Ticket Request submitted."
 
-    %w(fullname from to traveldate flexibility purpose).each do |param|
+    %w(fullname from to traveldate purpose).each do |param|
       if params[param.to_sym].empty?
         success = false
         message = "Param '#{param}' cannot be empty"
       end
       return { success: success, msg: message }.to_json unless success
+    end
+
+    if params.key?("flexiblefrom")
+      flexible_from = true
+      if params[:from2].empty?
+        success = false
+        message = "Param 'flexible_from' cannot be empty"
+        return { success: success, msg: message }.to_json
+      end
+    end
+
+    if params.key?("flexibleto")
+      flexible_to = true
+      if params[:to2].empty?
+        success = false
+        message = "Param 'flexible_to' cannot be empty"
+        return { success: success, msg: message }.to_json
+      end
+    end
+
+    if params.key?("roundtrip")
+      round_trip = true
+      if params[:returndate].empty?
+        success = false
+        message = "Param 'return_date' cannot be empty"
+        return { success: success, msg: message }.to_json
+      end
+    else
+      one_way = true
+    end
+
+    if params.key?("flexibility")
+      flexibility = true
     end
 
     if success
@@ -3045,8 +3136,15 @@ Admin</a> </p>
               travel_date: travel_date,
               purpose: purpose,
               from_apc: from_apc,
+              flexible_from: flexible_from,
+              from_apc2: from_apc2,
               to_apc: to_apc,
-              flexibility: flexibility.to_i
+              flexible_to: flexible_to,
+              to_apc2: to_apc2,
+              one_way: one_way,
+              round_trip: round_trip,
+              return_date: return_date,
+              flexibility: flexibility
             )
       # Send email to the admin group
       Delayed::Job.enqueue(

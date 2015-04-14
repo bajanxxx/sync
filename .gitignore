@@ -1,5 +1,6 @@
 # project specific
 random.rb
+random.js
 tmp/*
 
 # sbt specific
@@ -19,3 +20,6 @@ project/target
 # IDE specific
 .idea
 .idea_modules
+
+# NodeJS specific
+node_modules/

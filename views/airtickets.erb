@@ -31,6 +31,20 @@
             </select>
             <span class="help-block"></span>
           </div>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" id="FlexibleFrom" name="FlexibleFrom"> Flexible from ? (are you willing to travel from close by airport)
+            </label>
+          </div>
+          <div id="From2Div" class="form-group" style="display:none">
+            <label for="From2">Another From:</label>
+            <select class="form-control" id="From2" name="From2">
+              <option selected value=''>Start typing another city name where you are flexible to travel from</option>
+              <% ap_hash.each do |aph| %>
+                <option value="<%= aph['iata'] %>"><%= aph['name'] %></option>
+              <% end %>
+            </select>
+          </div>
           <div class="form-group">
             <label for="To">To:</label>
             <select class="form-control" id="To" name="To" required="required">
@@ -41,24 +55,43 @@
             </select>
             <span class="help-block"></span>
           </div>
-          <div class="form-group date">
-            <label>Date of travel: </label>
-            <input type="text" class="form-control" id="TravelDate" placeholder="mm/dd/yyyy">
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" id="FlexibleTo" name="FlexibleTo"> Flexible to ? (are you willing to travel to close by airport)
+            </label>
+          </div>
+          <div id="To2Div" class="form-group" style="display:none">
+            <label for="To2">Another To:</label>
+            <select class="form-control" id="To2" name="To2">
+              <option selected value=''>Start typing another city name where you are flexible to travel to</option>
+              <% ap_hash.each do |aph| %>
+                <option value="<%= aph['iata'] %>"><%= aph['name'] %></option>
+              <% end %>
+            </select>
           </div>
           <div class="form-group date">
-            <label>Flexibity: </label>
-            <input type="text" class="form-control" id="Flexibity" placeholder="specify in days">
+            <label>Date of travel: </label>
+            <input type="text" class="form-control" name="TravelDate" id="TravelDate" placeholder="mm/dd/yyyy">
+          </div>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" id="RoundTrip" name="RoundTrip"> Round Trip ? (is this a round trip travel)
+            </label>
+          </div>
+          <div id="ReturnDateDiv" class="form-group" style="display:none">
+            <label for="ReturnDate">Return Date:</label>
+            <input type="text" class="form-control" name="ReturnDate" id="ReturnDate" placeholder="return date in the format (mm/dd/yyyy)">
+          </div>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" name="Flexibility" id="Flexibility"> Are you flexible in the travel dates (by 2-3 days) ?
+            </label>
           </div>
           <div class="form-group">
             <label for="Purpose">Purpose: </label>
             <input type="text" class="form-control" id="Purpose" name="Purpose" placeholder="Why do you need this ticket for" value="" required="required" />
               <span class="help-block"></span>
           </div>
-           <!-- <div class="form-group">
-            <label for="Amount">Amount:</label>
-              <input type="text" class="form-control" id="Amount" name="Amount" placeholder="Price for the air ticket" value="" required="required" />
-              <span class="help-block"></span>
-          </div> -->
         </form>
         <p id="CreateAirTicketRequestLabel" class="text-center"></p>
         <hr />
@@ -101,18 +134,52 @@
               <input type="text" class="form-control" id="From-<%= request.id %>" value="<%= request.from_apc %>">
               <span class="help-block"></span>
             </div>
+            <% if request.flexible_from %>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" id="FlexibleFrom-<%= request.id %>" name="FlexibleFrom-<%= request.id %>" checked> Flexible from ? (are you willing to travel from close by airport)
+                </label>
+              </div>
+              <div id="From2Div-<%= request.id %>" class="form-group">
+                <label for="From2">Another From:</label>
+                <input type="text" class="form-control" id="From2-<%= request.id %>" value="<%= request.from_apc2 %>">
+              </div>
+            <% end %>
             <div class="form-group">
               <label for="To">To:</label>
-              <input type="text" class="form-control" id="To-<%= request.id %>" value="<%= request.from_apc %>">
+              <input type="text" class="form-control" id="To-<%= request.id %>" value="<%= request.to_apc %>">
               <span class="help-block"></span>
             </div>
+            <% if request.flexible_to %>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" id="FlexibleTo-<%= request.id %>" name="FlexibleTo-<%= request.id %>" checked> Flexible to ? (are you willing to travel to close by airport)
+                </label>
+              </div>
+              <div id="To2Div-<%= request.id %>" class="form-group">
+                <label for="From2">Another To:</label>
+                <input type="text" class="form-control" id="To2-<%= request.id %>" value="<%= request.to_apc2 %>">
+              </div>
+            <% end %>
             <div class="form-group date">
               <label>Date of travel: </label>
               <input type="text" class="form-control" id="TravelDate-<%= request.id %>" value="<%= request.travel_date %>">
             </div>
-            <div class="form-group date">
-              <label>Flexibity: </label>
-              <input type="text" class="form-control" id="Flexibity-<%= request.id %>" value="<%= request.flexibility %>">
+            <% if request.round_trip %>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" id="RoundTrip-<%= request.id %>" name="RoundTrip-<%= request.id %>" checked> Round Trip ? (is this a round trip travel)
+                </label>
+              </div>
+              <div id="ReturnDateDiv-<%= request.id %>" class="form-group">
+                <label for="ReturnDate">Return Date:</label>
+                <input type="text" class="form-control" name="ReturnDate-<%= request.id %>" id="ReturnDate-<%= request.id %>" placeholder="return date in the format (mm/dd/yyyy)" value="<%= request.return_date %>">
+              </div>
+            <% end %>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" name="Flexibility-<%= request.id %>" id="Flexibility-<%= request.id %>" <%= "checked" if request.flexibility %>> Are you flexible in the travel dates (by 2-3 days) ?
+              </label>
             </div>
             <div class="form-group">
               <label for="Purpose">Purpose: </label>
@@ -128,7 +195,8 @@
               <label>Flight Search:</label>
               <!-- # 2way: https://www.google.com/flights/#search;f=SFO;t=BWI;d=2015-04-26;r=2015-04-30 -->
               <!-- # 1way: https://www.google.com/flights/#search;f=SFO;t=BWI;d=2015-04-26;tt=o -->
-              <a target="_blank" href="https://www.google.com/flights/#search;f=<%= request.from_apc %>;t=<%= request.to_apc %>;d=<%= Date.strptime(request.travel_date, '%m/%d/%Y').strftime('%Y-%m-%d') %>;tt=o">Google Flights</a>
+              <!-- # flexible: https://www.google.com/flights/#search;f=SFO,OAK,HWD;t=BWI;d=2015-04-30;r=2015-05-04 -->
+              <a target="_blank" href="https://www.google.com/flights/#search;f=<%= request.from_apc %><%= ',' + request.from_apc2.to_s if request.flexible_from %>;t=<%= request.to_apc %><%= ',' + request.to_apc2.to_s if request.flexible_to %>;d=<%= Date.strptime(request.travel_date, '%m/%d/%Y').strftime('%Y-%m-%d') %><%= ';tt=o' if request.one_way %><%= ';r=' + Date.strptime(request.return_date, '%m/%d/%Y').strftime('%Y-%m-%d') if request.round_trip %>">Google Flights</a>
               <span class="help-block"></span>
             </div>
           </form>
@@ -236,27 +304,31 @@ $(document).ready(function(){
   $('.approvebutton').tooltip();
   $('.disapprovebutton').tooltip();
   $('#From').select2();
+  $('#From2').select2();
   $('#To').select2();
-
+  $('#To2').select2();
   $('#TravelDate').datepicker({});
+  $('#ReturnDate').datepicker({});
+  $('#FlexibleFrom').click(function() {
+    $('#From2Div').toggle(this.checked);
+  });
+  $('#FlexibleTo').click(function() {
+    $('#To2Div').toggle(this.checked);
+  });
+  $('#RoundTrip').click(function() {
+    $('#ReturnDateDiv').toggle(this.checked);
+  });
+
   $('#SubmitCreateBtn').click(function() {
     _this = $(this);
     _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
     _this.attr('disabled', true); // no double submit
 
-    var consultantName = $("#ConsultantName").val();
-    var email = $("#Email").val();
-    var tdate = $("#TravelDate").val();
-    var fromiata = $("#From").val();
-    var toiata = $("#To").val();
-    var flexibility = $("#Flexibity").val();
-    var purpose = $("#Purpose").val();
-
     $.ajax({
       type: "POST",
       dataType: "json",
       url: "/airtickets/submit",
-      data: {'name': consultantName, 'email': email, 'tdate': tdate, 'fiata': fromiata, 'tiata': toiata, 'flexibility': flexibility, 'purpose': purpose },
+      data: $('#CreateForm').serialize(),
       success: function(data) {
         if(!data.success) {
           console.log("Error: " + data.msg);

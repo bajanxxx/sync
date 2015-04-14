@@ -6,8 +6,15 @@ class AirTicketRequest
   field :purpose, type: String
   field :travel_date, type: String
   field :from_apc, type: String
+  field :flexible_from, type: Boolean, default: false
+  field :from_apc2, type: String
   field :to_apc, type: String
-  field :flexibility, type: Integer
+  field :flexible_to, type: Boolean, default: false
+  field :to_apc2, type: String
+  field :flexibility, type: Boolean, default: false
+  field :one_way, type: Boolean, default: false
+  field :round_trip, type: Boolean, default: false
+  field :return_date, type: String
   field :card_used, type: String
   field :amount, type: String # 100.00
   field :status, type: String, default: 'pending' # approved | rejected | pending
