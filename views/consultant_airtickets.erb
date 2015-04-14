@@ -24,6 +24,20 @@
             </select>
             <span class="help-block"></span>
           </div>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" id="flexiblefrom" name="flexiblefrom"> Flexible from ? (are you willing to travel from close by airport)
+            </label>
+          </div>
+          <div id="from2div" class="form-group" style="display:none">
+            <label for="From">Another From:</label>
+            <select class="form-control" id="from2" name="from2">
+              <option selected value=''>Start typing another city name where you are flexible to travel from</option>
+              <% ap_hash.each do |aph| %>
+                <option value="<%= aph['iata'] %>"><%= aph['name'] %></option>
+              <% end %>
+            </select>
+          </div>
           <div class="form-group">
             <label for="To">To:</label>
             <select class="form-control" id="to" name="to" required="required">
@@ -34,13 +48,41 @@
             </select>
             <span class="help-block"></span>
           </div>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" id="flexibleto" name="flexibleto"> Flexible to ? (are you willing to travel to close by airport)
+            </label>
+          </div>
+          <div id="to2div" class="form-group" style="display:none">
+            <label for="From">Another To:</label>
+            <select class="form-control" id="to2" name="to2">
+              <option selected value=''>Start typing another city name where you are flexible to travel to</option>
+              <% ap_hash.each do |aph| %>
+                <option value="<%= aph['iata'] %>"><%= aph['name'] %></option>
+              <% end %>
+            </select>
+          </div>
           <div class="form-group date">
             <label for="traveldate">Date of travel: </label>
             <input type="text" class="form-control" name="traveldate" id="traveldate" placeholder="travel date in the format (mm/dd/yyyy)">
           </div>
-          <div class="form-group date">
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" id="roundtrip" name="roundtrip"> Round Trip ? (is this a round trip travel)
+            </label>
+          </div>
+          <div id="returndatediv" class="form-group" style="display:none">
+            <label for="returndate">Return Date:</label>
+            <input type="text" class="form-control" name="returndate" id="returndate" placeholder="return date in the format (mm/dd/yyyy)">
+          </div>
+          <!-- <div class="form-group date">
             <label for="flexibility">Flexibility: </label>
             <input type="text" class="form-control" id="flexibility" name="flexibility" placeholder="specify in days (0 - not flexible)">
+          </div> -->
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" name="flexibility" id="flexibility"> Are you flexible in the travel dates (by 2-3 days) ?
+            </label>
           </div>
           <div class="form-group">
             <label for="purpose">Purpose: </label>
@@ -123,8 +165,20 @@
 <script type="text/javascript">
 $(document).ready(function(){
   $('#from').select2();
+  $('#from2').select2();
   $('#to').select2();
+  $('#to2').select2();
   $('#traveldate').datepicker({});
+  $('#returndate').datepicker({});
+  $('#flexiblefrom').click(function() {
+    $('#from2div').toggle(this.checked);
+  });
+  $('#flexibleto').click(function() {
+    $('#to2div').toggle(this.checked);
+  });
+  $('#roundtrip').click(function() {
+    $('#returndatediv').toggle(this.checked);
+  });
   $('#RequestForm').bootstrapValidator({
     feedbackIcons: {
         valid: 'glyphicon glyphicon-ok',
