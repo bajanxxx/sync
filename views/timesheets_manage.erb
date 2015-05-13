@@ -1,0 +1,253 @@
+<div class="modal fade" id="CreateVendorModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create Vendor</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="CreateVendorForm">
+          <div class="form-group">
+            <label for="VendorName">Name:</label>
+              <input type="text" class="form-control" id="VendorName" name="VendorName" placeholder="Name of the vendor" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="Address">Address</label>
+            <input type="text" class="form-control" id="Address" name="Address" placeholder="Address of the vendor" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="PreferredCurrency">Preferred Currency:</label>
+            <select name="PreferredCurrency" id="PreferredCurrency" class="form-control">
+              <option value="USD">USD</option>
+              <option value="INR">INR</option>
+            </select>
+          </div>
+        </form>
+        <p id="CreateVendorFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <button id="VendorSubmitBtn" name="VendorSubmitBtn" class="btn btn-large btn-primary center-block">Create Vendor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="CreateClientModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create Client</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="CreateClientForm">
+          <div class="form-group">
+            <label for="ClientName">Name:</label>
+              <input type="text" class="form-control" id="ClientName" name="ClientName" placeholder="Name of the client" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="ClientAddress">Address</label>
+            <input type="text" class="form-control" id="ClientAddress" name="ClientAddress" placeholder="Address of the client" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="PreferredClientCurrency">Preferred Currency:</label>
+            <select name="PreferredClientCurrency" id="PreferredClientCurrency" class="form-control">
+              <option value="USD">USD</option>
+              <option value="INR">INR</option>
+            </select>
+          </div>
+        </form>
+        <p id="CreateClientFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <button id="ClientSubmitBtn" name="ClientSubmitBtn" class="btn btn-large btn-primary center-block">Create Client</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="container theme-showcase" role="main">
+  <div id="manage" class="tab-pane">
+    <ul class="nav nav-tabs nav-justified">
+      <li class="active"><a data-toggle="tab" href="#vendors"> Vendors</a></li>
+      <li><a data-toggle="tab" href="#clients"> Clients</a></li>
+      <li><a data-toggle="tab" href="#expensecategories"> Expense Categories</a></li>
+    </ul>
+    <br/>
+    <div class="tab-content">
+      <div id="vendors" class="tab-pane active">
+        <div class="page-header">
+          <h4>
+            Vendors
+            <div class="btn-group pull-right">
+              <a id="CreateVendorModal" class="btn btn-primary btn-md" data-toggle="modal" href="#CreateVendorModal" role="button">Add Vendor &raquo;</a>
+            </div>
+          </h4>
+        </div>
+        <div class="panel panel-primary">
+          <ul class="list-group">
+            <% if vendors.empty? %>
+              <li class="list-group-item"><span>No vendors added yet!</span></li>
+            <% else %>
+              <% vendors.each do |vendor| %>
+              <li class="list-group-item"><span><%= vendor.name %></span> (<%= vendor.address %>)</li>
+              <% end %>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+
+      <div id="clients" class="tab-pane">
+        <div class="page-header">
+          <h4>
+            Clients
+            <div class="btn-group pull-right">
+              <a id="CreateClientModal" class="btn btn-primary btn-md" data-toggle="modal" href="#CreateClientModal" role="button">Add Client &raquo;</a>
+            </div>
+          </h4>
+        </div>
+        <div class="panel panel-primary">
+          <ul class="list-group">
+            <% if clients.empty? %>
+              <li class="list-group-item"><span>No clients added yet!</span></li>
+            <% else %>
+              <% clients.each do |client| %>
+              <li class="list-group-item"><span><%= client.name %> (<%= client.address %>)</span></li>
+              <% end %>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+      <div id="expensecategories" class="tab-pane">
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip({'placement': 'bottom'});
+
+  $('#CreateVendorForm').bootstrapValidator({
+    feedbackIcons: {
+        valid: 'glyphicon glyphicon-ok',
+        invalid: 'glyphicon glyphicon-remove',
+        validating: 'glyphicon glyphicon-refresh'
+      },
+    fields: {
+      ClientName: {
+        message: 'name of the client is not valid',
+        validators: {
+          notEmpty: {
+              message: 'name of the client is required and cannot be empty'
+          }
+        }
+      },
+      ClientAddress: {
+        message: 'required',
+        validators: {
+          notEmpty: {
+            message: 'address of the client is required'
+          }
+        }
+      }
+    }
+  });
+
+  $('#VendorSubmitBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/timesheets/manage/vendor",
+      data: $('#CreateVendorForm').serialize(),
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#CreateVendorFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg)
+          _this.html("Submitted");
+          $('#CreateVendorFormLabel').addClass('text-info').html(data.msg);
+          $('#CreateVendorModal').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#CreateVendorFormLabel').addClass('text-danger').html('Something went wrong creating a new request!!!');
+      }
+    });
+  });
+
+  $('#CreateClientForm').bootstrapValidator({
+    feedbackIcons: {
+        valid: 'glyphicon glyphicon-ok',
+        invalid: 'glyphicon glyphicon-remove',
+        validating: 'glyphicon glyphicon-refresh'
+      },
+    fields: {
+      VendorName: {
+        message: 'name of the vendor is not valid',
+        validators: {
+          notEmpty: {
+              message: 'name of the vendor is required and cannot be empty'
+          }
+        }
+      },
+      Address: {
+        message: 'required',
+        validators: {
+          notEmpty: {
+            message: 'address of the vendor is required'
+          }
+        }
+      }
+    }
+  });
+
+  $('#ClientSubmitBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/timesheets/manage/client",
+      data: $('#CreateClientForm').serialize(),
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#CreateClientFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg)
+          _this.html("Submitted");
+          $('#CreateClientFormLabel').addClass('text-info').html(data.msg);
+          $('#CreateClientModal').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#CreateClientFormLabel').addClass('text-danger').html('Something went wrong creating a new request!!!');
+      }
+    });
+  });
+})
+</script>
