@@ -42,10 +42,35 @@
       <br/>
       <div class="tab-content">
         <div id="vendors" class="tab-pane active">
+          <div class="page-header">
+            <h4>
+              Vendors
+              <div class="btn-group pull-right">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                  Add Vendor</span>
+                </button>
+              </div>
+            </h4>
+          </div>
+          <div class="panel panel-primary">
+            <ul class="list-group">
+              <% if vendors.empty? %>
+                <li class="list-group-item"><span>No vendors added yet!</span></li>
+              <% else %>
+                <% vendors.each do |vendor| %>
+                <li class="list-group-item"><span>vendor</span></li>
+                <% end %>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+
         </div>
         <div id="clients" class="tab-pane">
+
         </div>
         <div id="expensecategories" class="tab-pane">
+
         </div>
       </div>
     </div>
