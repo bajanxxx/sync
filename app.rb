@@ -69,6 +69,14 @@ require_relative 'models/training_sub_topic'
 require_relative 'models/content_slide'
 require_relative 'models/content_thumbnail'
 require_relative 'models/pdf_file'
+require_relative 'models/timesheet'
+require_relative 'models/timesheet_detail'
+require_relative 'models/time_project'
+require_relative 'models/time_vendor'
+require_relative 'models/time_client'
+require_relative 'models/time_contact'
+require_relative 'models/time_project_assignment'
+require_relative 'models/time_project_task'
 
 # Load core stuff
 require_relative 'lib/process_dice'
@@ -203,18 +211,19 @@ class Sync < Sinatra::Base
 
     # check if the user has logged in
     def username
-      begin
-        Session.find_by(_id: session[:uid]).username
-      rescue Mongoid::Errors::DocumentNotFound
+      _session = Session.find_by(_id: session[:uid])
+      if _session
+        _session.username
+      else
         nil
       end
     end
 
     def user_fullname(user_email)
-      begin
-        c = Consultant.find_by(email: user_email)
-        "#{c.first_name} #{c.last_name}"
-      rescue Mongoid::Errors::DocumentNotFound
+      _consultant = Consultant.find_by(email: user_email)
+      if _consultant
+        "#{_consultant.first_name} #{_consultant.last_name}"
+      else
         nil
       end
     end
@@ -222,9 +231,10 @@ class Sync < Sinatra::Base
     # check if the current user is admin user
     def admin_user
       if username
-        begin
-          User.find_by(_id: username).admin
-        rescue Mongoid::Errors::DocumentNotFound
+        _user = User.find_by(_id: username)
+        if _user
+          _user.admin
+        else
           false
         end
       end
@@ -257,13 +267,10 @@ class Sync < Sinatra::Base
     @userfullname = user_fullname(username)
     @admin_user = admin_user
     @admin_name = if @admin_user
-                    begin
-                      User.find_by(_id: @username)
-                        .email
-                        .split('@')
-                        .first
-                        .capitalize
-                    rescue Mongoid::Errors::DocumentNotFound
+                    _user = User.find_by(_id: @username)
+                    if _user
+                      _user.email.split('@').first.capitalize
+                    else
                       'ADMIN'
                     end
                   end
@@ -323,30 +330,16 @@ class Sync < Sinatra::Base
       google_profile = @auth.info.urls && @auth.info.urls['Google'] || nil
 
       # make sure user exists in the user collection
-      begin
-        User.find_by(email: user_email)
-      rescue Mongoid::Errors::DocumentNotFound
-        User.create(email: user_email)
-      end
+      User.find_or_create_by(email: user_email)
 
       # also create/update consultant document
-      begin
-        Consultant.find_by(email: user_email)
-        # .update_attributes(
-        #   first_name: @auth.info['first_name'],
-        #   last_name: @auth.info['last_name'],
-        #   image_url: @auth.info['image'],
-        #   google_profile: google_profile
-        # )
-      rescue Mongoid::Errors::DocumentNotFound
-        Consultant.create(
-          first_name: @auth.info['first_name'],
-          last_name: @auth.info['last_name'],
-          email: user_email,
-          image_url: @auth.info['image'],
-          google_profile: google_profile
-        )
-      end
+      Consultant.find_or_create_by(
+        first_name: @auth.info['first_name'],
+        last_name: @auth.info['last_name'],
+        email: user_email,
+        image_url: @auth.info['image'],
+        google_profile: google_profile
+      )
 
       # create a session for the user in the collection
       session_id = @sessions.start_session(user_email, session_uid)
@@ -363,9 +356,10 @@ class Sync < Sinatra::Base
 
   get '/' do
     # for logged in users show follow up jobs and applied jobs of 10 each
-    consultant = begin
-                   Consultant.find_by(email: @username).id
-                 rescue Mongoid::Errors::DocumentNotFound
+    _consultant = Consultant.find_by(email: @username)
+    consultant = if _consultant
+                   _consultant.id
+                 else
                    ''
                  end
     if @username
@@ -554,9 +548,11 @@ Admin</a> </p>
       success = false
       message = "fields cannot be empty"
     else
-      begin
-        Consultant.find_by(email: email)
-      rescue Mongoid::Errors::DocumentNotFound
+      _consultant = Consultant.find_by(email: email)
+      if _consultant
+        success = false
+        message = "User already exists with email address: #{email}"
+      else
         success = true
         Consultant.create(
           first_name: first_name,
@@ -564,9 +560,6 @@ Admin</a> </p>
           email: email,
           team: team
         )
-      else
-        success = false
-        message = "User already exists with email address: #{email}"
       end
     end
 
@@ -588,9 +581,10 @@ Admin</a> </p>
       job_applications = []
       consultant.applications.each do |application|
         job = Job.find_by(url: application.job_url)
-        resume_name = begin
-                        Resume.find_by(_id: application.resume_id).resume_name
-                      rescue Mongoid::Errors::DocumentNotFound
+        _resume = Resume.find_by(_id: application.resume_id)
+        resume_name = if _resume
+                        _resume.resume_name
+                      else
                         ''
                       end
         # Only show applications that aren't hidden
@@ -649,9 +643,12 @@ Admin</a> </p>
 
     consultant = Consultant.find_by(email: id)
     details = Detail.find_by(consultant_id: id)
-    begin
-      details.projects.find_by(name: project_name)
-    rescue Mongoid::Errors::DocumentNotFound
+    _projects = details.projects.find_by(name: project_name)
+    if _projects
+      # project with same name exists
+      success = false
+      message = "Failed to add project as the project_name: #{project_name} already exists"
+    else
       # project with the same name does not exist
       details.projects << Project.new(
         name: project_name,
@@ -695,9 +692,12 @@ Admin</a> </p>
 
       5.times do |usecase_index|
         unless params["uc#{usecase_index}name".to_sym].empty?
-          begin
-            details.projects.find_by(name: project_name).usecases.find_by(name: params["uc#{usecase_index}name".to_sym])
-          rescue Mongoid::Errors::DocumentNotFound
+          _usecases = details.projects.find_by(name: project_name).usecases.find_by(name: params["uc#{usecase_index}name".to_sym])
+          if _usecases
+            # usecase with the name already exists
+            success = false
+            message = "Failed to add usecase as the usecase_name: #{usecase_index} already exists for project: #{project_name}"
+          else
             details.projects.find_by(name: project_name).usecases << UseCase.new(
               name: params["uc#{usecase_index}name".to_sym],
               description: params["uc#{usecase_index}description".to_sym]
@@ -718,17 +718,9 @@ Admin</a> </p>
                 )
               end
             end
-          else
-            # usecase with the name already exists
-            success = false
-            message = "Failed to add usecase as the usecase_name: #{usecase_index} already exists for project: #{project_name}"
           end
         end
       end
-    else
-      # project with same name exists
-      success = false
-      message = "Failed to add project as the project_name: #{project_name} already exists"
     end
 
     if success
@@ -797,7 +789,7 @@ Admin</a> </p>
       run_at: 5.seconds.from_now
     )
 
-    flash[:info] = "Sent reminder to constultant email: #{email}"
+    flash[:info] = "Sent reminder to consultant email: #{email}"
   end
 
   # Delete the consultant and all the applications associated to that email
@@ -1408,9 +1400,11 @@ Admin</a> </p>
     end
 
     if success
-      begin
-        Job.find_by(url: params[:URL])
-      rescue Mongoid::Errors::DocumentNotFound
+      _job = Job.find_by(url: params[:URL])
+      if _job
+        success = false
+        message = "Job already exists with url: #{params[:URL]}"
+      else
         date = DateTime.now.strftime("%Y-%m-%d")
         Job.find_or_create_by(url: params[:URL], date_posted: date) do |doc|
           doc.source      = "INTERNAL"
@@ -1426,9 +1420,6 @@ Admin</a> </p>
           doc.desc        = params[:Desc]
         end
         success = true
-      else
-        success = false
-        message = "Job already exists with url: #{params[:URL]}"
       end
     end
 
@@ -1544,11 +1535,9 @@ Admin</a> </p>
         results << { id: job._id, title: job.title }
       end
     elsif uri?(search_term)
-      begin
-        job = Job.find_by(url: search_term)
+      job = Job.find_by(url: search_term)
+      if job
         results << {id: job._id, title: job.title}
-      rescue Mongoid::Errors::DocumentNotFound
-        # do nothing
       end
     else
       Job.full_text_search(search_term).entries.map do |j|
@@ -1617,9 +1606,11 @@ Admin</a> </p>
       success = false
       message = "fields cannot be empty"
     else
-      begin
-        Vendor.find_by(email: email)
-      rescue Mongoid::Errors::DocumentNotFound
+      _vendor = Vendor.find_by(email: email)
+      if _vendor
+        success = false
+        message = "Vendor already exists with email address: #{email}"
+      else
         Vendor.create(
           first_name: first_name,
           last_name: last_name,
@@ -1628,9 +1619,6 @@ Admin</a> </p>
           phone: phone
         )
         success = true
-      else
-        success = false
-        message = "Vendor already exists with email address: #{email}"
       end
     end
 
@@ -1649,10 +1637,10 @@ Admin</a> </p>
       if vendor['email']
         if vendor.fetch('email') =~ email_regex
           parsed_records += 1
-          begin
-            Vendor.find_by(email: vendor.fetch('email'))
+          _vendor = Vendor.find_by(email: vendor.fetch('email'))
+          if _vendor
             duplicate_records += 1
-          rescue Mongoid::Errors::DocumentNotFound
+          else
             new_records_inserted += 1
             Vendor.create(
               email: vendor['email'],
@@ -1733,9 +1721,11 @@ Admin</a> </p>
       success = false
       message = "'firstname', 'lastname', 'email', 'company' and 'title' cannot be empty"
     else
-      begin
-        Customer.find_by(email: email)
-      rescue Mongoid::Errors::DocumentNotFound
+      _customer = Customer.find_by(email: email)
+      if _customer
+        success = false
+        message = "Customer already exists with email address: #{email}"
+      else
         success = true
         Customer.create(
           company_id: company_id,
@@ -1760,9 +1750,6 @@ Admin</a> </p>
           fiscal_year_end: fiscal_year_end,
           duns: duns
         )
-      else
-        success = false
-        message = "Customer already exists with email address: #{email}"
       end
     end
 
@@ -1785,10 +1772,10 @@ Admin</a> </p>
       if customer['Email']
         if customer.fetch('Email') =~ email_regex
           parsed_records += 1
-          begin
-            Customer.find_by(email: customer.fetch('Email'))
+          _customer = Customer.find_by(email: customer.fetch('Email'))
+          if _customer
             duplicate_records += 1
-          rescue Mongoid::Errors::DocumentNotFound
+          else
             new_records_inserted += 1
             Customer.create(
               company_id: customer['UniqueCompanyID'],
@@ -1880,9 +1867,11 @@ Admin</a> </p>
       success = false
       message = "fields cannot be empty"
     else
-      begin
-        Template.find_by(name: template_name)
-      rescue Mongoid::Errors::DocumentNotFound # template not found
+      _template = Template.find_by(name: template_name)
+      if _template
+        success = false
+        message = "Template already exists with name: #{template_name}"
+      else
         success = true
         # Create a new campaign for tacking all the events
         create_campaign(template_name, template_name.downcase.gsub(' ', '_'))
@@ -1902,9 +1891,6 @@ Admin</a> </p>
           content: template_body,
           html: html_only
         )
-      else
-        success = false
-        message = "Template already exists with name: #{template_name}"
       end
     end
 
@@ -1921,8 +1907,8 @@ Admin</a> </p>
       success = false
       message = "fields cannot be empty"
     else
-      begin
-        template = Template.find_by(_id: id)
+      _template = Template.find_by(_id: id)
+      if _template
         html_only = if template_body =~ /^s*<[^Hh>]*html/
                       true
                     else
@@ -1933,7 +1919,7 @@ Admin</a> </p>
           content: template_body,
           html: html_only
         )
-      rescue Mongoid::Errors::DocumentNotFound # template not found
+      else
         success = false
         message = "Something went wrong, document not found!!!"
       end
@@ -2082,14 +2068,10 @@ Admin</a> </p>
       unsubscribers[:items].each do |unsubscriber|
         unsubscriber_email = unsubscriber[:address]
         puts "Got unsubscribe back from #{unsubscriber_email}"
-        begin
-          Vendor.where(email: unsubscriber_email).update(unsubscribed: true)
-        rescue Mongoid::Errors::DocumentNotFound
-        end
-        begin
-          Customer.where(email: unsubscriber_email).update(unsubscribed: true)
-        rescue Mongoid::Errors::DocumentNotFound
-        end
+        _vendor = Vendor.where(email: unsubscriber_email)
+        _vendor.update(unsubscribed: true) if _vendor
+        _customer = Customer.where(email: unsubscriber_email)
+        _customer.update(unsubscribed: true) if _customer
       end
     end
     status 200
@@ -2107,14 +2089,10 @@ Admin</a> </p>
       bounces[:items].each do |bounce|
         email = bounce[:address]
         puts "Got bounce back from #{email}"
-        begin
-          Vendor.where(email: email).update(bounced: true)
-        rescue Mongoid::Errors::DocumentNotFound
-        end
-        begin
-          Customer.where(email: email).update(bounced: true)
-        rescue Mongoid::Errors::DocumentNotFound
-        end
+        _vendor = Vendor.where(email: email)
+        _customer = Customer.where(email: email)
+        _vendor.update(bounced: true) if _vendor
+        _customer.update(bounced: true) if _customer
       end
     end
     status 200
@@ -2236,9 +2214,11 @@ Admin</a> </p>
       success = false
       message = "fields cannot be empty"
     else
-      begin
-        DocumentTemplate.find_by(name: template_name)
-      rescue Mongoid::Errors::DocumentNotFound # template not found
+      _doc_template = DocumentTemplate.find_by(name: template_name)
+      if _doc_template
+        success = false
+        message = "Template already exists with name: #{template_name}"
+      else
         success = true
         # Create the actual tempalte
         DocumentTemplate.create(
@@ -2246,9 +2226,6 @@ Admin</a> </p>
           type: template_type,
           content: template_body,
         )
-      else
-        success = false
-        message = "Template already exists with name: #{template_name}"
       end
     end
 
@@ -2265,15 +2242,15 @@ Admin</a> </p>
       success = false
       message = "fields cannot be empty"
     else
-      begin
-        template = DocumentTemplate.find_by(_id: id)
+      _template = DocumentTemplate.find_by(_id: id)
+      if _template
+        success = false
+        message = "Something went wrong, document not found!!!"
+      else
         template.update_attributes(
           type: template_type,
           content: template_body
         )
-      rescue Mongoid::Errors::DocumentNotFound
-        success = false
-        message = "Something went wrong, document not found!!!"
       end
     end
     { success: success, msg: message }.to_json
@@ -3081,24 +3058,345 @@ Admin</a> </p>
 
   get '/timesheets' do
     if @admin_user
-      erb :timesheets, locals: { projectscount: 2, currentweek: dates_week(Date.today) {|d| d} }
+      erb :timesheets,
+          locals: {
+            vendors: TimeVendor.all,
+            currentweek: dates_week(Date.today) {|d| d}
+          }
     else
       erb :admin_access_req
     end
   end
 
-  get '/timesheets/:userid/:weeknum' do |userid, weeknum|
-    # take a week number and convert that to list of dates in that week
-    date = Date.commercial(2015, weeknum.to_i)
+  get '/timesheets/projects' do
+    if @admin_user
+      erb :timesheets_projects,
+          locals: {
+            projects: TimeProject.all,
+            vendors: TimeVendor.all,
+            clients: TimeClient.all,
+            consultants: Consultant.all
+          }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  get '/timesheets/reports' do
+    if @admin_user
+    else
+      erb :admin_access_req
+    end
+  end
+
+  get '/timesheets/manage' do
+    if @admin_user
+      erb :timesheets_manage,
+          locals: {
+            vendors: TimeVendor.all,
+            clients: TimeClient.all
+          }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  post '/timesheets/manage/vendor' do
+    success    = true
+    message    = "Successfully created vendor"
+
+    name = params[:VendorName]
+    address = params[:Address]
+    preferred_currency = params[:PreferredCurrency]
+
+    if name.empty? || address.empty? || preferred_currency.empty?
+      success = false
+      message = "fields cannot be empty"
+    else
+      TimeVendor.create(name: name, address: address, preferred_currency: preferred_currency)
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  post '/timesheets/manage/client' do
+    success    = true
+    message    = "Successfully created vendor"
+
+    name = params[:ClientName]
+    address = params[:ClientAddress]
+    preferred_currency = params[:PreferredClientCurrency]
+
+    if name.empty? || address.empty? || preferred_currency.empty?
+      success = false
+      message = "fields cannot be empty"
+    else
+      TimeClient.create(name: name, address: address, preferred_currency: preferred_currency)
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  post '/timesheets/project/add' do
+    puts params
+
+    client_id = params[:ClientName]
+    vendor_id = params[:VendorName]
+    project_name = params[:ProjectName]
+    project_code = params[:ProjectCode]
+    start_date = params[:StartDate]
+    end_date = params[:EndDate]
+    notes = params[:Notes]
+    team = params[:Team]
+
+    success    = true
+    message    = "Successfully added project"
+
+    unless team
+      success = false
+      message = "Param 'team' cannot be empty, select atleast one consultant"
+
+      return { success: success, msg: message }.to_json unless success
+    end
+
+    %w(ProjectName ProjectCode StartDate EndDate Notes Team).each do |param|
+      if params[param.to_sym].empty?
+        success = false
+        message = "Param '#{param}' cannot be empty"
+      end
+      return { success: success, msg: message }.to_json unless success
+    end
+
+    if Date.strptime(start_date, "%m/%d/%Y") > Date.strptime(end_date, "%m/%d/%Y")
+      success = false
+      message = "start date should be less than end date"
+
+      return { success: success, msg: message }.to_json unless success
+    end
+
+    _time_project = TimeProject.find(project_code)
+    if _time_project
+      success = false
+      message = "Project with code #{project_code} already exists and is not unique"
+      return { success: success, msg: message }.to_json unless success
+    end
+
+    begin
+      client = TimeClient.find(client_id)
+      vendor = TimeVendor.find(vendor_id)
+
+      if success
+        # field :name, type: String
+        # field :project_code, type: String
+        # field :start_date, type: Date
+        # field :end_date, type: Date
+        # field :notes, type: String
+        # field :billable?, type: Boolean, default: false
+        # field :invoice_method, type: String # TASK_HOURLY, PERSON_HOURLY, PROJECT_HOURLY, NONE
+        # field :project_hourly_price, type: String, default: '0.00'
+        # field :budget?, type: Boolean, default: false
+        # field :budget_method, type: String # TOTAL_PROJECT_HOURS, TOTAL_PROJECT_FEES, HOURS_PER_TASK, HOURS_PER_PERSON
+        # field :budget_project_minutes, type: Integer
+        # field :budget_project_fees, type: String, default: '0.00'
+
+        project = TimeProject.create(
+          project_code: project_code,
+          name: project_name,
+          start_date: Date.strptime(start_date, "%m/%d/%Y"),
+          end_date: Date.strptime(end_date, "%m/%d/%Y"),
+          notes: notes,
+          team: team
+        )
+
+        project.time_client = client
+        project.time_vendor = vendor
+      end
+    rescue ArgumentError
+      success = false
+      message = "Cannot parse date format (expected format: mm/dd/yyyy)"
+    end
+
+    flash[:info] = message
+    { success: success, msg: message }.to_json
+  end
+
+  post '/timesheets/project/update/:id' do |id|
+    # consultant_id   = id
+    # application_id  = params[:pk]
+    # update_key      = params[:name]
+    # update_value    = params[:value]
+    # success         = true
+    # message         = "Sucessfully updated #{update_key} to #{update_value}"
+    # consultant = Consultant.find_by(email: consultant_id)
+    # if consultant.nil?
+    #   success = false
+    #   message = "Cannot find user specified by #{consultant_id}"
+    # end
+    # application = consultant.applications.find_by(id: application_id)
+    # if application.nil?
+    #   success = false
+    #   message = "Cannot find application specified by #{application_id} for user #{consultant_id}"
+    # end
+    # begin
+    #   case update_key
+    #   when 'Comments'
+    #     application.add_to_set(update_key.to_sym, update_value)
+    #   else
+    #     application.update_attribute(update_key.to_sym, update_value)
+    #   end
+    # rescue
+    #   success = false
+    #   message = "Failed to update(#{update_key})"
+    # end
+    # { success: success, msg: message }.to_json
+  end
+
+  get '/timesheets/pending' do
+    erb :timesheets_pending,
+        locals: {
+          pending_approvals: Timesheet.where(status: 'SUBMITTED')
+        }
+  end
+
+  post '/timesheets/approvals/deny/:id' do |id|
+    ts = Timesheet.find(id)
+    ts.update_attributes(status: 'REJECTED', disapproved_by: @admin_name, disapproved_at: DateTime.now)
+
+    flash[:info] = 'Sucessfully disapproved the timesheet approval'
+    redirect "/timesheets/pending"
+  end
+
+  post '/timesheets/approvals/approve/:id' do |id|
+    ts = Timesheet.find(id)
+    ts.update_attributes(status: 'APPROVED', approved_by: @admin_name, approved_at: DateTime.now)
+
+    flash[:info] = 'Sucessfully approved the timesheet approval'
+    redirect "/timesheets/pending"
+  end
+
+  #
+  # Consultant timesheet routes
+  #
+
+  get '/timesheets/:userid/:year/:weeknum' do |userid, year, weeknum|
+    # Get the last date in the week from week number of the year
+    date = Date.commercial(year.to_i, weeknum.to_i)
+    week_start = Date.commercial(year.to_i, weeknum.to_i, 1)
+    week_end = Date.commercial(year.to_i, weeknum.to_i, 7)
     dates = dates_week(date) { |d| d }
+    contains_none = true
+
+    user_projects = TimeProject.all_in(team: [userid])
+
+    user_projects.each do |project|
+      date_range = project.start_date..project.end_date
+      if date_range === week_start || date_range === week_end
+        contains_none = false
+        timesheet = Timesheet.find_or_create_by(project_code: project.project_code, consultant: userid, week: date)
+        dates.each do |date|
+          timesheet.timesheet_details.find_or_create_by(workday: date)
+        end
+        project.timesheets << timesheet
+      end
+    end
 
     erb :consultant_timesheets,
     locals: {
-      projectscount:2,
+      projects: user_projects,
       weekdates: dates,
-      weeknum: weeknum
+      year: year,
+      weeknum: weeknum,
+      date: date,
+      week_start: week_start,
+      week_end: week_end,
+      contains_none: contains_none
     }
   end
+
+  post '/timesheets/save/:projectid/:userid/:year/:weeknum' do |projectid, userid, year, weeknum|
+    puts params
+    success = true
+    message = "Successfully added"
+
+    current_week = Date.commercial(year.to_i, weeknum.to_i)
+
+    timesheet = Timesheet.find_by(
+      project_code: projectid,
+      consultant: userid,
+      week: current_week
+    )
+
+    dates = params.select { |_k, _v| _k.to_s.match(/\d{4}-\d{2}-\d{2}/) }
+
+    dates.each do |_k, _v|
+      timesheet_details = timesheet.timesheet_details.find_by(
+        workday: Date.strptime(_k, "%Y-%m-%d")
+      )
+      timesheet_details.update_attributes!(hours: _v)
+    end
+
+    total_hours = dates.values.map { |h| h.to_f }.inject{ |sum,x| sum + x }
+
+    timesheet.update_attributes(total_hours: total_hours, status: "SAVED")
+
+    TimeProject.find(projectid).timesheets << timesheet
+
+    { success: success, msg: message }.to_json
+  end
+
+  post '/timesheets/submit/:projectid/:userid/:year/:weeknum' do |projectid, userid, year, weeknum|
+    success = true
+    message = "Successfully added"
+
+    Timesheet.find_by(
+      project_code: projectid,
+      consultant: userid,
+      week: Date.commercial(year.to_i, weeknum.to_i)
+    ).update_attributes(status: "SUBMITTED")
+
+    { success: success, msg: message }.to_json
+  end
+
+  # post '/timesheets/:userid/:year/:weeknum' do |userid, year, weeknum|
+  #   puts params
+  #   success    = true
+  #   message    = "Successfully added"
+
+  #   current_week = Date.commercial(year.to_i, weeknum.to_i)
+
+  #   projects = params.select { |key, value| key.to_s.match(/PROJECT\|.*\|.*/) }
+
+  #   # get just the project codes
+  #   project_codes = projects.keys.map { |k| k.split("|")[1] }.uniq
+
+  #   project_codes.each do |project_code|
+  #     timesheet = Timesheet.find_by(
+  #       project_code: project_code,
+  #       consultant: userid,
+  #       week: current_week
+  #     )
+
+  #     project_specific = projects.select { |k, v|
+  #       k.to_s.match(/PROJECT\|#{Regexp.escape(project_code)}\|.*/)
+  #     }
+
+  #     project_specific.each do |_k, _v|
+  #       _d = _k.split("|").last
+  #       timesheet_details = timesheet.timesheet_details.find_by(
+  #         workday: Date.strptime(_d, "%Y-%m-%d")
+  #       )
+  #       timesheet_details.update_attributes!(hours: _v)
+  #     end
+
+  #     total_hours = project_specific.values.map { |h| h.to_f }.inject{|sum,x| sum + x }
+
+  #     timesheet.update_attributes(total_hours: total_hours, status: "SAVED")
+
+  #     TimeProject.find(project_code).timesheets << timesheet
+  #   end
+
+  #   { success: success, msg: message }.to_json
+  # end
 
   #
   # => CloudServers
