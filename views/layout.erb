@@ -227,15 +227,17 @@
 							<a href="#" class="dropdown-toggle disabled">Time <span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
 								<li><a href="/timesheets/pending"><i class="fa fa-pause"></i> Pending</a></li>
+								<li><a href="/timesheets/approved"><i class="fa fa-thumbs-up"></i> Approved</a></li>
 								<li><a href="/timesheets/<%= @username %>/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%U') %>"><i class="fa fa-calendar-o"></i> Timesheets</a></li>
 								<li><a href="/timesheets/projects"><i class="fa fa-folder"></i> Projects</a></li>
-								<li><a href="/timesheets/reports"><i class="fa fa-area-chart"></i> Reports</a></li>
+								<li><a href="/timesheets/reports/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%m') %>"><i class="fa fa-area-chart"></i> Reports</a></li>
 								<li><a href="/timesheets/manage"><i class="fa fa-pencil"></i> Manage</a></li>
 							</ul>
 						</li>
 						<li><a href="/training">Training</a></li>
 	        </ul>
 					<% else %>
+					<!-- consultant navigation menu -->
 					<ul class="nav navbar-nav">
 						<li><a href="/consultant/<%= @username %>/jobs">Jobs</a></li>
 						<li><a href="/consultant/<%= @username %>/projects">Projects</a></li>

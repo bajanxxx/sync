@@ -46,7 +46,7 @@
             <div class="panel panel-info">
               <!-- Default panel contents -->
               <%
-                current_timesheet = project.timesheets.find_by(consultant: @username, week: date)
+                current_timesheet = project.timesheets.find_by(consultant: userid, week: date)
                 current_timesheet_status = current_timesheet && current_timesheet.status || 'NOT SUBMITTED'
                 current_timesheet_status_label = case current_timesheet_status
                 when 'NOT SUBMITTED'
@@ -84,10 +84,19 @@
                         <div class="row">
                           <% current_timesheet.timesheet_details.each_with_index do |detail, index| %>
                             <td class="col-8 text-center">
-                              <% if (project.start_date <= weekdates[index] && project.end_date >= weekdates[index]) && (current_timesheet.status == 'NOT SUBMITTED' || current_timesheet.status == 'SAVED') %>
-                                <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
+                              <% if @admin_user %>
+                                <% if (project.start_date <= weekdates[index] && project.end_date >= weekdates[index]) %>
+                                  <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
+                                <% else %>
+                                  <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
+                                <% end %>
                               <% else %>
-                                <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
+                                <!-- normal user -->
+                                <% if (project.start_date <= weekdates[index] && project.end_date >= weekdates[index]) && (current_timesheet.status == 'NOT SUBMITTED' || current_timesheet.status == 'SAVED') %>
+                                  <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
+                                <% else %>
+                                  <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
+                                <% end %>
                               <% end %>
                             </td>
                           <% end %>
@@ -165,7 +174,7 @@ $('#showcalender').datepicker({format: 'mm/dd/yyyy'}).on('changeDate', function(
   var weekNum = moment(e.date).week();
   var year = moment(e.date).year();
   console.log(weekNum);
-  window.location.href='/timesheets/<%= @username %>/' + year + '/' + weekNum;
+  window.location.href='/timesheets/<%= userid %>/' + year + '/' + weekNum;
 });
 
 <% projects.each do |project| %>
@@ -234,7 +243,7 @@ $('#nextweek').click(function(){
     nextUrlWeek = nextUrlWeek + 1
   }
 
-  window.location.href='/timesheets/<%= @username %>/' + nextUrlYear + '/' + nextUrlWeek;
+  window.location.href='/timesheets/<%= userid %>/' + nextUrlYear + '/' + nextUrlWeek;
 })
 $('#prevweek').click(function(){
   var urlSegment = window.location.pathname
@@ -251,7 +260,7 @@ $('#prevweek').click(function(){
   } else {
     nextUrlWeek = nextUrlWeek - 1
   }
-  window.location.href='/timesheets/<%= @username %>/' + nextUrlYear + '/' + nextUrlWeek;
+  window.location.href='/timesheets/<%= userid %>/' + nextUrlYear + '/' + nextUrlWeek;
 })
 
 <% projects.each do |project| %>
@@ -262,7 +271,7 @@ $('#SaveBtn-<%= project.id %>').click(function() {
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "/timesheets/save/<%= project.id %>/<%= username %>/<%= year %>/<%= weeknum %>",
+    url: "/timesheets/save/<%= project.id %>/<%= userid %>/<%= year %>/<%= weeknum %>",
     data: $('#Form-<%= project.id %>').serialize(),
     success: function(data) {
       if(!data.success) {
@@ -289,7 +298,7 @@ $('#SubmitBtn-<%= project.id %>').click(function() {
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "/timesheets/submit/<%= project.id %>/<%= username %>/<%= year %>/<%= weeknum %>",
+    url: "/timesheets/submit/<%= project.id %>/<%= userid %>/<%= year %>/<%= weeknum %>",
     success: function(data) {
       if(!data.success) {
         console.log("Error: " + data.msg);
