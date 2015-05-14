@@ -3082,8 +3082,35 @@ Admin</a> </p>
     end
   end
 
-  get '/timesheets/reports' do
+  get '/timesheets/reports/:year/:month' do |year, month|
     if @admin_user
+      data = {}
+      _debug = {}
+      start_date = Date.new(year.to_i, month.to_i - 1, -5)
+      end_date = Date.new(year.to_i, month.to_i, -1)
+
+      Consultant.all.each do |_consultant|
+        _total = 0.0
+        _debug[_consultant.email.to_sym] = []
+
+        Timesheet.where(consultant: _consultant.email, week: start_date..end_date).each do |entry|
+          entry.timesheet_details.each do |td|
+            if td.workday >= Date.new(year.to_i, month.to_i) && td.workday <= Date.new(year.to_i, month.to_i, -1)
+              _debug[_consultant.email.to_sym] << { day: td.workday, hours: td.hours }
+              _total += td.hours
+            end
+          end
+        end
+
+        data[_consultant.email.to_sym] = _total
+      end
+
+      p _debug
+
+      erb :timesheets_reports,
+          locals: {
+            data: data
+          }
     else
       erb :admin_access_req
     end
@@ -3258,6 +3285,13 @@ Admin</a> </p>
         }
   end
 
+  get '/timesheets/approved' do
+    erb :timesheets_approved,
+        locals: {
+          approved_timesheets: Timesheet.where(status: 'APPROVED')
+        }
+  end
+
   post '/timesheets/approvals/deny/:id' do |id|
     ts = Timesheet.find(id)
     ts.update_attributes(status: 'REJECTED', disapproved_by: @admin_name, disapproved_at: DateTime.now)
@@ -3302,6 +3336,7 @@ Admin</a> </p>
 
     erb :consultant_timesheets,
     locals: {
+      userid: userid,
       projects: user_projects,
       weekdates: dates,
       year: year,
