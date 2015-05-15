@@ -1,0 +1,32 @@
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>
+      Timesheet Reports
+    </h2>
+  </div>
+
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <strong></strong>
+    </div>
+    <% if data.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No data found.</p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% data.each do |_email, _hours| %>
+        <li class="list-group-item">
+          <span><%= _email %> <%= _hours %></span>
+        </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+});
+</script>

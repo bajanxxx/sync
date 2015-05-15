@@ -1,0 +1,173 @@
+<div class="modal fade" id="CreateProjectModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create Project</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="CreateProjectForm">
+          <div class="form-group">
+            <label for="ClientName">Client Name:</label>
+            <% if clients.empty? %>
+              <select name="ClientName" id="ClientName" class="form-control" disabled>
+                <option value="">Please add clients before adding project</option>
+              </select>
+            <% else %>
+              <select name="ClientName" id="ClientName" class="form-control">
+                <% clients.each do |client| %>
+                <option value="<%= client.id %>"><%= client.name %></option>
+                <% end %>
+              </select>
+            <% end %>
+          </div>
+          <div class="form-group">
+            <label for="VendorName">Vendor Name:</label>
+            <% if vendors.empty? %>
+              <select name="VendorName" id="VendorName" class="form-control" disabled>
+                <option value="">Please add vendors before adding project</option>
+              </select>
+            <% else %>
+              <select name="VendorName" id="VendorName" class="form-control">
+                <% vendors.each do |vendor| %>
+                <option value="<%= vendor.id %>"><%= vendor.name %></option>
+                <% end %>
+              </select>
+            <% end %>
+          </div>
+          <div class="form-group">
+            <label for="ProjectName">Name:</label>
+              <input type="text" class="form-control" id="ProjectName" name="ProjectName" placeholder="Name of the project" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="ProjectCode">Project Code:</label>
+              <input type="text" class="form-control" id="ProjectCode" name="ProjectCode" placeholder="Unique code for the project to identify it" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group date">
+            <label for="StartDate">Date range: </label>
+            <div class="input-daterange input-group" id="datepicker">
+              <input type="text" class="input-sm form-control" name="StartDate" id="StartDate" />
+              <span class="input-group-addon">to</span>
+              <input type="text" class="input-sm form-control" name="EndDate" id="EndDate" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="Notes">Notes</label>
+            <textarea rows="5" class="form-control" id="Notes" name="Notes" placeholder="Add an optional note" value=""></textarea>
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="Team">Team:</label>
+            <select class="form-control" id="Team" name="Team[]" multiple="multiple">
+              <% consultants.each do |consultant| %>
+                <option value="<%= consultant.email %>"><%= consultant.first_name %> <%= consultant.last_name %></option>
+              <% end %>
+            </select>
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="Billable">Billable? </label>
+            <input type="checkbox" class="form-control" id="Billable" name="Billable" data-on-text="Yes" data-size="mini" />
+            <span class="help-block"></span>
+          </div>
+          <div id="BillableOptions" class="hide">
+            <div class="form-group">
+              <label for="BudgetType">This project is budget by:</label>
+              <select class="form-control" id="BudgetType" name="BudgetType">
+                <option value="">Total project hours</option>
+                <option value="">Total project fees</option>
+                <option value="">Hours per person</option>
+                <option value="">Hours per task</option>
+              </select>
+              <span class="help-block"></span>
+            </div>
+          </div>
+        </form>
+        <p id="CreateProjectFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <button id="ProjectSubmitBtn" name="ProjectSubmitBtn" class="btn btn-large btn-primary center-block">Create Project</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container theme-showcase" role="main">
+  <!-- page header -->
+  <div class="page-header">
+    <h2>
+      Projects
+      <div class="btn-group pull-right">
+        <a id="CreateProject" class="btn btn-primary btn-md" data-toggle="modal" href="#CreateProjectModal" role="button">Add Project &raquo;</a>
+      </div>
+    </h2>
+  </div>
+  <!-- page body -->
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <strong>Projects</strong>
+    </div>
+
+    <ul class="list-group">
+      <% if projects.empty? %>
+        <li class="list-group-item"><span>No projects added yet!!!</span></li>
+      <% else %>
+        <% projects.each do |project| %>
+          <li class="list-group-item"><span><%= project.name %> (<%= project.project_code %>)</span></li>
+        <% end %>
+      <% end %>
+    </ul>
+  </div>
+</div>
+
+<script type="text/javascript">
+$('.input-daterange').datepicker({});
+$('#Team').select2({
+  placeholder: "Start typing the name"
+});
+$("#Billable").bootstrapSwitch();
+
+$("#Billable").on('switchChange.bootstrapSwitch', function(event, state) {
+  if (state) {
+    console.log("checked")
+    $('#BillableOptions').removeClass('hide')
+  } else {
+    console.log("not checked")
+    $('#BillableOptions').addClass('hide')
+  }
+});
+
+$('#ProjectSubmitBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/timesheets/project/add",
+    data: $('#CreateProjectForm').serialize(),
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#CreateProjectFormLabel').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Sucess: " + data.msg)
+        _this.html("Submitted");
+        $('#CreateProjectFormLabel').addClass('text-info').html(data.msg);
+        $('#CreateProjectModal').modal('hide');
+        location.reload();
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.html('Re-submit');
+      $('#CreateProjectFormLabel').addClass('text-danger').html('Something went wrong processing request!!!');
+    }
+  });
+});
+</script>

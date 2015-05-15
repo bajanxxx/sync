@@ -1,0 +1,35 @@
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>
+      Timesheet Submission(s)
+    </h2>
+  </div>
+
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <strong>Approved Timesheets</strong>
+    </div>
+    <% if approved_timesheets.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No one has previously approved a timesheet yet.</p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% approved_timesheets.each do |request| %>
+        <li class="list-group-item">
+          <a href="/timesheets/<%= request.consultant %>/<%= request.week.strftime('%Y') %>/<%= (request.week + 7).strftime('%U') %>">
+            <span><%= request.consultant %> has logged <%= request.total_hours %> for the week of <%= request.week %></span>
+          </a>
+          <span class="badge alert-success">Approved by: <%= request.approved_by %></span>
+        </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+});
+</script>

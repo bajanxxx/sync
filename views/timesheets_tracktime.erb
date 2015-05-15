@@ -1,0 +1,166 @@
+<div class="container theme-showcase" role="main">
+  <ul class="nav nav-tabs nav-justified">
+    <li class="active"><a data-toggle="tab" href="#timesheets"><i class="fa fa-calendar-o"></i> TimeSheets</a></li>
+    <li><a data-toggle="tab" href="#expenses"><i class="fa fa-usd"></i> Expenses</a></li>
+  </ul>
+
+  <br/>
+
+  <div class="tab-content">
+    <div id="timesheets" class="tab-pane active">
+      <ul class="nav nav-pills nav-justified">
+        <li class="active"><a data-toggle="tab" href="#time"><i class="fa fa-clock-o"></i> Track Time</a></li>
+        <li><a data-toggle="tab" href="#archives"><i class="fa fa-archive"></i> Archives</a></li>
+      </ul>
+      <br/>
+      <div class="tab-content">
+        <div id="time" class="tab-pane active">
+          <div class="panel panel-default">
+            <!-- Default panel contents -->
+            <div class="panel-heading">Please enter the time for the specified project's</div>
+            <div class="panel-body">
+              <div class="row-fluid">
+                <div class="span6">
+                  <h3>
+                    <%= weekdates.first.day %> <%= Date::ABBR_MONTHNAMES[weekdates.first.month] %> - <%= weekdates.last.day %> <%= Date::ABBR_MONTHNAMES[weekdates.last.month] %> <%= weekdates.first.year %>
+                  </h3>
+                </div>
+                <div class="span6">
+                  <div class="pull-right">
+                    <span class="label label-default">Not submitted</span>
+                    <button id="prevweek" type="button" class="btn btn-default btn-xs"><i class="fa fa-chevron-left fa-2x"></i></button>
+                    <button id="nextweek" type="button" class="btn btn-default btn-xs"><i class="fa fa-chevron-right fa-2x"></i></button>
+                    <button id="showcalender" type="button" class="btn btn-default btn-xs"><i class="fa fa-calendar fa-2x"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <table class="table">
+              <thead class="header">
+                <tr>
+                  <td class="col-md-4">Project Name</td>
+                  <% weekdates.each do |d| %>
+                    <td class="col-md-1"><%= Date::ABBR_DAYNAMES[d.wday] %><br><%= d.day %> <%= Date::ABBR_MONTHNAMES[d.month] %></td>
+                  <% end %>
+                  <td class="col-md-1">Total</td>
+                </tr>
+              </thead>
+              <% projectscount.times do |i| %>
+                <tr>
+                  <td class="col-md-4">
+                    <input type="text" class="form-control" id="projectname<%= i %>" value="projectname<%= i %>">
+                  </td>
+                  <td class="col-md-1">
+                    <input type="number" step="any" min="0" max="24" class="form-control count" id="mon<%= i %>" placeholder="00.00" onchange="sum<%= i %>();" value="0.00">
+                  </td>
+                  <td class="col-md-1">
+                    <input type="number" step="any" min="0" max="24" class="form-control count" id="tue<%= i %>" placeholder="00.00" onchange="sum<%= i %>();" value="0.00">
+                  </td>
+                  <td class="col-md-1">
+                    <input type="number" step="any" min="0" max="24" class="form-control count" id="wed<%= i %>" placeholder="00.00" onchange="sum<%= i %>();" value="0.00">
+                  </td>
+                  <td class="col-md-1">
+                    <input type="number" step="any" min="0" max="24" class="form-control count" id="thu<%= i %>" placeholder="00.00" onchange="sum<%= i %>();" value="0.00">
+                  </td>
+                  <td class="col-md-1">
+                    <input type="number" step="any" min="0" max="24" class="form-control count" id="fri<%= i %>" placeholder="00.00" onchange="sum<%= i %>();" value="0.00">
+                  </td>
+                  <td class="col-md-1">
+                    <input type="number" step="any" min="0" max="24" class="form-control count" id="sat<%= i %>" placeholder="00.00" onchange="sum<%= i %>();" value="0.00">
+                  </td>
+                  <td class="col-md-1">
+                    <input type="number" step="any" min="0" max="24" class="form-control count" id="sun<%= i %>" placeholder="00.00" onchange="sum<%= i %>();" value="0.00">
+                  </td>
+                  <td id="total<%= i %>" class="col-md-1">00.00</td>
+                </tr>
+              <% end %>
+            </table>
+            <hr>
+            <div class="row-fluid">
+              <div class="col-md-4">
+                <button type="button" class="btn btn-default">Submit</button>
+              </div>
+              <div id="moncol" class="col-md-1"></div>
+              <div id="tuecol" class="col-md-1"></div>
+              <div id="wedcol" class="col-md-1"></div>
+              <div id="thucol" class="col-md-1"></div>
+              <div id="fricol" class="col-md-1"></div>
+              <div id="satcol" class="col-md-1"></div>
+              <div id="suncol" class="col-md-1"></div>
+              <div id="totcol" class="col-md-1">00.00</div>
+            </div>
+            <br>
+          </div>
+        </div>
+        <div id="archives" class="tab-pane">
+        </div>
+      </div> <!-- timesheets tab contents -->
+    </div> <!-- timesheets tab -->
+    <div id="expenses" class="tab-pane">
+    </div> <!-- expenses tab -->
+  </div> <!-- Main tab contents -->
+</div> <!-- Main Container -->
+
+<script src="/js/moment.min.js"></script>
+<script src="/js/bootstrap-datepicker.js"></script>
+<script type="text/javascript">
+$('#showcalender').datepicker({format: 'mm/dd/yyyy'}).on('changeDate', function(e){
+  console.log('Date selected');
+  var weekNum = moment(e.date).week();
+  console.log(weekNum);
+  window.location.href='/timesheets/<%= @username %>/' + weekNum;
+});
+
+<% projectscount.times do |i| %>
+function sum<%= i %>() {
+  var mon = $("#mon<%= i %>").val();
+  var tue = $("#tue<%= i %>").val();
+  var wed = $("#wed<%= i %>").val();
+  var thu = $("#thu<%= i %>").val();
+  var fri = $("#fri<%= i %>").val();
+  var sat = $("#sat<%= i %>").val();
+  var sund = $("#sun<%= i %>").val();
+
+  var result = parseFloat(mon) + parseFloat(tue) + parseFloat(wed) + parseFloat(thu) + parseFloat(fri) + parseFloat(sat) + parseFloat(sund);
+
+  if (!isNaN(result)) {
+    $('#total<%= i %>').text(result.toFixed(2));
+    totalsum();
+  }
+}
+<% end %>
+
+function totalsum() {
+  var totals = $('td[id^="total"]');
+  var result = 0;
+  totals.each(function(index) {
+    result += parseFloat($(this).text());
+  })
+  if (!isNaN(result)) {
+    $('#totcol').text(result.toFixed(2));
+  }
+}
+
+$(document).ready(function() {
+  var now = moment();
+  // this week
+  var currentStartOfWeek = now.startOf('isoWeek');
+  var currentEndOfWeek = now.endOf('isoWeek');
+
+  // $("#weekidentifier").text(
+  //   now.startOf('isoWeek').get('date') + " - " +
+  //   now.endOf('isoWeek').get('date') + " " +
+  //   moment.months(now.get('month')) + " " +
+  //   now.get('year')
+  // );
+});
+
+$('#nextweek').click(function(){
+   window.location.href='/timesheets/<%= @username %>/<%= weeknum.to_i + 1 %>';
+})
+$('#prevweek').click(function(){
+   window.location.href='/timesheets/<%= @username %>/<%= weeknum.to_i - 1 %>';
+})
+</script>

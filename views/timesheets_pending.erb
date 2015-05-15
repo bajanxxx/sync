@@ -1,0 +1,74 @@
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>
+      Timesheet Submission(s)
+    </h2>
+  </div>
+
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <strong>Pending Approvals</strong>
+    </div>
+    <% if pending_approvals.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No pending requests to take care off.</p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% pending_approvals.each do |request| %>
+        <li class="list-group-item">
+          <button type="button" id="DisapproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-remove disapprovebutton" data-original-title="Disapprove this request"></span></button>
+          <button type="button" id="ApproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok approvebutton" data-original-title="Approve this request"></span></button>
+          <span><%= request.consultant %> has logged <%= request.total_hours %> for the week of <%= request.week %></span>
+        </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+  $('.approvebutton').tooltip();
+  $('.disapprovebutton').tooltip();
+
+
+  <% pending_approvals.each do |request| %>
+  $('#DisapproveRequest-<%= request.id %>').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/timesheets/approvals/deny/<%= request.id %>",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  $('#ApproveRequest-<%= request.id %>').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/timesheets/approvals/approve/<%= request.id %>",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  <% end %>
+});
+</script>

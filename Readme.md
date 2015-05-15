@@ -150,6 +150,19 @@ Create the following cron job's for the fetcher to run continuously & also to ba
 
 ```
 # dice
+# every midnight 12 am deep fetch
+25 0 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice deep hadoop >> /var/log/dice_deep_hadoop_fetcher.log 2>&1
+35 0 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice deep cassandra >> /var/log/dice_deep_cassandra_fetcher.log 2>&1
+45 0 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice deep spark >> /var/log/dice_deep_spark_fetcher.log 2>&1
+# every morning 9 am daily fetch
+0 9 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice daily hadoop >> /var/log/dice_daily_hadoop_fetcher.log 2>&1
+10 9 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice daily cassandra >> /var/log/dice_daily_cassandra_fetcher.log 2>&1
+20 9 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice daily spark >> /var/log/dice_daily_spark_fetcher.log 2>&1
+# ever even hours hourly fetch
+0 */2 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice hourly hadoop >> /var/log/dice_hourly_hadoop_fetcher.log 2>&1
+10 */2 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice hourly cassandra >> /var/log/dice_hourly_hadoop_fetcher.log 2>&1
+20 */2 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice hourly spark >> /var/log/dice_hourly_hadoop_fetcher.log 2>&1
+# old
 0 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search hadoop --age-of-postings 1 --traverse-depth 25 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
 0 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search hadoop --age-of-postings 1 --traverse-depth 1 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
 0 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search cassandra --age-of-postings 1 --traverse-depth 25 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
