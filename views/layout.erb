@@ -29,6 +29,7 @@
 		<link href="/css/bootstrap-social.css" rel="stylesheet"/>
 		<link href="/css/bootstrap.vertical-tabs.min.css" rel="stylesheet"/>
     <link href="/css/font-awesome.css" rel="stylesheet">
+    <link href="/css/bootstrap-switch.min.css" rel="stylesheet">
 
 		<style>
 			html {
@@ -162,6 +163,10 @@
 			.dropdown:hover .dropdown-menu {
 				display: block;
 			}
+
+			.col-8{
+				width: 12.5%;
+			}
 		</style>
 		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -178,6 +183,7 @@
     <script src="/js/select2.js"></script>
     <script src="/js/bootstrap-paginator.min.js"></script>
     <script src="/js/summernote.min.js"></script>
+    <script src="/js/bootstrap-switch.min.js"></script>
 	</head>
 	<body>
 	  <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -203,42 +209,47 @@
 							<a href="#" class="dropdown-toggle disabled">Requests <span class="caret"></span></a>
 						<% end %>
 							<ul class="dropdown-menu" role="menu">
+								<li><a href="/cloudservers/requests"><i class="fa fa-server"></i> Cloud Servers</a></li>
 								<% if @doc_requests != 0 %>
-								<li><a href="/documents">Documents <span class="badge"><%= @doc_requests %></span></a></li>
+								<li><a href="/documents"><i class="fa fa-file-text"></i> Documents <span class="badge"><%= @doc_requests %></span></a></li>
 								<% else %>
-								<li><a href="/documents">Documents</a></li>
+								<li><a href="/documents"><i class="fa fa-file-text"></i> Documents</a></li>
 								<% end %>
-								<li><a href="/certificates">Certifications</a></li>
+								<li><a href="/certificates"><i class="fa fa-certificate"></i> Certifications</a></li>
 								<% if @air_requests != 0 %>
-								<li><a href="/airtickets">Air Tickets <span class="badge"><%= @air_requests %></span></a></li>
+								<li><a href="/airtickets"><i class="fa fa-plane"></i> Air Tickets <span class="badge"><%= @air_requests %></span></a></li>
 								<% else %>
-								<li><a href="/airtickets">Air Tickets</a></li>
+								<li><a href="/airtickets"><i class="fa fa-plane"></i> Air Tickets</a></li>
 								<% end %>
 							</ul>
 						</li>
-						<!-- <li><a href="/timesheets">Timesheets</a></li> -->
 						<li class="dropdown">
-							<a href="/cloudservers" class="dropdown-toggle disabled">Cloud <span class="caret"></span></a>
+							<a href="#" class="dropdown-toggle disabled">Time <span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
-								<li><a href="/cloudservers/requests">Requests</a></li>
-								<li><a href="#">Running Servers</a></li>
-								<li><a href="#">Running Clusters</a></li>
+								<li><a href="/timesheets/pending"><i class="fa fa-pause"></i> Pending</a></li>
+								<li><a href="/timesheets/approved"><i class="fa fa-thumbs-up"></i> Approved</a></li>
+								<li><a href="/timesheets/<%= @username %>/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%U') %>"><i class="fa fa-calendar-o"></i> Timesheets</a></li>
+								<li><a href="/timesheets/projects"><i class="fa fa-folder"></i> Projects</a></li>
+								<li><a href="/timesheets/reports/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%m') %>"><i class="fa fa-area-chart"></i> Reports</a></li>
+								<li><a href="/timesheets/manage"><i class="fa fa-pencil"></i> Manage</a></li>
 							</ul>
 						</li>
 						<li><a href="/training">Training</a></li>
 	        </ul>
 					<% else %>
+					<!-- consultant navigation menu -->
 					<ul class="nav navbar-nav">
 						<li><a href="/consultant/<%= @username %>/jobs">Jobs</a></li>
 						<li><a href="/consultant/<%= @username %>/projects">Projects</a></li>
 						<li class="dropdown">
 							<a href="#" class="dropdown-toggle disabled">Requests <span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
+								<li><a href="/cloudservers/requests/<%= @username %>">CloudServers</a></li>
 								<li><a href="/documents/<%= @username %>">Documents</a></li>
 								<li><a href="/airtickets/<%= @username %>">AirTickets</a></li>
 							</ul>
 						</li>
-						<li><a href="/cloudservers/requests/<%= @username %>">CloudServers</a></li>
+						<li><a href="/timesheets/<%= @username %>/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%U') %>">Timesheets</a></li>
 						<li><a href="/training">Training</a></li>
 					</ul>
 					<% end %>
