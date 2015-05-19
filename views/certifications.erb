@@ -1,0 +1,408 @@
+<script src="/js/bootstrap-datepicker.js"></script>
+
+<!-- Modal Definitions -->
+<div class="modal fade" id="CreateCertificationRequest" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create New Certification Request</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="CreateForm">
+          <div class="form-group">
+            <label for="ConsultantName">Consultant Name:</label>
+              <input type="text" class="form-control" id="ConsultantName" name="ConsultantName" placeholder="Name of the Consultant" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="Email">Email Address of Consultant:</label>
+            <input type="email" class="form-control" id="Email" name="Email" placeholder="Email" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="Certification">Certification:</label>
+            <select class="form-control" id="Certification" name="Certification" required="required">
+              <option selected value=''>Start typing the certification name</option>
+              <% c_hash.each do |c| %>
+                <option value="<%= c['short'] %>"><%= c['name'] %></option>
+              <% end %>
+            </select>
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+             <label class="control-label" for="Date">Date: </label>
+             <input type="text" class="form-control" name="Date" id="Date" placeholder="date you want to take certification on (mm/dd/yyyy)">
+           </div>
+          <div class="form-group">
+            <label class="control-label" for="Flexible">Flexible? </label>
+            <input type="checkbox" class="form-control" id="Flexible" name="Flexible" data-on-text="Yes" data-size="mini" /> &nbsp; (Are you flexible by 2 days ?)
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="TimePreference">Time Preference:</label>
+            <select class="form-control" id="TimePreference" name="TimePreference" required="required">
+              <option value="MNG">Morning (8AM-12PM)</option>
+              <option value="NOON">Noon (12pM-5PM)</option>
+            </select>
+            <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="CreateCertificationRequestLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="SubmitCreateBtn" name="SubmitBtn" class="btn btn-large btn-primary">Submit Request</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dynamic Modals (Requests made by user) -->
+<!-- dynamic air ticket request modals -->
+<% pending_requests.each do |request| %>
+  <div class="modal fade" id="ApproveCertificationRequest-<%= request.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="myModalLabel">Approve Certification Request</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="CreateForm-<%= request.id %>">
+            <div class="form-group">
+              <label for="ConsultantName">Consultant Name:</label>
+                <input type="text" class="form-control" id="ConsultantName-<%= request.id %>" name="ConsultantName-<%= request.id %>" placeholder="Name of the Consultant" value="<%= request.consultant_name %>" required="required" />
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Email">Email Address of Consultant:</label>
+              <input type="email" class="form-control" id="Email-<%= request.id %>" name="Email-<%= request.id %>" placeholder="Email" value="<%= request.consultant_email %>" required="required" disabled/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Certification">Certification:</label>
+              <input type="text" class="form-control" id="Certification-<%= request.id %>" value="<%= request.name %>" disabled>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+               <label class="control-label" for="Date">Date: </label>
+               <input type="text" class="form-control" name="Date-<%= request.id %>" id="Date-<%= request.id %>" value="<%= request.booking_date %>">
+            </div>
+            <div class="form-group">
+              <label for="TimeSelected">Time Selected:</label>
+              <input type="text" class="form-control" name="TimeSelected-<%= request.id %>" id="TimeSelected-<%= request.id %>" placeholder="Actual time selected while booking">
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label class="control-label" for="Flexible">Flexible? </label>
+              <input type="text" class="form-control" id="Flexible-<%= request.id %>" name="Flexible-<%= request.id %>" value="<%= request.flexibility %>" disabled/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="TimePreference">Time Preference:</label>
+              <input type="text" class="form-control" id="TimePreference-<%= request.id %>" name="TimePreference-<%= request.id %>" value="<%= request.time_preference %>" disabled/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Price">Price:</label>
+              <input type="text" class="form-control" id="Price-<%= request.id %>" name="Price-<%= request.id %>" value="<%= request.amount %>"/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label>Link:</label>
+              <a target="_blank" href="<%= c_hash.detect {|ele| ele['short'] == request.short}['url'] %>">Booking link</a>
+              <span class="help-block"></span>
+            </div>
+          </form>
+          <p id="ApproveCertificationRequestLabel-<%= request.id %>" class="text-center"></p>
+          <hr />
+          <div class="row-fluid">
+            <div class="span3"></div>
+            <div class="span6 text-center">
+              <button id="ApproveBtn-<%= request.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Approve</button>
+            </div>
+            <div class="span3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Certification Request(s)
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+          Start Here <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li>
+            <a id="CreateCertificationRequestBtn" data-toggle="modal" href="#CreateCertificationRequest">
+              Create New Certification Request
+            </a>
+          </li>
+        </ul>
+      </div>
+    </h2>
+  </div>
+  <!-- Notifications -->
+  <h3>Notifications</h3>
+  <div class="panel panel-info">
+    <div class="panel-heading">
+      <strong>Pending Requests</strong>
+    </div>
+    <% if pending_requests.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No new requests have been made. So, right now <code>chill!</code></p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% pending_requests.each do |request| %>
+      <li class="list-group-item">
+        <button type="button" id="DisapproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-remove disapprovebutton" data-original-title="Disapprove this request"></span></button>
+        <button type="button" data-toggle="modal" data-target="#ApproveCertificationRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok approvebutton" data-original-title="Approve this request"></span></button>
+        <span><%= request.consultant_name %> has requested certification (<%= request.short %>) booking</span>
+      </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <strong>Approved Requests</strong>
+    </div>
+    <% if approved_requests.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No requests have been so far marked as approved!</p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% approved_requests.each do |request| %>
+      <li class="list-group-item">
+        <button type="button" id="CertificationFail-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-thumbs-down failbutton" data-original-title="Consultant Failed!"></span></button>
+        <button type="button" id="CertificationPass-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-thumbs-up passbutton" data-original-title="Consultant passed!"></span></button>
+
+        <span class="badge alert-info">Approved At: <%= request.approved_at %></a></span>
+        <span class="badge alert-success">Approved By: <%= request.approved_by %></a></span>
+        <span><%= request.consultant_name %> has requested certification (<%= request.short %>) booking</span>
+      </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <strong>DisApproved Requests</strong>
+    </div>
+    <% if disapproved_requests.empty? %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No new requests have been so far marked as disapproved!</p>
+    </div>
+    <% else %>
+    <ul class="list-group">
+      <% disapproved_requests.each do |request| %>
+      <li class="list-group-item">
+        <span class="badge alert-info">DisApproved At: <%= request.disapproved_at %></a></span>
+        <span class="badge alert-success">DisApproved By: <%= request.disapproved_by %></a></span>
+        <span><%= request.consultant_name %> has requested air ticket booking</span>
+      </li>
+      <% end %>
+    </ul>
+    <% end %>
+  </div>
+
+  <div class="row-fluid">
+    <div class="col-md-6">
+      <div class="panel panel-success">
+        <div class="panel-heading">
+          <strong>Passed Requests</strong>
+        </div>
+        <% if passed_requests.empty? %>
+        <div class="bs-callout bs-callout-info">
+          <p class="lead">No requests have been so far marked as passed!</p>
+        </div>
+        <% else %>
+        <ul class="list-group">
+          <% passed_requests.each do |request| %>
+            <li class="list-group-item">
+              <%= request.consultant_name %> passed <%= request.short %>
+            </li>
+          <% end %>
+        </ul>
+        <% end %>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="panel panel-warning">
+        <div class="panel-heading">
+          <strong>Failed Requests</strong>
+        </div>
+        <% if failed_requests.empty? %>
+        <div class="bs-callout bs-callout-info">
+          <p class="lead">No requests have been so far marked as passed!</p>
+        </div>
+        <% else %>
+        <ul class="list-group">
+          <% failed_requests.each do |request| %>
+            <li class="list-group-item">
+              <%= request.consultant_name %> failed <%= request.short %>
+            </li>
+          <% end %>
+        </ul>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+  $('.approvebutton').tooltip();
+  $('.disapprovebutton').tooltip();
+  $('.passbutton').tooltip();
+  $('.failbutton').tooltip();
+  $('#Certification').select2();
+  $("#Flexible").bootstrapSwitch();
+  $('#Date').datepicker({});
+
+  $('#SubmitCreateBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/certifications/submit",
+      data: $('#CreateForm').serialize(),
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#CreateCertificationRequestLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg);
+          _this.html("Submitted");
+          $('#CreateCertificationRequestLabel').addClass('text-info').html(data.msg);
+          $('#CreateCertificationRequest').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#CreateCertificationRequestLabel').addClass('text-danger').html('Something went wrong requesting air ticket!!!');
+      }
+    });
+  });
+
+  <% pending_requests.each do |request| %>
+  $('#Date-<%= request.id %>').datepicker({});
+  $('#ApproveBtn-<%= request.id %>').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var consultantName = $("#ConsultantName-<%= request.id %>").val();
+    var date = $("#Date-<%= request.id %>").val();
+    var time = $("#TimeSelected-<%= request.id %>").val();
+    var price = $("#Price-<%= request.id %>").val();
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/certifications/approve/<%= request.id %>",
+      data: {'cname': consultantName, 'date': date, 'time': time, 'price': price },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#ApproveCertificationRequestLabel-<%= request.id %>').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg);
+          _this.html("Submitted");
+          $('#ApproveCertificationRequestLabel-<%= request.id %>').addClass('text-info').html(data.msg);
+          $('#ApproveCertificationRequest-<%= request.id %>').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#ApproveCertificationRequestLabel-<%= request.id %>').addClass('text-danger').html('Something went wrong requesting air ticket!!!');
+      }
+    });
+  });
+  <% end %>
+
+  // Disapprove requests
+  <% pending_requests.each do |request| %>
+  $('#DisapproveRequest-<%= request.id %>').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/certifications/deny/<%= request.id %>",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  <% end %>
+
+  <% approved_requests.each do |request| %>
+  $('#CertificationPass-<%= request.id %>').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/certifications/status/pass/<%= request.id %>",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+
+  $('#CertificationFail-<%= request.id %>').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/certifications/status/fail/<%= request.id %>",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  <% end %>
+});
+</script>

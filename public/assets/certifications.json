@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Cloudera Certified Developer for Apache Hadoop",
+    "short": "CCDH",
+    "code": "CCD-410",
+    "price": "295.00",
+    "authority": "Cloudera",
+    "url": "https://university.cloudera.com/content/CCD-410"
+  },
+  {
+    "name": "Cloudera Certified Administrator for Apache Hadoop",
+    "short": "CCAH",
+    "code": "CCA-500",
+    "price": "295.00",
+    "authority": "Cloudera",
+    "url": "https://university.cloudera.com/content/CCA-500"
+  },
+  {
+    "name": "Cloudera Certified Administrator for Apache Hadoop Upgrade",
+    "short": "CCAHU",
+    "code": "CCA-505",
+    "price": "125.00",
+    "authority": "Cloudera",
+    "url": "https://university.cloudera.com/content/CCA-505"
+  },
+  {
+    "name": "Cloudera Certified Specialist in Apache HBase",
+    "short": "CCSHB",
+    "code": "CCB-400",
+    "price": "295.00",
+    "authority": "Cloudera",
+    "url": "https://university.cloudera.com/content/CCB-400"
+  },
+  {
+    "name": "Cloudera Certified Professional: Data Scientist",
+    "short": "CCPDS",
+    "code": "",
+    "price": "",
+    "authority": "Cloudera",
+    "url": "http://www.cloudera.com/content/cloudera/en/training/certification/ccp-ds.html"
+  },
+  {
+    "name": "HDP Certified Developer",
+    "short": "HDPCD",
+    "code": "HDPCD",
+    "price": "",
+    "authority": "HortonWorks",
+    "url": "http://hortonworks.com/training/class/hdp-certified-developer-hdpcd-exam/"
+  },
+  {
+    "name": "Hadoop 2.0 Administrator Certification",
+    "short": "HDPCA",
+    "code": "",
+    "price": "",
+    "authority": "HortonWorks",
+    "url": "http://hortonworks.com/training/hadoop-2-administration-certification/"
+  },
+  {
+    "name": "Hadoop 2.0 Java Developer Certification",
+    "short": "HDPCJD",
+    "code": "",
+    "price": "",
+    "authority": "HortonWorks",
+    "url": "http://hortonworks.com/training/hadoop-2-0-javadeveloper-certification-2/"
+  },
+  {
+    "name": "Developer Certification for Apache Spark",
+    "short": "SCD",
+    "code": "",
+    "price": "300.00",
+    "authority": "DataBricks & Orielly",
+    "url": "http://www.oreilly.com/data/sparkcert.html?cmp=ex-strata-na-lp-na_apache_spark_certification"
+  }
+]

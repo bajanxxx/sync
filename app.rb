@@ -77,6 +77,7 @@ require_relative 'models/time_client'
 require_relative 'models/time_contact'
 require_relative 'models/time_project_assignment'
 require_relative 'models/time_project_task'
+require_relative 'models/certification_request'
 
 # Load core stuff
 require_relative 'lib/process_dice'
@@ -3141,6 +3142,173 @@ Admin</a> </p>
         )
       end
     end
+
+    { success: success, msg: message }.to_json
+  end
+
+  #
+  # => Certification Requests
+  #
+  before '/certifications' do
+    redirect '/login' if !@username
+  end
+
+  before '/certifications/*' do
+    redirect '/login' if !@username
+  end
+
+  get '/certifications' do
+    if @admin_user
+      file = File.read(File.expand_path("../public/assets/certifications.json", __FILE__))
+      c_hash = JSON.parse(file)
+
+      erb :certifications,
+          locals: {
+            c_hash: c_hash,
+            pending_requests: CertificationRequest.where(status: 'pending'),
+            approved_requests: CertificationRequest.where(status: 'approved'),
+            disapproved_requests: CertificationRequest.where(status: 'disapproved'),
+            passed_requests: CertificationRequest.where(status: 'completed', pass: true),
+            failed_requests: CertificationRequest.where(status: 'completed', pass: false)
+          }
+    else
+      erb :admin_access_req
+    end
+  end
+
+  post '/certifications/submit' do
+    success    = true
+    message    = "Certification Request submitted."
+
+    file = File.read(File.expand_path("../public/assets/certifications.json", __FILE__))
+    c_hash = JSON.parse(file)
+
+    consultant_name = params[:ConsultantName]
+    email = params[:Email]
+    _ccode = params[:Certification]
+    date = params[:Date]
+    _f = params[:Flexible]
+    flexible = if _f == 'on'
+                true
+              else
+                false
+              end
+    time_preference = params[:TimePreference] # MNG | NOON
+    c_details = c_hash.detect {|ele| ele['short'] == _ccode}
+
+    CertificationRequest.create(
+      consultant_name: consultant_name,
+      consultant_email: email,
+      booking_date: date,
+      flexibility: flexible,
+      time_preference: time_preference,
+      name: c_details['name'],
+      short: _ccode,
+      code: c_details['code'],
+      amount: c_details['price']
+    )
+
+    { success: success, msg: message }.to_json
+  end
+
+  post '/certifications/approve/:rid' do |rid|
+    success    = true
+    message    = "Certification Request Approved."
+
+    # {'cname': consultantName, 'date': date, 'time': time, 'price': price },
+    cname = params[:cname]
+    date = params[:date]
+    time = params[:time]
+    price = params[:price]
+
+    unless price =~ /^\d{1,4}\.\d{0,2}$/
+      success = false
+      message = "Amount is not properly formatted"
+    end
+
+    unless time =~ /^\d{2}:\d{2}$/
+      success = false
+      message = "Time is not properly formatted (ex: 09:00)"
+    end
+
+    if success
+      cr = CertificationRequest.find(rid)
+      cr.update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  post '/certifications/deny/:rid' do |rid|
+    cr = CertificationRequest.find(rid)
+    cr.update_attributes(status: 'disapproved', disapproved_by: @admin_name, disapproved_at: DateTime.now)
+
+    flash[:info] = 'Sucessfully disapproved and updated the user status of the request'
+    redirect "/certifications"
+  end
+
+  # whether the consultant passed or not
+  post '/certifications/status/pass/:rid' do |rid|
+    cr = CertificationRequest.find(rid)
+    cr.update_attributes(status: 'completed', pass: true)
+
+    flash[:info] = 'Sucessfully marked request as pass'
+  end
+
+  post '/certifications/status/fail/:rid' do |rid|
+    cr = CertificationRequest.find(rid)
+    cr.update_attributes(status: 'completed', pass: false)
+
+    flash[:info] = 'Sucessfully marked request as fail'
+  end
+
+  #
+  # => Certification Requests (Consultant Routes)
+  #
+
+  get '/certifications/:userid' do |userid|
+    file = File.read(File.expand_path("../public/assets/certifications.json", __FILE__))
+    c_hash = JSON.parse(file)
+
+    erb :consultant_certifications,
+        locals: {
+          c_hash: c_hash,
+          consultant: Consultant.find_by(email: userid),
+          pending_requests: CertificationRequest.where(consultant_email: userid, status: 'pending'),
+          previous_requests: CertificationRequest.where(consultant_email: userid, :status.ne => 'pending')
+        }
+  end
+
+  post '/certifications/:userid/request' do |userid|
+    success    = true
+    message    = "Certifications Request submitted."
+
+    file = File.read(File.expand_path("../public/assets/certifications.json", __FILE__))
+    c_hash = JSON.parse(file)
+
+    consultant_name = params[:ConsultantName]
+    _ccode = params[:Certification]
+    date = params[:Date]
+    _f = params[:Flexible]
+    flexible = if _f == 'on'
+                true
+              else
+                false
+              end
+    time_preference = params[:TimePreference] # MNG | NOON
+    c_details = c_hash.detect {|ele| ele['short'] == _ccode}
+
+    CertificationRequest.create(
+      consultant_name: consultant_name,
+      consultant_email: userid,
+      booking_date: date,
+      flexibility: flexible,
+      time_preference: time_preference,
+      name: c_details['name'],
+      short: _ccode,
+      code: c_details['code'],
+      amount: c_details['price']
+    )
 
     { success: success, msg: message }.to_json
   end

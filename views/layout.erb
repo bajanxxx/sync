@@ -190,6 +190,7 @@
 	    <div class="container-fluid">
 	      <a class="navbar-brand" href="/">Cloudwick Sync</a>
 	      <div class="collapse navbar-collapse">
+	      	<!-- ADMIN navigation menu -->
 					<% if @admin_user %>
 	        <ul class="nav navbar-nav">
 	          <li><a href="/jobs">Jobs</a></li>
@@ -215,7 +216,7 @@
 								<% else %>
 								<li><a href="/documents"><i class="fa fa-file-text"></i> Documents</a></li>
 								<% end %>
-								<li><a href="/certificates"><i class="fa fa-certificate"></i> Certifications</a></li>
+								<li><a href="/certifications"><i class="fa fa-certificate"></i> Certifications</a></li>
 								<% if @air_requests != 0 %>
 								<li><a href="/airtickets"><i class="fa fa-plane"></i> Air Tickets <span class="badge"><%= @air_requests %></span></a></li>
 								<% else %>
@@ -236,6 +237,19 @@
 						</li>
 						<li><a href="/training">Training</a></li>
 	        </ul>
+	        <ul class="nav navbar-nav pull-right">
+						<form action="/search" method="post" class="navbar-form navbar-left" role="search">
+							<div class="form-group">
+								<input type="text" class="form-control" name="search" id="search" placeholder="Search for job details">
+							</div>
+  						<input type="submit" class="btn btn-info btn-small" value="Search"/>
+						</form>
+						<% if @username %>
+						<li><p class="navbar-text"><%= @username %> | <a href='/logout' class="navbar-link">logout</a></li>
+						<% else %>
+						<li><a href="/login" class="navbar-link">signin</a></li>
+						<% end %>
+					</ul>
 					<% else %>
 					<!-- consultant navigation menu -->
 					<ul class="nav navbar-nav">
@@ -247,32 +261,20 @@
 								<li><a href="/cloudservers/requests/<%= @username %>">CloudServers</a></li>
 								<li><a href="/documents/<%= @username %>">Documents</a></li>
 								<li><a href="/airtickets/<%= @username %>">AirTickets</a></li>
+								<li><a href="/certifications/<%= @username %>">Certifications</a></li>
 							</ul>
 						</li>
 						<li><a href="/timesheets/<%= @username %>/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%U') %>">Timesheets</a></li>
 						<li><a href="/training">Training</a></li>
 					</ul>
-					<% end %>
 					<ul class="nav navbar-nav pull-right">
-						<form action="/search" method="post" class="navbar-form navbar-left" role="search">
-  						<% if @admin_user %>
-							<div class="form-group">
-								<input type="text" class="form-control" name="search" id="search" placeholder="Search for job details">
-							</div>
-  						<input type="submit" class="btn btn-info btn-small" value="Search"/>
-  						<% else %>
-							<div class="form-group">
-								<input type="text" class="form-control" name="search" id="search" placeholder="Only for admin use">
-							</div>
-  						<input type="submit" class="btn btn-info btn-small" disabled="disabled" value="Search"/>
-  						<% end %>
-						</form>
 						<% if @username %>
 						<li><p class="navbar-text"><%= @username %> | <a href='/logout' class="navbar-link">logout</a></li>
 						<% else %>
 						<li><a href="/login" class="navbar-link">signin</a></li>
 						<% end %>
 					</ul>
+					<% end %>
 		    </div><!-- /.container -->
 	  	</div><!-- /.navbar-inner -->
 		</div><!-- /.navbar -->
