@@ -3374,11 +3374,13 @@ Admin</a> </p>
         data[_consultant.email.to_sym] = _total
       end
 
-      p _debug
+      # p _debug
 
       erb :timesheets_reports,
           locals: {
-            data: data
+            data: data,
+            year: year,
+            month: month
           }
     else
       erb :admin_access_req
