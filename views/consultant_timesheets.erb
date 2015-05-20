@@ -43,7 +43,7 @@
           <% projects.each do |project| %>
             <% date_range = project.start_date..project.end_date %>
             <% if date_range === week_start || date_range === week_end %>
-            <div class="panel panel-info">
+            <div class="panel panel-primary">
               <!-- Default panel contents -->
               <%
                 current_timesheet = project.timesheets.find_by(consultant: userid, week: date)
