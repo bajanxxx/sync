@@ -80,57 +80,85 @@
                         </div>
                       </tr>
                     </thead>
-                      <tr>
-                        <div class="row">
-                          <% current_timesheet.timesheet_details.each_with_index do |detail, index| %>
-                            <td class="col-8 text-center">
-                              <% if @admin_user %>
-                                <% if (project.start_date <= weekdates[index] && project.end_date >= weekdates[index]) %>
-                                  <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
-                                <% else %>
-                                  <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
-                                <% end %>
+                    <tr>
+                      <div class="row">
+                        <% current_timesheet.timesheet_details.each_with_index do |detail, index| %>
+                          <td class="col-8 text-center">
+                            <% if @admin_user %>
+                              <% if (project.start_date <= weekdates[index] && project.end_date >= weekdates[index]) %>
+                                <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
                               <% else %>
-                                <!-- normal user -->
-                                <% if (project.start_date <= weekdates[index] && project.end_date >= weekdates[index]) && (current_timesheet.status == 'NOT SUBMITTED' || current_timesheet.status == 'SAVED') %>
-                                  <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
-                                <% else %>
-                                  <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
-                                <% end %>
+                                <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
                               <% end %>
-                            </td>
-                          <% end %>
-                          <td id="total<%= project.id %>" class="col-8 text-center">
-                            <%= current_timesheet.total_hours %>
+                            <% else %>
+                              <!-- normal user -->
+                              <% if (project.start_date <= weekdates[index] && project.end_date >= weekdates[index]) && (current_timesheet.status == 'NOT SUBMITTED' || current_timesheet.status == 'SAVED') %>
+                                <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
+                              <% else %>
+                                <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
+                              <% end %>
+                            <% end %>
                           </td>
-                        </div>
-                      </tr>
-                      <!-- <tr>
-                        <div class="row">
-                          <td id="moncol" class="col-8 text-center"></td>
-                          <td id="tuecol" class="col-8 text-center"></td>
-                          <td id="wedcol" class="col-8 text-center"></td>
-                          <td id="thucol" class="col-8 text-center"></td>
-                          <td id="fricol" class="col-8 text-center"></td>
-                          <td id="satcol" class="col-8 text-center"></td>
-                          <td id="suncol" class="col-8 text-center"></td>
-                          <td id="totcol" class="col-8 text-center"><%= current_timesheet.total_hours %></td>
-                        </div>
-                      </tr> -->
+                        <% end %>
+                        <td id="total<%= project.id %>" class="col-8 text-center">
+                          <%= current_timesheet.total_hours %>
+                        </td>
+                      </div>
+                    </tr>
                   </table>
                 </form>
                 <div class="panel-footer clearfix">
-                    <div class="pull-right">
-                      <button id="SaveBtn-<%= project.id %>" type="button" class="btn btn-default" disabled>Save</button>
-                      <% if current_timesheet.status == 'SAVED' %>
-                        <button id="SubmitBtn-<%= project.id %>" type="button" class="btn btn-primary">Submit</button>
-                      <% else %>
-                        <button id="SubmitBtn-<%= project.id %>" type="button" class="btn btn-primary" disabled>Submit</button>
-                      <% end %>
-                    </div>
+                  <div class="pull-right">
+                    <button id="SaveBtn-<%= project.id %>" type="button" class="btn btn-default" disabled>Save</button>
+                    <% if current_timesheet.status == 'SAVED' %>
+                      <button id="SubmitBtn-<%= project.id %>" type="button" class="btn btn-primary">Submit</button>
+                    <% else %>
+                      <button id="SubmitBtn-<%= project.id %>" type="button" class="btn btn-primary" disabled>Submit</button>
+                    <% end %>
+                  </div>
                 </div>
               </div>
               <br>
+              <!-- Upload attachment's related to timesheet -->
+              <div class="row-fluid">
+                <div class="col-md-6">
+                  <div class="panel panel-info">
+                    <div class="panel-heading">
+                      <a><strong>Exiting Attachment's</strong></a>
+                    </div>
+                    <div class="panel-body">
+                      <ul class="list-group">
+                        <% if current_timesheet.timesheet_attachments.empty? %>
+                          <li class="list-group-item">
+                            <span>No attachment's added yet</span>
+                          </li>
+                        <% else %>
+                          <% current_timesheet.timesheet_attachments.each do |attachment| %>
+                          <li class="list-group-item">
+                            <a href="/download/<%= attachment.id %>"><%= attachment.filename.split('_', 5).last %></a>
+                          </li>
+                          <% end %>
+                        <% end %>
+                      </ul>
+                    </div>
+                  </div>
+                </div> <!-- col-md-6 -->
+                <div class="col-md-6">
+                  <div class="panel panel-info">
+                    <div class="panel-heading">
+                      <a><strong>Upload Attachment</strong></a>
+                    </div>
+                    <div class="panel-body">
+                      <!-- upload new resumes -->
+                      <form role="form" id="upload-<%= project.id %>" method="post" action="/upload/timesheet/<%= project.id %>/<%= @username %>/<%= year %>/<%= weeknum %>" enctype="multipart/form-data">
+                        <input type="file" class="form-control" title="Select timesheet approvals to upload" name="timesheets[]" data-filename-placement="inside" multiple />
+                        <ul id="fileList"></ul>
+                        <button type="submit" class="btn btn-primary center-block" id="UploadBtn-<%= project.id %>"><i class="fa fa-cloud-upload fa-lg"></i> Upload Timesheet</button>
+                      </form>
+                    </div>
+                  </div>
+                </div> <!-- col-md-6 -->
+              </div> <!-- row-fluid for attachments -->
             </div>
             <% else %>
             <!-- project is not in range of this date range -->
@@ -157,9 +185,13 @@ input{
 }
 </style>
 
+<script src="/js/bootstrap.file-input.js"></script>
 <script src="/js/moment.min.js"></script>
 <script src="/js/bootstrap-datepicker.js"></script>
 <script type="text/javascript">
+$('input[type=file]').bootstrapFileInput();
+$('.file-inputs').bootstrapFileInput();
+
 // enable the submit button if the user has changed the value of any of the input's
 <% projects.each do |project| %>
 $('.hours-<%= project.id %>').change(function() {
@@ -167,6 +199,29 @@ $('.hours-<%= project.id %>').change(function() {
     $('#SaveBtn-<%= project.id %>').removeAttr('disabled')
   }
 })
+// validate timesheet upload
+$('#upload-<%= project.id %>').bootstrapValidator({
+  feedbackIcons: {
+    valid: 'glyphicon glyphicon-ok',
+    invalid: 'glyphicon glyphicon-remove',
+    validating: 'glyphicon glyphicon-refresh'
+  },
+  fields: {
+    'timesheets[]': {
+      validators: {
+        notEmpty: {
+          message: 'The timesheet is required'
+        },
+        file: {
+          extension: 'pdf,doc,docx,jpeg,png',
+          type: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg',
+          maxSize: 2048 * 1024,   // 2 MB
+          message: 'Currently we only accept pdf, doc, docx, jpeg, png files with size limit of 2MB'
+        }
+      }
+    },
+  }
+});
 <% end %>
 
 $('#showcalender').datepicker({format: 'mm/dd/yyyy'}).on('changeDate', function(e){

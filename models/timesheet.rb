@@ -15,5 +15,6 @@ class Timesheet
   field :disapproved_at, type: DateTime
 
   has_many :timesheet_details, class_name: 'TimesheetDetail'
+  has_many :timesheet_attachments, class_name: 'TimesheetAttachment'
   belongs_to :time_project, class_name: 'TimeProject'
 end

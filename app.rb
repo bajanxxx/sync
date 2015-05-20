@@ -77,6 +77,7 @@ require_relative 'models/time_client'
 require_relative 'models/time_contact'
 require_relative 'models/time_project_assignment'
 require_relative 'models/time_project_task'
+require_relative 'models/timesheet_attachment'
 require_relative 'models/certification_request'
 
 # Load core stuff
@@ -3660,46 +3661,36 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
-  # post '/timesheets/:userid/:year/:weeknum' do |userid, year, weeknum|
-  #   puts params
-  #   success    = true
-  #   message    = "Successfully added"
+  # upload an attachement for a timesheet specific to particular week
+  post '/upload/timesheet/:projectid/:email/:year/:week' do |project_id, email, year, week|
+    timesheet = Timesheet.find_by(
+                  project_code: project_id,
+                  consultant: email,
+                  week: Date.commercial(year.to_i, week.to_i)
+                )
+    s_files = []
+    w_files = []
 
-  #   current_week = Date.commercial(year.to_i, weeknum.to_i)
-
-  #   projects = params.select { |key, value| key.to_s.match(/PROJECT\|.*\|.*/) }
-
-  #   # get just the project codes
-  #   project_codes = projects.keys.map { |k| k.split("|")[1] }.uniq
-
-  #   project_codes.each do |project_code|
-  #     timesheet = Timesheet.find_by(
-  #       project_code: project_code,
-  #       consultant: userid,
-  #       week: current_week
-  #     )
-
-  #     project_specific = projects.select { |k, v|
-  #       k.to_s.match(/PROJECT\|#{Regexp.escape(project_code)}\|.*/)
-  #     }
-
-  #     project_specific.each do |_k, _v|
-  #       _d = _k.split("|").last
-  #       timesheet_details = timesheet.timesheet_details.find_by(
-  #         workday: Date.strptime(_d, "%Y-%m-%d")
-  #       )
-  #       timesheet_details.update_attributes!(hours: _v)
-  #     end
-
-  #     total_hours = project_specific.values.map { |h| h.to_f }.inject{|sum,x| sum + x }
-
-  #     timesheet.update_attributes(total_hours: total_hours, status: "SAVED")
-
-  #     TimeProject.find(project_code).timesheets << timesheet
-  #   end
-
-  #   { success: success, msg: message }.to_json
-  # end
+    params[:timesheets].each do |attachement|
+      # filename is in format: consultantname_projectid_year_week_filename
+      file_name = email.split('@').first.upcase + '_' + project_id + '_' + year + '_' + week + '_' + attachement[:filename]
+      temp_file = attachement[:tempfile]
+      attachement_id = upload_file(temp_file,file_name)
+      if attachement_id
+        timesheet.timesheet_attachments.find_or_create_by(file_name: file_name) do |att|
+          att.id = attachement_id
+          att.filename = file_name
+          att.uploaded_date = DateTime.now
+        end
+        s_files << file_name
+      else
+        w_files << file_name
+      end
+    end
+    flash[:info] = "Successfully uploaded files '#{s_files.join(',')}'" unless s_files.empty?
+    flash[:warning] = "Failed uploading attachement. Attachement(s) with name '#{w_files.join(',')}' already exists!." unless w_files.empty?
+    redirect back
+  end
 
   #
   # => CloudServers
