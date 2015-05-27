@@ -2245,7 +2245,7 @@ Admin</a> </p>
       message = "fields cannot be empty"
     else
       _template = DocumentTemplate.find_by(_id: id)
-      if _template
+      if !_template
         success = false
         message = "Something went wrong, document not found!!!"
       else
