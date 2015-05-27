@@ -2249,7 +2249,7 @@ Admin</a> </p>
         success = false
         message = "Something went wrong, document not found!!!"
       else
-        template.update_attributes(
+        _template.update_attributes(
           type: template_type,
           content: template_body
         )
