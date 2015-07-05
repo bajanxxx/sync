@@ -25,3 +25,7 @@ libraryDependencies += "com.typesafe" % "config" % "1.2.1"
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
 
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.6.0"
+
+libraryDependencies += "org.ccil.cowan.tagsoup" % "tagsoup" % "1.2.1"
+
+libraryDependencies += "org.jsoup" % "jsoup" % "1.8.2"
