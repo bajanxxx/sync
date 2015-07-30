@@ -1,5 +1,8 @@
 package com.cloudwick.sync.jobs.fetcher
 
+import java.io.{InputStreamReader, BufferedReader}
+import java.net.{HttpURLConnection, URL}
+
 import akka.actor.Actor
 import akka.event.Logging
 import com.mongodb.casbah.MongoCollection
@@ -42,13 +45,37 @@ class ProcessJobPosting(url: String,
     "[a-zA-Z]+".r findAllIn line map (_.toLowerCase)
   }
 
-  def processRequest(url: String): HttpResponse[String] = {
-    Http(url)
-      .option(_.setInstanceFollowRedirects(true))
-      .option(HttpOptions.connTimeout(10000))
-      .option(HttpOptions.readTimeout(50000))
-      .asString
+  def handleRequest(uRL: String): HttpURLConnection = {
+    var conn = new URL(uRL).openConnection().asInstanceOf[HttpURLConnection]
+    conn.setReadTimeout(50000)
+    conn.setConnectTimeout(10000)
+
+    val status = conn.getResponseCode
+    status match {
+      case HttpURLConnection.HTTP_OK =>
+        conn
+      case HttpURLConnection.HTTP_MOVED_TEMP | HttpURLConnection.HTTP_MOVED_PERM |
+           HttpURLConnection.HTTP_SEE_OTHER => {
+        // handle redirection
+        conn = handleRequest(conn.getHeaderField("Location"))
+        conn
+      }
+    }
   }
+
+  def processRequest(uRL: String): String = {
+    val conn = handleRequest(uRL)
+    val in: BufferedReader = new BufferedReader(new InputStreamReader(conn.getInputStream))
+    Stream.continually(in.readLine()).takeWhile(_ != null).mkString("\n")
+  }
+
+//  def processRequest(url: String): HttpResponse[String] = {
+//    Http(url)
+//      .option(_.setInstanceFollowRedirects(true))
+//      .option(HttpOptions.connTimeout(10000))
+//      .option(HttpOptions.readTimeout(50000))
+//      .asString
+//  }
 
   def keepPosting(content: String, searchTerm: String): Boolean = {
     content contains searchTerm
@@ -81,10 +108,10 @@ class ProcessJobPosting(url: String,
 
   def receive = {
     case Messages.Job(iUrl, title, company, location, date, searchTerm, grepWord) =>
-      // log.info("Processing [{}]", iUrl)
+      log.debug("Processing [{}]", iUrl)
       val qDate = DateTime.parse(date, dateFormat)
       try {
-        val urlContent = processRequest(iUrl).toString
+        val urlContent = processRequest(iUrl)
         if (keepPosting(urlContent, grepWord)) {
           val skills = getSkills(urlContent)
           val emails = getEmails(urlContent)
@@ -141,7 +168,7 @@ class ProcessJobPosting(url: String,
           // Update the sender and notify that job url processing completed
           sender() ! Messages.JobUrlProcessed
         } else {
-          // log.info("Skipping [{}]", iUrl)
+          log.debug("Skipping [{}] as grep_term:'{}' not found", iUrl, grepWord)
           sender() ! Messages.JobUrlProcessed
         }
       } catch {

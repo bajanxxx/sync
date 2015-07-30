@@ -58,7 +58,7 @@ object Start extends App {
         config.getInt(s"sync.api.dice.fetch.$fType.age"),
         config.getInt(s"sync.api.dice.fetch.$fType.depth"),
         config.getInt(s"sync.api.dice.fetch.$fType.sort"),
-        "CON_CORP"),
+        config.getString("sync.api.dice.grep")),
       name=s"${sTerm}jobs")
 
     val future = actor ? Messages.Start

@@ -32,7 +32,14 @@ rvm requirements --verify-downloads 1
 rvm install 2.0.0
 rvm use 2.0.0 --default
 rvm rubygems current
+rvm @globla do gem install bundler
 ```
+
+**Install External Dependencies:**
+
+* [ImageMagick](http://www.imagemagick.org/script/binary-releases.php#unix)
+
+> If its a Ubuntu based system then install `apt-get install libmagickwand-dev imagemagick`
 
 **Install Gem Dependencies:**
 
@@ -41,10 +48,6 @@ cd /opt/sync
 rvm @global do bundle install
 ```
 
-**Install External Dependencies:**
-
-* [ImageMagick](http://www.imagemagick.org/script/binary-releases.php#unix)
-
 Install MongoDB:
 ----------------
 The following commands will install a single MongoDB instance on the local
@@ -52,7 +55,7 @@ system:
 
 ```
 cd $HOME
-curl -sO https://raw2.github.com/cloudwicklabs/scripts/master/mongo_install.sh
+curl -sO https://raw.githubusercontent.com/cloudwicklabs/scripts/master/mongo_install.sh
 chmod +x mongo_install.sh
 ./mongo_install.sh
 ```
@@ -109,6 +112,12 @@ RAILS_ENV=production bin/delayed_job.rb stop
 RAILS_ENV='production' unicorn --config-file config/unicorn.rb --host 0.0.0.0 --port 9292 --env development --daemonize config.ru
 RAILS_ENV=production bin/delayed_job.rb -n 8 start
 /etc/init.d/nginx start
+```
+
+Or use the built-in script:
+
+```
+bin/sync_init.sh
 ```
 
 **Creating indexes for collections** (Onetime)
