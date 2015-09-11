@@ -70,5 +70,21 @@
     "price": "300.00",
     "authority": "DataBricks & Orielly",
     "url": "http://www.oreilly.com/data/sparkcert.html?cmp=ex-strata-na-lp-na_apache_spark_certification"
+  },
+  {
+    "name": "AWS Certified Solutions Architect - Associate",
+    "short": "AWSSAA",
+    "code": "",
+    "price": "150.00",
+    "authority": "Amazon Web Services",
+    "url": "https://www.webassessor.com/wa.do?page=publicHome&branding=AMAZON" 
+  },
+  {
+    "name": "AWS Certified SysOps Administrator - Associate",
+    "short": "AWSSAA",
+    "code": "",
+    "price": "150.00",
+    "authority": "Amazon Web Services",
+    "url": "https://www.webassessor.com/wa.do?page=publicHome&branding=AMAZON"
   }
 ]
