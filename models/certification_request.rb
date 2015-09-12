@@ -20,4 +20,5 @@ class CertificationRequest
   field :disapproved_at, type: DateTime
   field :pass, type: Boolean
   field :admin_created, type: Boolean, default: false
+  field :notes, type: String
 end
