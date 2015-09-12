@@ -11,8 +11,13 @@
       <div class="modal-body">
         <form role="form" id="CreateForm">
           <div class="form-group">
-            <label for="ConsultantName">Consultant Name:</label>
-              <input type="text" class="form-control" id="ConsultantName" name="ConsultantName" placeholder="Name of the Consultant" value="" required="required" />
+            <label for="FirstName">First Name:</label>
+              <input type="text" class="form-control" id="FirstName" name="FirstName" placeholder="First Name that should appear on certificate" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="LastName">Last Name:</label>
+              <input type="text" class="form-control" id="LastName" name="LastName" placeholder="Last Name that should appear on certificate" value="" required="required" />
               <span class="help-block"></span>
           </div>
           <div class="form-group">
@@ -75,8 +80,13 @@
         <div class="modal-body">
           <form role="form" id="CreateForm-<%= request.id %>">
             <div class="form-group">
-              <label for="ConsultantName">Consultant Name:</label>
-                <input type="text" class="form-control" id="ConsultantName-<%= request.id %>" name="ConsultantName-<%= request.id %>" placeholder="Name of the Consultant" value="<%= request.consultant_name %>" required="required" />
+              <label for="FirstName">First Name:</label>
+                <input type="text" class="form-control" id="FirstName" name="FirstName" placeholder="First Name that should appear on certificate" value="<%= request.consultant_first_name %>" required="required" />
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="LastName">Last Name:</label>
+                <input type="text" class="form-control" id="LastName" name="LastName" placeholder="Last Name that should appear on certificate" value="<%= request.consultant_last_name %>" required="required" />
                 <span class="help-block"></span>
             </div>
             <div class="form-group">
@@ -111,6 +121,11 @@
             <div class="form-group">
               <label for="Price">Price:</label>
               <input type="text" class="form-control" id="Price-<%= request.id %>" name="Price-<%= request.id %>" value="<%= request.amount %>"/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Notes">Notes:</label>
+              <textarea rows="3" class="form-control" id="Notes-<%= request.id %>" name="Notes-<%= request.id %>" placeholder="Enter notes that will be sent to consultant"></textarea>
               <span class="help-block"></span>
             </div>
             <div class="form-group">
@@ -168,7 +183,8 @@
       <li class="list-group-item">
         <button type="button" id="DisapproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-remove disapprovebutton" data-original-title="Disapprove this request"></span></button>
         <button type="button" data-toggle="modal" data-target="#ApproveCertificationRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok approvebutton" data-original-title="Approve this request"></span></button>
-        <span><%= request.consultant_name %> has requested certification (<%= request.short %>) booking</span>
+        <span class="badge alert-info">Submitted At: <%= request.created_at %></a></span>
+        <span><%= request.consultant_first_name %> <%= request.consultant_last_name %> has requested certification (<%= request.short %>) booking</span>
       </li>
       <% end %>
     </ul>
@@ -192,7 +208,7 @@
 
         <span class="badge alert-info">Approved At: <%= request.approved_at %></a></span>
         <span class="badge alert-success">Approved By: <%= request.approved_by %></a></span>
-        <span><%= request.consultant_name %> has requested certification (<%= request.short %>) booking</span>
+        <span><%= request.consultant_first_name %> has requested certification (<%= request.short %>) booking</span>
       </li>
       <% end %>
     </ul>
@@ -213,7 +229,7 @@
       <li class="list-group-item">
         <span class="badge alert-info">DisApproved At: <%= request.disapproved_at %></a></span>
         <span class="badge alert-success">DisApproved By: <%= request.disapproved_by %></a></span>
-        <span><%= request.consultant_name %> has requested air ticket booking</span>
+        <span><%= request.consultant_last_name %> has requested certification (<%= request.short %>) booking</span>
       </li>
       <% end %>
     </ul>
@@ -234,7 +250,7 @@
         <ul class="list-group">
           <% passed_requests.each do |request| %>
             <li class="list-group-item">
-              <%= request.consultant_name %> passed <%= request.short %>
+              <%= request.consultant_first_name %> passed <%= request.short %>
             </li>
           <% end %>
         </ul>
@@ -254,7 +270,7 @@
         <ul class="list-group">
           <% failed_requests.each do |request| %>
             <li class="list-group-item">
-              <%= request.consultant_name %> failed <%= request.short %>
+              <%= request.consultant_first_name %> failed <%= request.short %>
             </li>
           <% end %>
         </ul>
@@ -317,12 +333,13 @@ $(document).ready(function(){
     var date = $("#Date-<%= request.id %>").val();
     var time = $("#TimeSelected-<%= request.id %>").val();
     var price = $("#Price-<%= request.id %>").val();
+    var notes = $("#Notes-<%= request.id %>").val();
 
     $.ajax({
       type: "POST",
       dataType: "json",
       url: "/certifications/approve/<%= request.id %>",
-      data: {'cname': consultantName, 'date': date, 'time': time, 'price': price },
+      data: {'cname': consultantName, 'date': date, 'time': time, 'price': price, 'notes': notes },
       success: function(data) {
         if(!data.success) {
           console.log("Error: " + data.msg);

@@ -3184,7 +3184,8 @@ Admin</a> </p>
     file = File.read(File.expand_path("../public/assets/certifications.json", __FILE__))
     c_hash = JSON.parse(file)
 
-    consultant_name = params[:ConsultantName]
+    consultant_first_name = params[:FirstName]
+    consultant_last_name = params[:LastName]
     email = params[:Email]
     _ccode = params[:Certification]
     date = params[:Date]
@@ -3198,7 +3199,8 @@ Admin</a> </p>
     c_details = c_hash.detect {|ele| ele['short'] == _ccode}
 
     CertificationRequest.create(
-      consultant_name: consultant_name,
+      consultant_first_name: consultant_first_name,
+      consultant_last_name: consultant_last_name,
       consultant_email: email,
       booking_date: date,
       flexibility: flexible,
@@ -3221,6 +3223,7 @@ Admin</a> </p>
     date = params[:date]
     time = params[:time]
     price = params[:price]
+    notes = params[:notes]
 
     unless price =~ /^\d{1,4}\.\d{0,2}$/
       success = false
@@ -3287,7 +3290,8 @@ Admin</a> </p>
     file = File.read(File.expand_path("../public/assets/certifications.json", __FILE__))
     c_hash = JSON.parse(file)
 
-    consultant_name = params[:ConsultantName]
+    consultant_first_name = params[:FirstName]
+    consultant_last_name = params[:LastName]
     _ccode = params[:Certification]
     date = params[:Date]
     _f = params[:Flexible]
@@ -3300,7 +3304,8 @@ Admin</a> </p>
     c_details = c_hash.detect {|ele| ele['short'] == _ccode}
 
     CertificationRequest.create(
-      consultant_name: consultant_name,
+      consultant_first_name: consultant_first_name,
+      consultant_last_name: consultant_last_name,
       consultant_email: userid,
       booking_date: date,
       flexibility: flexible,

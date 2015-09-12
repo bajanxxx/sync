@@ -11,8 +11,13 @@
       <div class="modal-body">
         <form role="form" id="CreateForm">
           <div class="form-group">
-            <label for="ConsultantName">Consultant Name:</label>
-              <input type="text" class="form-control" id="ConsultantName" name="ConsultantName" placeholder="Name that should appear on certificate" value="" required="required" />
+            <label for="FirstName">First Name:</label>
+              <input type="text" class="form-control" id="FirstName" name="FirstName" placeholder="First Name that should appear on certificate" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="LastName">Last Name:</label>
+              <input type="text" class="form-control" id="LastName" name="LastName" placeholder="Last Name that should appear on certificate" value="" required="required" />
               <span class="help-block"></span>
           </div>
           <div class="form-group">
@@ -135,16 +140,29 @@ $(document).ready(function(){
         validating: 'glyphicon glyphicon-refresh'
     },
     fields: {
-      ConsultantName: {
-        message: 'The name is not valid',
+      FirstName: {
+        message: 'The first name is not valid',
         validators: {
           notEmpty: {
-              message: 'The name is required and cannot be empty'
+              message: 'The first name is required and cannot be empty'
           },
           stringLength: {
               min: 6,
               max: 100,
-              message: 'The name must be more than 6 and less than 100 characters long'
+              message: 'The first name must be more than 6 and less than 100 characters long'
+          },
+        }
+      },
+      LastName: {
+        message: 'The last name is not valid',
+        validators: {
+          notEmpty: {
+              message: 'The last name is required and cannot be empty'
+          },
+          stringLength: {
+              min: 6,
+              max: 100,
+              message: 'The last name must be more than 6 and less than 100 characters long'
           },
         }
       }
