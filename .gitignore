@@ -1,4 +1,5 @@
 # project specific
+.ruby-version
 random.rb
 random.js
 tmp/*
