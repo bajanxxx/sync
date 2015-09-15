@@ -3122,7 +3122,6 @@ Admin</a> </p>
         run_at: 1.seconds.from_now
       )
       flash[:info] = 'Sucessfully approved and updated the user status of the request'
-      redirect "/certifications"
     end
 
     { success: success, msg: message }.to_json
