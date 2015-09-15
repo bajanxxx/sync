@@ -3218,7 +3218,7 @@ Admin</a> </p>
         twilio.account.messages.create(
           from: @settings[:twilio_phone],
           to: to_phone,
-          body: "SYNC: #{cname} certification booking request"
+          body: "SYNC: #{consultant_first_name} #{consultant_last_name} certification booking request"
         )
       end
     end
