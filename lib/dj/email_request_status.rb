@@ -17,6 +17,10 @@ class EmailRequestStatus < Struct.new(:settings, :admin, :request, :request_type
           <td align="left" width="20%" valign="top"><strong>Approved/Disapproved By:</strong></td>
           <td align="left" width="20%" valign="top">#{admin}</td>
         <tr>
+        <tr>
+          <td align="left" width="20%" valign="top"><strong>Notes:</strong></td>
+          <td align="left" width="20%" valign="top">#{request.notes}</td>
+        <tr>
       </table>
       <br/>
       <p><strong>Important</strong>: <font color="red"> Contact #{admin} for more information.</font></p>
