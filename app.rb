@@ -96,6 +96,7 @@ require_relative 'lib/dj/generate_document'
 require_relative 'lib/dj/email_request_status'
 require_relative 'lib/dj/email_document_request'
 require_relative 'lib/dj/email_airticket_request'
+require_relative 'lib/dj/email_certification_request'
 require_relative 'lib/dj/email_project_notification'
 require_relative 'lib/dj/create_cloud_instances'
 require_relative 'lib/dj/delete_cloud_instances'
@@ -2320,130 +2321,6 @@ Admin</a> </p>
     send_file(image.path, type: image_prps.type, disposition: 'inline')
   end
 
-  # get '/documents/download/:id' do |file_id|
-  #   document = download_file(file_id)
-  #   response.headers['content_type'] = "application/octet-stream"
-  #   attachment(document.filename)
-  #   response.write(document.read)
-  # end
-
-  # post '/documents/render/:type' do |document_type|
-  #   email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
-  #   cname = params[:name]
-  #   email = params[:email]
-  #   company = params[:company]
-  #   position = params[:position]
-  #   start_date = params[:sdate]
-  #   end_date = params[:edate]
-  #   dated = params[:dated]
-  #   tname = params[:tname]
-  #   sname = params[:sname]
-  #   lname = params[:layout]
-  #   rid = params[:rid] # open present if this a request from consultant
-  #   document_format = ''
-  #   namespace = nil
-
-  #   success    = true
-  #   message    = "Successfully generated #{document_type}"
-
-  #   begin
-  #     signature_id = DocumentSignature.find_by(filename: sname).file_id
-  #     layout_id = DocumentLayout.find_by(filename: lname).file_id
-
-  #     tmp_file = Tempfile.new(cname.downcase.gsub(' ', '_'))
-
-  #     case document_type
-  #     when 'leaveletter'
-  #       if Date.strptime(start_date, "%m/%d/%Y") > Date.strptime(end_date, "%m/%d/%Y")
-  #         success = false
-  #         message = "start date should be less than end date"
-  #       end
-  #       document_format = 'LEAVELETTER'
-  #       namespace = OpenStruct.new(name: cname, start_date: start_date, end_date: end_date)
-  #       # Build an erb template and replace variables
-  #       template_content = DocumentTemplate.find_by(name: tname).content
-  #       erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
-  #       template = ERB.new(erb_template).result(namespace.instance_eval {binding})
-  #     when 'offerletter'
-  #       document_format = 'OFFERLETTER'
-  #       namespace = OpenStruct.new(
-  #         name: cname,
-  #         start_date: start_date,
-  #         position: position,
-  #         li: '•'
-  #       )
-  #       # Build an erb template and replace variables
-  #       template_content = DocumentTemplate.find_by(name: tname).content
-  #       erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
-  #       template = ERB.new(erb_template).result(namespace.instance_eval {binding})
-  #     when 'employmentletter'
-  #       document_format = 'EMPLOYMENTLETTER'
-  #       namespace = OpenStruct.new(name: cname, start_date: start_date, position: position)
-  #       # Build an erb template and replace variables
-  #       template_content = DocumentTemplate.find_by(name: tname).content
-  #       erb_template = template_content.gsub('{{', '<%=').gsub('}}', '%>')
-  #       template = ERB.new(erb_template).result(namespace.instance_eval {binding})
-  #     end
-
-  #     if email !~ email_regex
-  #       success = false
-  #       message = "email not formatted properly"
-  #     else
-  #       case document_type
-  #       when 'leaveletter'
-  #         LeaveLetter.new(
-  #           cname,
-  #           company,
-  #           grid.get(BSON::ObjectId(signature_id)).read,
-  #           grid.get(BSON::ObjectId(layout_id)).read,
-  #           Date.strptime(start_date, "%m/%d/%Y").strftime('%B %d, %Y'),
-  #           Date.strptime(end_date, "%m/%d/%Y").strftime('%B %d, %Y'),
-  #           Date.strptime(dated, "%m/%d/%Y").strftime('%B %d, %Y'),
-  #           template,
-  #           tmp_file.path
-  #         ).build!
-  #       when 'offerletter'
-  #         OfferLetter.new(
-  #           cname,
-  #           company,
-  #           grid.get(BSON::ObjectId(signature_id)).read,
-  #           grid.get(BSON::ObjectId(layout_id)).read,
-  #           Date.strptime(start_date, "%m/%d/%Y").strftime('%B %d, %Y'),
-  #           Date.strptime(dated, "%m/%d/%Y").strftime('%B %d, %Y'),
-  #           template,
-  #           tmp_file.path
-  #         ).build!
-  #       when 'employmentletter'
-  #         EmploymentLetter.new(
-  #           cname,
-  #           company,
-  #           grid.get(BSON::ObjectId(signature_id)).read,
-  #           grid.get(BSON::ObjectId(layout_id)).read,
-  #           Date.strptime(start_date, "%m/%d/%Y").strftime('%B %d, %Y'),
-  #           Date.strptime(dated, "%m/%d/%Y").strftime('%B %d, %Y'),
-  #           template,
-  #           tmp_file.path
-  #         ).build!
-  #       end
-  #       success = true
-  #       message = "Sucessfully sent #{document_type} to #{cname}"
-  #       file_id = upload_file(tmp_file.path, Pathname.new(tmp_file.path).basename.to_s)
-  #       if file_id
-  #         redirect "/documents/download/#{file_id}"
-  #       else
-  #         success = false
-  #         message = 'Failed rendering file to mongo'
-  #       end
-  #     end
-  #   rescue ArgumentError
-  #     success = false
-  #     message = "Cannot parse date format (expected format: mm/dd/yyyy)"
-  #   ensure
-  #     tmp_file.close
-  #   end
-  #   { success: success, msg: message }.to_json
-  # end
-
   post '/documents/send/:type' do |document_type|
     email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
     cname = params[:name]
@@ -3237,7 +3114,15 @@ Admin</a> </p>
 
     if success
       cr = CertificationRequest.find(rid)
-      cr.update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
+      cr.update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now, notes: notes)
+      Delayed::Job.enqueue(
+        EmailRequestStatus.new(@settings, @admin_name, cr, "Certification (#{cr.short})"),
+        queue: 'consultant_certification_requests',
+        priority: 10,
+        run_at: 1.seconds.from_now
+      )
+      flash[:info] = 'Sucessfully approved and updated the user status of the request'
+      redirect "/certifications"
     end
 
     { success: success, msg: message }.to_json
@@ -3247,8 +3132,14 @@ Admin</a> </p>
     cr = CertificationRequest.find(rid)
     cr.update_attributes(status: 'disapproved', disapproved_by: @admin_name, disapproved_at: DateTime.now)
 
+    Delayed::Job.enqueue(
+      EmailRequestStatus.new(@settings, @admin_name, cr, "Certification (#{cr.short})"),
+      queue: 'consultant_certification_requests',
+      priority: 10,
+      run_at: 1.seconds.from_now
+    )
     flash[:info] = 'Sucessfully disapproved and updated the user status of the request'
-    redirect "/certifications"
+    redirect "/documents"
   end
 
   # whether the consultant passed or not
@@ -3303,18 +3194,35 @@ Admin</a> </p>
     time_preference = params[:TimePreference] # MNG | NOON
     c_details = c_hash.detect {|ele| ele['short'] == _ccode}
 
-    CertificationRequest.create(
-      consultant_first_name: consultant_first_name,
-      consultant_last_name: consultant_last_name,
-      consultant_email: userid,
-      booking_date: date,
-      flexibility: flexible,
-      time_preference: time_preference,
-      name: c_details['name'],
-      short: _ccode,
-      code: c_details['code'],
-      amount: c_details['price']
-    )
+    if success
+      cr = CertificationRequest.create(
+              consultant_first_name: consultant_first_name,
+              consultant_last_name: consultant_last_name,
+              consultant_email: userid,
+              booking_date: date,
+              flexibility: flexible,
+              time_preference: time_preference,
+              name: c_details['name'],
+              short: _ccode,
+              code: c_details['code'],
+              amount: c_details['price']
+            )
+      # Send email to the admin group
+      Delayed::Job.enqueue(
+        EmailCertificationRequest.new(@settings, @admin_name, cr),
+        queue: 'consultant_certification_requests',
+        priority: 10,
+        run_at: 1.seconds.from_now
+      )
+      # Send an sms to the admin
+      @settings[:admin_phone].each do |to_phone|
+        twilio.account.messages.create(
+          from: @settings[:twilio_phone],
+          to: to_phone,
+          body: "SYNC: #{cname} certification booking request"
+        )
+      end
+    end
 
     { success: success, msg: message }.to_json
   end

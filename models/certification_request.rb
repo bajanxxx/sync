@@ -2,6 +2,8 @@ class CertificationRequest
   include Mongoid::Document
 
   field :consultant_name, type: String
+  field :consultant_first_name, type: String
+  field :consultant_last_name, type: String
   field :consultant_email, type: String
   field :purpose, type: String
   field :booking_date, type: String
@@ -20,5 +22,5 @@ class CertificationRequest
   field :disapproved_at, type: DateTime
   field :pass, type: Boolean
   field :admin_created, type: Boolean, default: false
-  field :notes, type: String
+  field :notes, type: String, default: "N/A"
 end

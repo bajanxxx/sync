@@ -19,4 +19,5 @@ class DocumentRequest
   field :file_id, type: String
   field :uploaded_at, type: DateTime
   field :admin_created, type: Boolean, default: false
+  field :notes, type: String, default: "N/A"
 end
