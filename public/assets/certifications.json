@@ -86,5 +86,29 @@
     "price": "150.00",
     "authority": "Amazon Web Services",
     "url": "https://www.webassessor.com/wa.do?page=publicHome&branding=AMAZON"
+  },
+  {
+    "name": "Developer Certification for Apache Cassandra",
+    "short": "DVCAC",
+    "code": "",
+    "price": "300.00",
+    "authority": "Datastax & Orielly",
+    "url": "https://www.webassessor.com/wa.do?page=enterCatalog&branding=OREILLY&tabs=111"
+  },
+  {
+    "name": "Administrator Certification for Apache Cassandra",
+    "short": "ADCAC",
+    "code": "",
+    "price": "300.00",
+    "authority": "Datastax & Orielly",
+    "url": "https://www.webassessor.com/wa.do?page=enterCatalog&branding=OREILLY&tabs=111"
+  },
+  {
+    "name": "Architect Certification for Apache Cassandra",
+    "short": "ATCAC",
+    "code": "",
+    "price": "400.00",
+    "authority": "Datastax & Orielly",
+    "url": "https://www.webassessor.com/wa.do?page=enterCatalog&branding=OREILLY&tabs=111"
   }
 ]
