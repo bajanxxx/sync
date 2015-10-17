@@ -25,7 +25,7 @@ EOBODY
     Pony.mail(
       from: 'Cloudwick Sync' + "<" + settings[:email] + ">",
       to: settings[:admin_group],
-      subject: "Sync: Document Request Notification from #{request.consultant_name}",
+      subject: "Sync: Certification Request Notification from #{request.consultant_name}",
       headers: { 'Content-Type' => 'text/html' },
       body: email_body,
       via: :smtp,
