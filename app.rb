@@ -3098,7 +3098,7 @@ Admin</a> </p>
     # {'cname': consultantName, 'date': date, 'time': time, 'price': price },
     cname = params[:cname]
     date = params[:date]
-    time = params[:time]
+    # time = params[:time]
     price = params[:price]
     notes = params[:notes]
 
@@ -3107,10 +3107,10 @@ Admin</a> </p>
       message = "Amount is not properly formatted"
     end
 
-    unless time =~ /^\d{2}:\d{2}$/
-      success = false
-      message = "Time is not properly formatted (ex: 09:00)"
-    end
+    # unless time =~ /^\d{2}:\d{2}$/
+    #   success = false
+    #   message = "Time is not properly formatted (ex: 09:00)"
+    # end
 
     if success
       cr = CertificationRequest.find(rid)
@@ -3156,6 +3156,26 @@ Admin</a> </p>
     flash[:info] = 'Sucessfully marked request as fail'
   end
 
+  get '/certifications/report/generate' do
+    crs = CertificationRequest.all.entries
+
+    content = "Certitication Name, Consultant Name,Status of request,Passed?,Amount\n"
+
+    crs.each do |cr|
+      pass =  if cr.status == 'completed'
+                cr.pass ? 'PASSED' : 'FAILED'
+              else
+                'N/A'
+              end
+
+      content << "#{cr.name},#{cr.consultant_first_name} #{cr.consultant_last_name},#{cr.status},#{pass},#{cr.amount}\n"
+    end
+
+    content_type :txt
+    attachment "CertificationsReport_#{Date.today.strftime('%m-%d-%Y')}.csv"
+    content
+  end
+
   #
   # => Certification Requests (Consultant Routes)
   #
@@ -3192,6 +3212,16 @@ Admin</a> </p>
               end
     time_preference = params[:TimePreference] # MNG | NOON
     c_details = c_hash.detect {|ele| ele['short'] == _ccode}
+
+    # Check if the user already has the certification request made - check duplicates
+    previous_cr = CertificationRequest.find_by(
+      consultant_email: userid,
+      short: _ccode
+    )
+    if previous_cr
+      success = false
+      message = "Duplicate certification request, please contact admin to resolve the issue."
+    end
 
     if success
       cr = CertificationRequest.create(
