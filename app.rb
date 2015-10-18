@@ -97,6 +97,8 @@ require_relative 'lib/dj/email_request_status'
 require_relative 'lib/dj/email_document_request'
 require_relative 'lib/dj/email_airticket_request'
 require_relative 'lib/dj/email_certification_request'
+require_relative 'lib/dj/email_certification_notification_priorday'
+require_relative 'lib/dj/email_certification_notification_postday'
 require_relative 'lib/dj/email_project_notification'
 require_relative 'lib/dj/create_cloud_instances'
 require_relative 'lib/dj/delete_cloud_instances'
@@ -3115,11 +3117,26 @@ Admin</a> </p>
     if success
       cr = CertificationRequest.find(rid)
       cr.update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now, notes: notes)
+      # immediate notification for the user
       Delayed::Job.enqueue(
         EmailRequestStatus.new(@settings, @admin_name, cr, "Certification (#{cr.short})"),
         queue: 'consultant_certification_requests',
         priority: 10,
         run_at: 1.seconds.from_now
+      )
+      # prior day notification to users
+      Delayed::Job.enqueue(
+        EmailCertificationNotificationPriorDay.new(@settings, @admin_name, cr),
+        queue: 'consultant_certification_notifications',
+        priority: 10,
+        run_at: DateTime.strptime(cr.booking_date, "%m/%d/%Y") - 1
+      )
+      # post day notification to user about status of the certification
+      Delayed::Job.enqueue(
+        EmailCertificationNotificationPostDay.new(@settings, @admin_name, cr),
+        queue: 'consultant_certification_notifications',
+        priority: 10,
+        run_at: DateTime.strptime(cr.booking_date, "%m/%d/%Y") + 1
       )
       flash[:info] = 'Sucessfully approved and updated the user status of the request'
     end
@@ -3221,6 +3238,13 @@ Admin</a> </p>
     if previous_cr
       success = false
       message = "Duplicate certification request, please contact admin to resolve the issue."
+    end
+
+    # User cannot take more than one certification in a group
+    similar_cr = CertificationRequest.any_of({ :name => /.*#{c_details['authority']}.*/ })
+    if similar_cr.count > 0
+      success = false
+      message = "You cannot take another '#{c_details['authority']}' certification as you have already taken one its kind. Please contanct admin for more details."
     end
 
     if success
@@ -4087,7 +4111,7 @@ Admin</a> </p>
       CustomTask.new('lorem ipsum...'),
       queue: 'custom_tasks',
       priority: 5,
-      run_at: 5.seconds.from_now
+      run_at: Time.new(2015, 10, 17, 15, 35, 00)
     )
     puts "dj test route"
   end

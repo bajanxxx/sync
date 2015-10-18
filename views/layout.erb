@@ -258,10 +258,10 @@
 						<li class="dropdown">
 							<a href="#" class="dropdown-toggle disabled">Requests <span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
-								<li><a href="/cloudservers/requests/<%= @username %>">CloudServers</a></li>
-								<li><a href="/documents/<%= @username %>">Documents</a></li>
-								<li><a href="/airtickets/<%= @username %>">AirTickets</a></li>
-								<li><a href="/certifications/<%= @username %>">Certifications</a></li>
+								<li><a href="/cloudservers/requests/<%= @username %>"><i class="fa fa-server"></i> CloudServers</a></li>
+								<li><a href="/documents/<%= @username %>"><i class="fa fa-file-text"></i> Documents</a></li>
+								<li><a href="/airtickets/<%= @username %>"><i class="fa fa-plane"></i> AirTickets</a></li>
+								<li><a href="/certifications/<%= @username %>"><i class="fa fa-certificate"></i> Certifications</a></li>
 							</ul>
 						</li>
 						<li><a href="/timesheets/<%= @username %>/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%U') %>">Timesheets</a></li>
