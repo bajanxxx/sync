@@ -40,7 +40,7 @@
     "url": "http://www.cloudera.com/content/cloudera/en/training/certification/ccp-ds.html"
   },
   {
-    "name": "HDP Certified Developer",
+    "name": "HortonWorks HDP Certified Developer",
     "short": "HDPCD",
     "code": "HDPCD",
     "price": "",
@@ -48,7 +48,7 @@
     "url": "http://hortonworks.com/training/class/hdp-certified-developer-hdpcd-exam/"
   },
   {
-    "name": "Hadoop 2.0 Administrator Certification",
+    "name": "HortonWorks Hadoop 2.0 Administrator Certification",
     "short": "HDPCA",
     "code": "",
     "price": "",
@@ -56,7 +56,7 @@
     "url": "http://hortonworks.com/training/hadoop-2-administration-certification/"
   },
   {
-    "name": "Hadoop 2.0 Java Developer Certification",
+    "name": "HortonWorks Hadoop 2.0 Java Developer Certification",
     "short": "HDPCJD",
     "code": "",
     "price": "",
@@ -64,15 +64,15 @@
     "url": "http://hortonworks.com/training/hadoop-2-0-javadeveloper-certification-2/"
   },
   {
-    "name": "Developer Certification for Apache Spark",
+    "name": "Databricks Developer Certification for Apache Spark",
     "short": "SCD",
     "code": "",
     "price": "300.00",
-    "authority": "DataBricks & Orielly",
+    "authority": "DataBricks",
     "url": "http://www.oreilly.com/data/sparkcert.html?cmp=ex-strata-na-lp-na_apache_spark_certification"
   },
   {
-    "name": "AWS Certified Solutions Architect - Associate",
+    "name": "Amazon Web Services Certified Solutions Architect - Associate",
     "short": "AWSSAA",
     "code": "",
     "price": "150.00",
@@ -80,7 +80,7 @@
     "url": "https://www.webassessor.com/wa.do?page=publicHome&branding=AMAZON" 
   },
   {
-    "name": "AWS Certified SysOps Administrator - Associate",
+    "name": "Amazon Web Services Certified SysOps Administrator - Associate",
     "short": "AWSSAA",
     "code": "",
     "price": "150.00",
@@ -88,27 +88,27 @@
     "url": "https://www.webassessor.com/wa.do?page=publicHome&branding=AMAZON"
   },
   {
-    "name": "Developer Certification for Apache Cassandra",
+    "name": "Datastax Developer Certification for Apache Cassandra",
     "short": "DVCAC",
     "code": "",
     "price": "300.00",
-    "authority": "Datastax & Orielly",
+    "authority": "Datastax",
     "url": "https://www.webassessor.com/wa.do?page=enterCatalog&branding=OREILLY&tabs=111"
   },
   {
-    "name": "Administrator Certification for Apache Cassandra",
+    "name": "Datastax Administrator Certification for Apache Cassandra",
     "short": "ADCAC",
     "code": "",
     "price": "300.00",
-    "authority": "Datastax & Orielly",
+    "authority": "Datastax",
     "url": "https://www.webassessor.com/wa.do?page=enterCatalog&branding=OREILLY&tabs=111"
   },
   {
-    "name": "Architect Certification for Apache Cassandra",
+    "name": "Datastax Architect Certification for Apache Cassandra",
     "short": "ATCAC",
     "code": "",
     "price": "400.00",
-    "authority": "Datastax & Orielly",
+    "authority": "Datastax",
     "url": "https://www.webassessor.com/wa.do?page=enterCatalog&branding=OREILLY&tabs=111"
   }
 ]
