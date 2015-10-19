@@ -110,5 +110,29 @@
     "price": "400.00",
     "authority": "Datastax",
     "url": "https://www.webassessor.com/wa.do?page=enterCatalog&branding=OREILLY&tabs=111"
+  },
+  {
+    "name": "MapR Certified Hadoop Administrator",
+    "short": "MCHA",
+    "code": "",
+    "price": "250.00",
+    "authority": "MapR",
+    "url": "https://www.mapr.com/services/mapr-academy/MapR-Certified-Hadoop-Administrator"
+  },
+  {
+    "name": "MapR Certified Hadoop Developer",
+    "short": "MCHD",
+    "code": "",
+    "price": "250.00",
+    "authority": "MapR",
+    "url": "https://www.mapr.com/services/mapr-academy/MapR-Certified-Hadoop-Developer"
+  },
+  {
+    "name": "MapR Certified HBase Developer",
+    "short": "MCHBD",
+    "code": "",
+    "price": "250.00",
+    "authority": "MapR",
+    "url": "https://www.mapr.com/services/mapr-academy/MapR-Certified-HBase-Developer"
   }
 ]
