@@ -207,21 +207,8 @@ $(document).ready(function(){
           },
           stringLength: {
               min: 10,
-              max: 1000,
+              max: 500,
               message: 'purpose must be more than 10 and less than 1000 characters long'
-          },
-        }
-      },
-      flexibility: {
-        message: 'flexibility is not valid',
-        validators: {
-          notEmpty: {
-            message: 'flexibility of the travel is required and cannot be empty'
-          },
-          between: {
-            min: 0,
-            max: 30,
-            message: 'specify fliexibility in between 0 and 30'
           },
         }
       },
