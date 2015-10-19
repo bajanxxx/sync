@@ -201,7 +201,180 @@
               <span class="help-block"></span>
             </div>
           </form>
-          <p id="ApproveCertificationRequestLabel-<%= request.id %>" class="text-center"></p>
+          <hr />
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- dis-approved certification request modals -->
+<% disapproved_requests.each do |request| %>
+  <div class="modal fade" id="DisApprovedCertificationRequest-<%= request.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="myModalLabel">DisApproved Certification Request</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="CreateForm-<%= request.id %>">
+            <div class="form-group">
+              <label for="FirstName">First Name:</label>
+                <input type="text" class="form-control" id="FirstName" name="FirstName" placeholder="First Name that should appear on certificate" value="<%= request.consultant_first_name %>" required="required" disabled/>
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="LastName">Last Name:</label>
+                <input type="text" class="form-control" id="LastName" name="LastName" placeholder="Last Name that should appear on certificate" value="<%= request.consultant_last_name %>" required="required" disabled/>
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Email">Email Address of Consultant:</label>
+              <input type="email" class="form-control" id="Email-<%= request.id %>" name="Email-<%= request.id %>" placeholder="Email" value="<%= request.consultant_email %>" required="required" disabled/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Certification">Certification:</label>
+              <input type="text" class="form-control" id="Certification-<%= request.id %>" value="<%= request.name %>" disabled>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+               <label class="control-label" for="Date">Date: </label>
+               <input type="text" class="form-control" name="Date-<%= request.id %>" id="Date-<%= request.id %>" value="<%= request.booking_date %>" disabled>
+            </div>
+            <div class="form-group">
+              <label for="Price">Price:</label>
+              <input type="text" class="form-control" id="Price-<%= request.id %>" name="Price-<%= request.id %>" value="<%= request.amount %>" disabled/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Notes">Notes:</label>
+              <textarea rows="3" class="form-control" id="Notes-<%= request.id %>" name="Notes-<%= request.id %>" placeholder="Enter notes that will be sent to consultant" value="<%= request.notes %>" disabled></textarea>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label>Link:</label>
+              <a target="_blank" href="<%= c_hash.detect {|ele| ele['short'] == request.short}['url'] %>">Booking link</a>
+              <span class="help-block"></span>
+            </div>
+          </form>
+          <hr />
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- passed certification request modals -->
+<% passed_requests.each do |request| %>
+  <div class="modal fade" id="PassedCertificationRequest-<%= request.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="myModalLabel">Passed Certification Request</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="CreateForm-<%= request.id %>">
+            <div class="form-group">
+              <label for="FirstName">First Name:</label>
+                <input type="text" class="form-control" id="FirstName" name="FirstName" placeholder="First Name that should appear on certificate" value="<%= request.consultant_first_name %>" required="required" disabled/>
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="LastName">Last Name:</label>
+                <input type="text" class="form-control" id="LastName" name="LastName" placeholder="Last Name that should appear on certificate" value="<%= request.consultant_last_name %>" required="required" disabled/>
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Email">Email Address of Consultant:</label>
+              <input type="email" class="form-control" id="Email-<%= request.id %>" name="Email-<%= request.id %>" placeholder="Email" value="<%= request.consultant_email %>" required="required" disabled/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Certification">Certification:</label>
+              <input type="text" class="form-control" id="Certification-<%= request.id %>" value="<%= request.name %>" disabled>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+               <label class="control-label" for="Date">Date: </label>
+               <input type="text" class="form-control" name="Date-<%= request.id %>" id="Date-<%= request.id %>" value="<%= request.booking_date %>" disabled>
+            </div>
+            <div class="form-group">
+              <label for="Price">Price:</label>
+              <input type="text" class="form-control" id="Price-<%= request.id %>" name="Price-<%= request.id %>" value="<%= request.amount %>" disabled/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Notes">Notes:</label>
+              <textarea rows="3" class="form-control" id="Notes-<%= request.id %>" name="Notes-<%= request.id %>" placeholder="Enter notes that will be sent to consultant" value="<%= request.notes %>" disabled></textarea>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label>Link:</label>
+              <a target="_blank" href="<%= c_hash.detect {|ele| ele['short'] == request.short}['url'] %>">Booking link</a>
+              <span class="help-block"></span>
+            </div>
+          </form>
+          <hr />
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- failed certification request modals -->
+<% failed_requests.each do |request| %>
+  <div class="modal fade" id="FailedCertificationRequest-<%= request.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="myModalLabel">Failed Certification Request</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="CreateForm-<%= request.id %>">
+            <div class="form-group">
+              <label for="FirstName">First Name:</label>
+                <input type="text" class="form-control" id="FirstName" name="FirstName" placeholder="First Name that should appear on certificate" value="<%= request.consultant_first_name %>" required="required" disabled/>
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="LastName">Last Name:</label>
+                <input type="text" class="form-control" id="LastName" name="LastName" placeholder="Last Name that should appear on certificate" value="<%= request.consultant_last_name %>" required="required" disabled/>
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Email">Email Address of Consultant:</label>
+              <input type="email" class="form-control" id="Email-<%= request.id %>" name="Email-<%= request.id %>" placeholder="Email" value="<%= request.consultant_email %>" required="required" disabled/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Certification">Certification:</label>
+              <input type="text" class="form-control" id="Certification-<%= request.id %>" value="<%= request.name %>" disabled>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+               <label class="control-label" for="Date">Date: </label>
+               <input type="text" class="form-control" name="Date-<%= request.id %>" id="Date-<%= request.id %>" value="<%= request.booking_date %>" disabled>
+            </div>
+            <div class="form-group">
+              <label for="Price">Price:</label>
+              <input type="text" class="form-control" id="Price-<%= request.id %>" name="Price-<%= request.id %>" value="<%= request.amount %>" disabled/>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="Notes">Notes:</label>
+              <textarea rows="3" class="form-control" id="Notes-<%= request.id %>" name="Notes-<%= request.id %>" placeholder="Enter notes that will be sent to consultant" value="<%= request.notes %>" disabled></textarea>
+              <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label>Link:</label>
+              <a target="_blank" href="<%= c_hash.detect {|ele| ele['short'] == request.short}['url'] %>">Booking link</a>
+              <span class="help-block"></span>
+            </div>
+          </form>
           <hr />
         </div>
       </div>
@@ -325,9 +498,11 @@
     <ul class="list-group">
       <% disapproved_requests.each do |request| %>
       <li class="list-group-item">
-        <span class="badge alert-info">DisApproved At: <%= request.disapproved_at %></a></span>
-        <span class="badge alert-success">DisApproved By: <%= request.disapproved_by %></a></span>
-        <span><%= request.consultant_last_name %> <%= request.consultant_last_name %> has requested certification (<%= request.short %>) booking</span>
+        <span class="badge alert-info"><%= request.disapproved_at.strftime("%m/%d/%Y") %></a></span>
+        <span class="badge alert-success"><%= request.disapproved_by %></a></span>
+        <a href="#" data-toggle="modal" data-target="#DisApprovedCertificationRequest-<%= request.id %>">
+          <span><%= request.consultant_last_name %> <%= request.consultant_last_name %> has requested certification (<%= request.name %>) booking</span>
+        </a>
       </li>
       <% end %>
     </ul>
@@ -348,7 +523,9 @@
         <ul class="list-group">
           <% passed_requests.each do |request| %>
             <li class="list-group-item">
-              <%= request.consultant_first_name %> <%= request.consultant_last_name %> passed <%= request.short %>
+              <a href="#" data-toggle="modal" data-target="#PassedCertificationRequest-<%= request.id %>">
+                <%= request.consultant_first_name %> <%= request.consultant_last_name %> passed <%= request.name %>
+              </a>
             </li>
           <% end %>
         </ul>
@@ -362,13 +539,15 @@
         </div>
         <% if failed_requests.empty? %>
         <div class="bs-callout bs-callout-info">
-          <p class="lead">No requests have been so far marked as passed!</p>
+          <p class="lead">No requests have been so far marked as failed!</p>
         </div>
         <% else %>
         <ul class="list-group">
           <% failed_requests.each do |request| %>
             <li class="list-group-item">
-              <%= request.consultant_first_name %> <%= request.consultant_last_name %> failed <%= request.short %>
+              <a href="#" data-toggle="modal" data-target="#FailedCertificationRequest-<%= request.id %>">
+                <%= request.consultant_first_name %> <%= request.consultant_last_name %> failed <%= request.name %>
+              </a>
             </li>
           <% end %>
         </ul>

@@ -3176,7 +3176,7 @@ Admin</a> </p>
   get '/certifications/report/generate' do
     crs = CertificationRequest.all.entries
 
-    content = "Certitication Name, Consultant Name,Status of request,Passed?,Amount\n"
+    content = "Certitication Name, Consultant Name,Status of request,Passed?,Amount,ApprovedDate,CertificationDate,Notes\n"
 
     crs.each do |cr|
       pass =  if cr.status == 'completed'
@@ -3184,8 +3184,21 @@ Admin</a> </p>
               else
                 'N/A'
               end
+      approved_at = if cr.status != 'pending'
+                      if cr.status == 'approved' 
+                        cr.approved_at.strftime("%m/%d/%Y") 
+                      elsif cr.status == 'disapproved'
+                        cr.disapproved_at.strftime("%m/%d/%Y")
+                      elsif cr.status == 'completed'
+                        cr.approved_at.strftime("%m/%d/%Y")
+                      else
+                        'N/A'
+                      end
+                    else
+                      'N/A'
+                    end
 
-      content << "#{cr.name},#{cr.consultant_first_name} #{cr.consultant_last_name},#{cr.status},#{pass},#{cr.amount}\n"
+      content << "#{cr.name},#{cr.consultant_first_name} #{cr.consultant_last_name},#{cr.status},#{pass},#{cr.amount},#{approved_at},#{cr.booking_date},#{cr.notes}\n"
     end
 
     content_type :txt
