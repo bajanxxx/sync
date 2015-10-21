@@ -43,12 +43,73 @@
 				padding-right: 0px;
 				padding-bottom: 50px;
 	    }
+			
+			/*nav bar colors - generated using http://work.smarchal.com/twbscolor/css/e74c3cc0392becf0f1ffbbbc0*/
+	    .navbar-default {
+			  background-color: #0778bf;
+			  border-color: #0778bf;
+			}
+			.navbar-default .navbar-brand {
+			  color: #ecf0f1;
+			}
+			.navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {
+			  color: #919b9d;
+			}
+			.navbar-default .navbar-text {
+			  color: #ecf0f1;
+			}
+			.navbar-default .navbar-nav > li > a {
+			  color: #ecf0f1;
+			}
+			.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
+			  color: #919b9d;
+			}
+			.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus {
+			  color: #919b9d;
+			  background-color: #0778bf;
+			}
+			.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus {
+			  color: #919b9d;
+			  background-color: #0778bf;
+			}
+			.navbar-default .navbar-toggle {
+			  border-color: #0778bf;
+			}
+			.navbar-default .navbar-toggle:hover, .navbar-default .navbar-toggle:focus {
+			  background-color: #0778bf;
+			}
+			.navbar-default .navbar-toggle .icon-bar {
+			  background-color: #ecf0f1;
+			}
+			.navbar-default .navbar-collapse,
+			.navbar-default .navbar-form {
+			  border-color: #ecf0f1;
+			}
+			.navbar-default .navbar-link {
+			  color: #ecf0f1;
+			}
+			.navbar-default .navbar-link:hover {
+			  color: #919b9d;
+			}
 
-			.navbar-default .navbar-brand:hover,
+			@media (max-width: 767px) {
+			  .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+			    color: #ecf0f1;
+			  }
+			  .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+			    color: #919b9d;
+			  }
+			  .navbar-default .navbar-nav .open .dropdown-menu > .active > a, .navbar-default .navbar-nav .open .dropdown-menu > .active > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > .active > a:focus {
+			    color: #919b9d;
+			    background-color: #0778bf;
+			  }
+			}
+
+/*			.navbar-default .navbar-brand:hover,
 			.navbar-default .navbar-brand:focus {
      		color: #428bca;
 			}
-
+*/
 			#footer {
 				position: absolute;
 				bottom: 0px;
@@ -238,12 +299,13 @@
 						<li><a href="/training">Training</a></li>
 	        </ul>
 	        <ul class="nav navbar-nav pull-right">
-						<form action="/search" method="post" class="navbar-form navbar-left" role="search">
+	        	<!-- search bar -->
+						<!-- <form action="/search" method="post" class="navbar-form navbar-left" role="search">
 							<div class="form-group">
 								<input type="text" class="form-control" name="search" id="search" placeholder="Search for job details">
 							</div>
   						<input type="submit" class="btn btn-info btn-small" value="Search"/>
-						</form>
+						</form> -->
 						<% if @username %>
 						<li><p class="navbar-text"><%= @username %> | <a href='/logout' class="navbar-link">logout</a></li>
 						<% else %>
