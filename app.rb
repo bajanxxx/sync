@@ -3243,6 +3243,12 @@ Admin</a> </p>
     time_preference = params[:TimePreference] # MNG | NOON
     c_details = c_hash.detect {|ele| ele['short'] == _ccode}
 
+    # validate date
+    if Date.strptime(date, "%m/%d/%Y") < Date.today
+      success = false
+      message = "certification date should not be past"
+    end
+
     # Check if the user already has the certification request made - check duplicates
     previous_cr = CertificationRequest.find_by(
       consultant_email: userid,

@@ -2,7 +2,7 @@ class EmailCertificationNotificationPriorDay < Struct.new(:settings, :admin, :re
   def perform
     email_body = <<EOBODY
       <p>This is a nofication from Sync portal:</p>
-      <p><strong>Notification about your certification (#{request.code}) that you have scheduled for tomorrow.</strong></p>
+      <p><strong>Notification about your certification (#{request.short}) that you have scheduled for tomorrow.</strong></p>
       <p>Request Details:</p>
       <table width="100%" border="0" cellspacing="0" cellpading="0">
         <tr>
