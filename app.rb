@@ -3260,7 +3260,7 @@ Admin</a> </p>
     end
 
     # User cannot take more than one certification in a group
-    similar_cr = CertificationRequest.any_of({ :name => /.*#{c_details['authority']}.*/ })
+    similar_cr = CertificationRequest.any_of({ consultant_email: userid, :name => /.*#{c_details['authority']}.*/ })
     if similar_cr.count > 0
       success = false
       message = "You cannot take another '#{c_details['authority']}' certification as you have already taken one its kind. Please contanct admin for more details."
