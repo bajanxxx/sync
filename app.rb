@@ -282,7 +282,8 @@ class Sync < Sinatra::Base
 
     @doc_requests = DocumentRequest.where(status: 'pending').count
     @air_requests = AirTicketRequest.where(status: 'pending').count
-    @requests_count = @doc_requests + @air_requests
+    @certification_requests = CertificationRequest.where(status: 'pending').count
+    @requests_count = @doc_requests + @air_requests + @certification_requests
 
     # we do not want to redirect to twitter when the path info starts
     # with /auth/
