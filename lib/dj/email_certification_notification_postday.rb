@@ -2,7 +2,7 @@ class EmailCertificationNotificationPostDay < Struct.new(:settings, :admin, :req
   def perform
     email_body = <<EOBODY
       <p>This is a nofication from Sync portal:</p>
-      <p><strong>Please update the status of your certification by replying back to this email.</strong></p>
+      <p><strong>Please update the status of your certification by replying back to <a href="mailto:syncadmin@cloudwick.com?Subject=Certification%20Status%20#{request.short}">syncadmin@cloudwick.com.</a></strong></p>
       <p>Request Details:</p>
       <table width="100%" border="0" cellspacing="0" cellpading="0">
         <tr>

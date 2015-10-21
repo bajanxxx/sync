@@ -287,8 +287,24 @@
 
 		<div id="footer">
       <div class="container">
-        <p class="text-muted text-center">Sync | ©2014 <a href='http://www.cloudwick.com'>Cloudwick</a>, Inc. All rights reserved | <a href='http://www.linkedin.com/in/ashrithm/'>Ashrith Mekala</p>
+        <p class="text-muted text-center">Sync | © 2014-2015 <a href='http://www.cloudwick.com'>Cloudwick</a>, Inc. All rights reserved | <a href='http://www.linkedin.com/in/ashrithm/'>Ashrith Mekala</p>
       </div>
     </div>
   </body>
+  <script type="text/javascript">
+  // browser detection by ducktyping
+  var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+  // Opera 8.0+ (UA detection to detect Blink/v8-powered Opera)
+	var isFirefox = typeof InstallTrigger !== 'undefined';   // Firefox 1.0+
+	var isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+	    // At least Safari 3+: "[object HTMLElementConstructor]"
+	var isChrome = !!window.chrome && !isOpera;              // Chrome 1+
+	var isIE = /*@cc_on!@*/false || !!document.documentMode;   // At least IE6
+
+	if (isChrome || isSafari) {
+		console.log('Browser - OK');
+	} else {
+		alert('Site will not work as intended, please use chrome or safari.');
+	}
+  </script>
 </html>
