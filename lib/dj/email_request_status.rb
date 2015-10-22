@@ -30,7 +30,7 @@ EOBODY
     Pony.mail(
       from: 'Cloudwick Sync' + "<" + settings[:email] + ">",
       to: request.consultant_email,
-      cc: settings[:cc],
+      cc: settings[:admin_group],
       subject: "Status of the #{request_type} request you made",
       headers: { 'Content-Type' => 'text/html' },
       body: email_body,
