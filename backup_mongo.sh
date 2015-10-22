@@ -40,9 +40,24 @@ function check_preqs () {
       exit 1
     }
   done
+
+  if [[ ! -z $aws_s3_bucket ]]; then
+    type -P aws &> /dev/null || {
+      echo "Command 'aws' is required, please install aws command line tools to backup to s3"
+      echo "Aborting!!!"
+      exit 1
+    }
+
+    if [[ ! -f $HOME/.aws/credentials  ]]; then
+      echo "AWS credentials file is not found, please run 'aws configure' command to generate the credentials file"
+      echo "Aborting!!!"
+      exit 1
+    fi
+  fi
 }
 
 function backup_now () {
+  local archive_name="$1"
   local dest_dirs=$destination_dirs
   local db=$database_name
   local options=""
@@ -50,10 +65,6 @@ function backup_now () {
   if [[ ! -d $staging_dir ]]; then
     mkdir $staging_dir
   fi
-  # Store the current date in YYYY-mm-DD-HHMMSS
-  local date=$(date -u "+%F-%H%M%S")
-  local file_name="backup-$date"
-  local archive_name="$file_name.tar.gz"
   echo "Backing up data to ${archive_name}"
 
   if [[ -n "$db" ]]; then
@@ -77,6 +88,15 @@ function backup_now () {
   done
 }
 
+function backup_to_s3 () {
+  local archive_name="$1"
+  local dest_dirs=$destination_dirs
+  local dest_dir=$(echo $dest_dirs | { read first rest; echo $first ;})
+
+  echo "Backing up MongoDB to S3..."
+  aws s3 cp $dest_dir/$archive_name $aws_s3_bucket --region=$aws_s3_region
+}
+
 function usage () {
   script=$0
   cat <<USAGE
@@ -85,8 +105,6 @@ Syntax
 
 -p: destination directories
 -d: database name
--k: aws access key
--s: aws secret key
 -b: aws bucket name
 -r: aws region name
 -h: show this message
@@ -94,6 +112,7 @@ Syntax
 Example:
 `basename ${script}` -p "/mongo_backup1 /mongo_backup2" -d database_name
 `basename ${script}` -p /mongo_backup -d database_name
+`basename ${script}` -p /mongo_backup -d database_name -b s3://cloudwicklabs.sync/mongo_backup/ -r us-west-1
 
 USAGE
   exit 1
@@ -109,12 +128,6 @@ do
       ;;
     p)
       destination_dirs=$OPTARG
-      ;;
-    k)
-      aws_access_key=$OPTARG
-      ;;
-    s)
-      aws_secret_key=$OPTARG
       ;;
     b)
       aws_s3_bucket=$OPTARG
@@ -136,5 +149,15 @@ if [[ -z $database_name ]] || [[ -z $destination_dirs ]]; then
   exit 1
 fi
 
+# Store the current date in YYYY-mm-DD-HHMMSS
+date=$(date -u "+%F-%H%M%S")
+file_name="backup-$date"
+archive_name="$file_name.tar.gz"
+
 check_preqs
-backup_now
+backup_now $archive_name
+
+if [[ ! -z $aws_s3_bucket ]]; then
+  echo "Backing upto s3 (path: $aws_s3_bucket, region: $aws_s3_region)"
+  backup_to_s3 $archive_name
+fi
