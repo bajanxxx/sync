@@ -284,21 +284,6 @@ class Sync < Sinatra::Base
     @air_requests = AirTicketRequest.where(status: 'pending').count
     @certification_requests = CertificationRequest.where(status: 'pending').count
     @requests_count = @doc_requests + @air_requests + @certification_requests
-
-    # we do not want to redirect to twitter when the path info starts
-    # with /auth/
-    # pass if request.path_info =~ /^\/auth\//
-    # pass if request.path_info =~ /\/not_valid_email/
-
-    # /auth/google_oauth2 is captured by omniauth:
-    # when the path info matches /auth/google_oauth2, omniauth will redirect to google api
-    # unless current_user
-    #   ap session[:uid]
-    #   ap 'current user not logged in'
-    #   redirect to('/auth/google_oauth2')
-    # else
-    #   ap 'user is already logged in'
-    # end
   end
 
   # after do
@@ -2784,7 +2769,6 @@ Admin</a> </p>
   end
 
   post '/airtickets/submit' do
-    # {"ConsultantName"=>"Ashrith", "Email"=>"ashrith@cloudwick.com", "From"=>"SFO", "FlexibleFrom"=>"on", "From2"=>"", "To"=>"BWI", "To2"=>"", "ReturnDate"=>"", "Purpose"=>"i dont kow"}
     cname = params[:ConsultantName]
     cemail = params[:Email]
     travel_date = params[:TravelDate]
@@ -2886,7 +2870,7 @@ Admin</a> </p>
 
     if success
       ar = AirTicketRequest.find(rid)
-      ar.update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now)
+      ar.update_attributes(status: 'approved', approved_by: @admin_name, approved_at: DateTime.now, amount: amount)
       Delayed::Job.enqueue(
         EmailRequestStatus.new(@settings, @admin_name, ar, "AirTicket (from: #{ar.from_apc} -> to: #{ar.to_apc})"),
         queue: 'consultant_airticket_requests',
