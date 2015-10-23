@@ -2,9 +2,8 @@
 #
 # Author:: Ashrith Mekala (<ashrith@cloudwick.com>)
 # Description:: Back's up mongodb to specified directory paths
-# Version: 0.1
 #
-# Copyright 2013, Cloudwick, Inc.
+# Copyright 2013-2015, Cloudwick, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

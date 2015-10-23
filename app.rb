@@ -2914,7 +2914,10 @@ Admin</a> </p>
   end
 
   post '/airtickets/:userid/request' do |userid|
-    cname = params[:fullname]
+    cfname = params[:firstname]
+    clname = params[:lastname]
+    cpnum = params[:phonenum]
+    cdob = params[:dob]
     from_apc = params[:from]
     from_apc2 = params[:from2]
     to_apc = params[:to]
@@ -2931,10 +2934,10 @@ Admin</a> </p>
     success    = true
     message    = "Air Ticket Request submitted."
 
-    %w(fullname from to traveldate purpose).each do |param|
+    %w(firstname lastname phonenum dob from to traveldate purpose).each do |param|
       if params[param.to_sym].empty?
         success = false
-        message = "Param '#{param}' cannot be empty"
+        message = "Field '#{param}' cannot be empty"
       end
       return { success: success, msg: message }.to_json unless success
     end
@@ -2976,7 +2979,10 @@ Admin</a> </p>
     if success
       # process the request
       ar =  AirTicketRequest.create(
-              consultant_name: cname,
+              consultant_first_name: cfname,
+              consultant_last_name: clname,
+              consultant_dob: cdob,
+              consultant_phone: cpnum,
               consultant_email: userid,
               travel_date: travel_date,
               purpose: purpose,
