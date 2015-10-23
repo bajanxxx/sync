@@ -10,10 +10,25 @@
       </div>
       <div id="requestModal" class="modal-body">
         <form role="form" id="RequestForm">
-           <div class="form-group">
-            <label for="FullName">FullName</label>
-            <input type="text" class="form-control" name="fullname" id="fullname" placeholder="Full Name as it should appear on iternary" required="required">
-           </div>
+          <div class="form-group">
+            <label for="firstname">First Name:</label>
+              <input type="text" class="form-control" id="firstname" name="firstname" placeholder="First Name as per your ID" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="lastname">Last Name:</label>
+              <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Last Name as per your ID" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="phonenum">Phone Number:</label>
+              <input type="text" class="form-control" id="phonenum" name="phonenum" placeholder="Best number to reach you" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group date">
+            <label for="dob">dob: </label>
+            <input type="text" class="form-control" name="dob" id="dob" placeholder="birth day in the format (mm/dd/yyyy)">
+          </div>
            <div class="form-group">
             <label for="From">From:</label>
             <select class="form-control" id="from" name="from" required="required">
@@ -168,6 +183,7 @@ $(document).ready(function(){
   $('#from2').select2();
   $('#to').select2();
   $('#to2').select2();
+  $('#dob').datepicker({});
   $('#traveldate').datepicker({});
   $('#returndate').datepicker({});
   $('#flexiblefrom').click(function() {
@@ -186,16 +202,29 @@ $(document).ready(function(){
         validating: 'glyphicon glyphicon-refresh'
     },
     fields: {
-      fullname: {
-        message: 'The name is not valid',
+      firstname: {
+        message: 'The first name is not valid',
         validators: {
           notEmpty: {
-              message: 'The name is required and cannot be empty'
+              message: 'The first name is required and cannot be empty'
           },
           stringLength: {
               min: 6,
               max: 100,
-              message: 'The name must be more than 6 and less than 100 characters long'
+              message: 'The first name must be more than 6 and less than 100 characters long'
+          },
+        }
+      },
+      lastname: {
+        message: 'The last name is not valid',
+        validators: {
+          notEmpty: {
+              message: 'The last name is required and cannot be empty'
+          },
+          stringLength: {
+              min: 6,
+              max: 100,
+              message: 'The last name must be more than 6 and less than 100 characters long'
           },
         }
       },
@@ -210,14 +239,6 @@ $(document).ready(function(){
               max: 500,
               message: 'purpose must be more than 10 and less than 1000 characters long'
           },
-        }
-      },
-      company: {
-        message: 'Company name is not valid',
-        validators: {
-          notEmpty: {
-              message: 'Company name is required and cannot be empty'
-          }
         }
       },
     }

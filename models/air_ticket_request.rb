@@ -1,8 +1,12 @@
 class AirTicketRequest
   include Mongoid::Document
 
-  field :consultant_name, type: String
+  field :consultant_name, type: String # OLD
+  field :consultant_first_name, type: String
+  field :consultant_last_name, type: String
   field :consultant_email, type: String
+  field :consultant_dob, type: String
+  field :consultant_phone, type: String
   field :purpose, type: String
   field :travel_date, type: String
   field :from_apc, type: String

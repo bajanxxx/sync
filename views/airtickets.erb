@@ -12,9 +12,23 @@
       <div class="modal-body">
         <form role="form" id="CreateForm">
           <div class="form-group">
-            <label for="ConsultantName">Consultant Name:</label>
-              <input type="text" class="form-control" id="ConsultantName" name="ConsultantName" placeholder="Name of the Consultant" value="" required="required" />
+            <label for="FirstName">First Name:</label>
+              <input type="text" class="form-control" id="FirstName" name="FirstName" placeholder="First Name as per your ID" value="" required="required" />
               <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="LastName">Last Name:</label>
+              <input type="text" class="form-control" id="LastName" name="LastName" placeholder="Last Name as per your ID" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="PhoneNum">Phone Number:</label>
+              <input type="text" class="form-control" id="PhoneNum" name="PhoneNum" placeholder="Best number to reach you" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group date">
+            <label for="DOB">DOB: </label>
+            <input type="text" class="form-control" name="DOB" id="DOB" placeholder="birth day in the format (mm/dd/yyyy)">
           </div>
           <div class="form-group">
             <label for="Email">Email Address of Consultant:</label>
@@ -115,14 +129,28 @@
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title" id="myModalLabel">Create New AirTicket Request</h4>
+          <h4 class="modal-title" id="myModalLabel">Approve AirTicket Request</h4>
         </div>
         <div class="modal-body">
           <form role="form" id="CreateForm-<%= request.id %>">
             <div class="form-group">
-              <label for="ConsultantName">Consultant Name:</label>
-                <input type="text" class="form-control" id="ConsultantName-<%= request.id %>" name="ConsultantName-<%= request.id %>" placeholder="Name of the Consultant" value="<%= request.consultant_name %>" required="required" />
+              <label for="FirstName">First Name:</label>
+                <input type="text" class="form-control" id="FirstName-<%= request.id %>" name="FirstName-<%= request.id %>" placeholder="First Name as per your ID" value="<%= request.consultant_first_name %>" required="required" />
                 <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="LastName">Last Name:</label>
+                <input type="text" class="form-control" id="LastName-<%= request.id %>" name="LastName-<%= request.id %>" placeholder="Last Name as per your ID" value="<%= request.consultant_last_name %>" required="required" />
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+              <label for="PhoneNum">Phone Number:</label>
+                <input type="text" class="form-control" id="PhoneNum-<%= request.id %>" name="PhoneNum-<%= request.id %>" placeholder="Best number to reach you" value="<%= request.consultant_phone %>" required="required" />
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group date">
+              <label for="DOB">DOB: </label>
+              <input type="text" class="form-control" name="DOB-<%= request.id %>" id="DOB-<%= request.id %>" value="<%= request.consultant_dob %>">
             </div>
             <div class="form-group">
               <label for="Email">Email Address of Consultant:</label>
@@ -249,7 +277,7 @@
       <li class="list-group-item">
         <button type="button" id="DisapproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-remove disapprovebutton" data-original-title="Disapprove this request"></span></button>
         <button type="button" data-toggle="modal" data-target="#ApproveAirTicketRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok approvebutton" data-original-title="Approve this request"></span></button>
-        <span><%= request.consultant_name %> has requested air ticket booking</span>
+        <span><%= request.consultant_first_name %> <%= request.consultant_last_name %> has requested air ticket booking</span>
       </li>
       <% end %>
     </ul>
@@ -270,7 +298,7 @@
       <li class="list-group-item">
         <span class="badge alert-info">Approved At: <%= request.approved_at %></a></span>
         <span class="badge alert-success">Approved By: <%= request.approved_by %></a></span>
-        <span><%= request.consultant_name %> has requested air ticket booking</span>
+        <span><%= request.consultant_first_name %> <%= request.consultant_last_name %> has requested air ticket booking</span>
       </li>
       <% end %>
     </ul>
@@ -291,7 +319,7 @@
       <li class="list-group-item">
         <span class="badge alert-info">DisApproved At: <%= request.disapproved_at %></a></span>
         <span class="badge alert-success">DisApproved By: <%= request.disapproved_by %></a></span>
-        <span><%= request.consultant_name %> has requested air ticket booking</span>
+        <span><%= request.consultant_first_name %> <%= request.consultant_last_name %> has requested air ticket booking</span>
       </li>
       <% end %>
     </ul>
@@ -358,7 +386,10 @@ $(document).ready(function(){
     _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
     _this.attr('disabled', true); // no double submit
 
-    var consultantName = $("#ConsultantName-<%= request.id %>").val();
+    var consultantFName = $("#FirstName-<%= request.id %>").val();
+    var consultantLName = $("#LastName-<%= request.id %>").val();
+    var consultantDOB = $("DOB-<%= request.id %>").val();
+    var consulantPhone = $("PhoneNum-<%= request.id %>").val();
     var email = $("#Email-<%= request.id %>").val();
     var tdate = $("#TravelDate-<%= request.id %>").val();
     var fromiata = $("#From-<%= request.id %>").val();
@@ -374,7 +405,7 @@ $(document).ready(function(){
       type: "POST",
       dataType: "json",
       url: "/airtickets/approve/<%= request.id %>",
-      data: {'name': consultantName, 'email': email, 'tdate': tdate, 'fiata': fromiata, 'tiata': toiata, 'flexibility': flexibility, 'amount': amount, 'purpose': purpose },
+      data: {'fname': consultantFName, 'lname': consultantLName, 'dob': consultantDOB, 'phone': consulantPhone, 'email': email, 'tdate': tdate, 'fiata': fromiata, 'tiata': toiata, 'flexibility': flexibility, 'amount': amount, 'purpose': purpose },
       success: function(data) {
         if(!data.success) {
           console.log("Error: " + data.msg);

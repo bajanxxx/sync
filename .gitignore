@@ -3,6 +3,7 @@
 random.rb
 random.js
 tmp/*
+data/*
 
 # sbt specific
 dist/*
