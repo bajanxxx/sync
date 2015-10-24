@@ -84,8 +84,16 @@ class ProcessBase(baseUrl: String,
           log.info("No jobs found in this parent url [" + baseUrl + "?text=" + searchTerm + "&age="
             + age.toString + "&page=" + pageNum.toString + "&sort=" + sort.toString + "&sd=d]")
       }
-    case Messages.JobUrlProcessed =>
-      context.actorSelection(s"/user/${searchTerm}jobs") ! Messages.Counter
+    case Messages.JobUrlDuplicate =>
+      context.actorSelection(s"/user/${searchTerm}jobs") ! Messages.DuplicateCounter
+    case Messages.JobUrlRepeated =>
+      context.actorSelection(s"/user/${searchTerm}jobs") ! Messages.RepeatedCounter
+    case Messages.JobUrlInserted =>
+      context.actorSelection(s"/user/${searchTerm}jobs") ! Messages.InsertedCounter
+    case Messages.JobUrlSkipped =>
+      context.actorSelection(s"/user/${searchTerm}jobs") ! Messages.SkippedCounter
+    case Messages.JobUrlFailed =>
+      context.actorSelection(s"/user/${searchTerm}jobs") ! Messages.FailedCounter
     case x =>
       log.warning("Message not recognized: [{}]", x)
   }

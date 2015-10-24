@@ -1,10 +1,13 @@
 package com.cloudwick.sync.jobs.fetcher
 
+import java.util.Date
+
 import akka.actor.{Props, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.mongodb.MongoTimeoutException
 import com.mongodb.casbah.Imports._
+import com.mongodb.casbah.commons.conversions.scala.RegisterJodaTimeConversionHelpers
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -50,6 +53,7 @@ object Start extends App {
 
   def processDice(fType: String, sTerm: String) = {
     checkConnection
+
     val actor = system.actorOf(
       Props(classOf[Master],
         conn(config.getString("sync.mongo.db")),
@@ -63,8 +67,24 @@ object Start extends App {
 
     val future = actor ? Messages.Start
 
+    val fetcherCollection = conn(config.getString("sync.mongo.db"))("fetchers")
+
     future.map { result =>
-      logger.info("Total number of jobs processed: " + result)
+      result match {
+        case (jobsProcessed: Int, jobsFiltered: Int, jobsInserted: Int) =>
+          logger.info("Total number of jobs processed: " + jobsProcessed)
+          fetcherCollection.insert(
+            MongoDBObject(
+              "job_status" -> "completed",
+              "progress" -> 100,
+              "jobs_filtered" -> jobsFiltered,
+              "jobs_inserted" -> jobsInserted,
+              "message" -> "completed by fetcher batch",
+              "jobs_processed" -> jobsProcessed,
+              "init_time" -> new Date()
+            )
+          )
+      }
       system.shutdown()
     }
   }

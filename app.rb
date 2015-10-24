@@ -355,53 +355,22 @@ class Sync < Sinatra::Base
                  end
     if @username
       if @admin_user
-        # TODO don't render anything for admin, we are not using this feature actively
-        # jobs_to_render = []
-        # jobs_to_render_interviews = []
-        # follow_up_jobs = Application.where(
-        #                    :status.in => %w(FOLLOW_UP APPLIED)
-        #                  ).select { |a| a.hide == false }
-        # follow_up_jobs && follow_up_jobs.each do |application|
-        #   jobs_to_render << Job.where(url: application.job_url, hide: false)
-        # end
-        # interviews_scheduled = Application.where(:status.in => ['INTERVIEW_SCHEDULED']).select {|a| a.hide == false }
-        # interviews_scheduled && interviews_scheduled.each do |application|
-        #   jobs_to_render_interviews << Job.where(url: application.job_url, hide: false)
-        # end
-        # # remove empty records
-        # jobs_to_render.map!{ |job| job.entries }.reject(&:empty?)
-        # jobs_to_render_interviews.map!{ |job| job.entries }.reject(&:empty?)
-        #
-        # # jobs_to_render
-        # jobs = jobs_to_render.flatten.uniq {|e| e[:url] }
-        # jobs_interview = jobs_to_render_interviews.flatten.uniq {|e| e[:url]}
-        #
-        # # list of users tracking a job
-        # tracking_applied = {}
-        # tracking_interview = {}
-        # jobs.each do |job|
-        #   job_url = Job.find(job.id).url
-        #   Application.where(job_url: job_url).entries.each do |app|
-        #     consultant = Consultant.find_by(email: app.consultant_id)
-        #     (tracking_applied[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
-        #   end
-        # end
-        # jobs_interview.each do |job|
-        #   job_url = Job.find(job.id).url
-        #   Application.where(job_url: job_url).select{|a| a.hide == true}.entries.each do |app|
-        #     consultant = Consultant.find_by(email: app.consultant_id)
-        #     (tracking_interview[job_url] ||= []) << consultant.first_name[0..0].capitalize + consultant.last_name[0..0].capitalize
-        #   end
-        # end
-
-        erb :index
-            # :locals => {
-            #   # Only send the unique jobs by url
-            #   :jobs => jobs,
-            #   :jobs_interview => jobs_interview,
-            #   :tracking_applied => tracking_applied,
-            #   :tracking_interview => tracking_interview
-            # }
+        # get fetcher stats
+        fetcher_stats = Fetcher.where(:init_time.gt => (Date.today-30))
+        fetcher_data = []
+        fetcher_stats.map do |fetcher|
+          fetcher_data << [ fetcher.init_time.to_datetime.to_i * 1000, fetcher.jobs_processed ]
+        end
+        # get requests counts in last 30 days
+        certification_requests = CertificationRequest.where(:created_at.gt => (Date.today - 30))
+        document_requests = DocumentRequest.where(:created_at.gt => (Date.today - 30))
+        air_ticket_requests = AirTicketRequest.where(:created_at.gt => (Date.today - 30))
+        erb :index, locals: {
+              fetcher_data: fetcher_data.sort_by{|k| k[0]},
+              certification_requests: certification_requests,
+              document_requests: document_requests,
+              air_ticket_requests: air_ticket_requests
+            }
       elsif @username == consultant
         redirect "/consultant/#{@username}"
       else
@@ -435,27 +404,6 @@ Admin</a> </p>
     end
   end
 
-  # post '/login' do
-  #   username = params[:username]
-  #   password = params[:password]
-  #   # puts "user submitted '#{username}' with pass: '#{password}'"
-  #   user_record = @users.validate_login(username, password)
-  #
-  #   if user_record
-  #     # puts "Starting a session for user: #{user_record.email}"
-  #     session_id = @sessions.start_session(user_record.email)
-  #     redirect '/internal_error' unless session_id
-  #     response.set_cookie(
-  #         'user_session',
-  #         :value => session_id,
-  #         :path => '/'
-  #       )
-  #     redirect '/'
-  #   else
-  #     erb :login, :locals => {:login_error => 'Invalid Login'}
-  #   end
-  # end
-
   get '/internal_error' do
     "Error: System has encounterd a DB error"
   end
@@ -471,39 +419,6 @@ Admin</a> </p>
     flash[:info] = "You have sucessfully logged out. Thanks for visiting!"
     redirect '/'
   end
-
-  # get '/signup' do
-  #   erb :signup
-  # end
-  #
-  # post '/signup' do
-  #   username = params[:username]
-  #   password = params[:password]
-  #   verify = params[:verify]
-  #   @errors = {
-  #     'username' => username,
-  #     'username_error' => '',
-  #     'password_error' => '',
-  #     'verify_error' => ''
-  #   }
-  #   if validate_signup(username, password, verify, @errors)
-  #     unless @users.add_user(username, password)
-  #       @errors['username_error'] = 'Username already exists, please choose another'
-  #       return erb :signup # with errors
-  #     end
-  #     session_id = @sessions.start_session(username)
-  #     response.set_cookie(
-  #         'user_session',
-  #         :value => session_id,
-  #         # :expires => @expiration_date,
-  #         :path => '/'
-  #       )
-  #     redirect '/'
-  #   else
-  #     # puts "user validation failed"
-  #     erb :signup # with errors
-  #   end
-  # end
 
   #
   # => CONSULTANTS
