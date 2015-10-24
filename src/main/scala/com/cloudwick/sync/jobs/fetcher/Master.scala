@@ -31,6 +31,8 @@ class Master(db: MongoDB,
   private var jobsProcessed = 0
   private val jobsToProcessRequested = depth * 50
   private var jobsToProcessRequired = 0
+  private var jobsFiltered = 0
+  private var jobsInserted = 0
   private var initializer: Option[ActorRef] = None
 
   implicit val timeout = Timeout(5 minutes)
@@ -82,12 +84,44 @@ class Master(db: MongoDB,
           processor ? Messages.ProcessPageRequest
         }
       }
-    case Messages.Counter =>
+    case Messages.DuplicateCounter =>
+      jobsProcessed += 1
+      jobsFiltered += 1
+      log.info("Total jobs: [{}]. Jobs to process: [{}] | Processed jobs: [{}]",
+        totalJobs, jobsToProcessRequired, jobsProcessed)
+      if (jobsToProcessRequired == jobsProcessed) {
+        initializer.foreach(_ ! (jobsProcessed, jobsFiltered, jobsInserted))
+      }
+    case Messages.RepeatedCounter =>
+      jobsProcessed += 1
+      jobsFiltered += 1
+      log.info("Total jobs: [{}]. Jobs to process: [{}] | Processed jobs: [{}]",
+        totalJobs, jobsToProcessRequired, jobsProcessed)
+      if (jobsToProcessRequired == jobsProcessed) {
+        initializer.foreach(_ ! (jobsProcessed, jobsFiltered, jobsInserted))
+      }
+    case Messages.InsertedCounter =>
+      jobsProcessed += 1
+      jobsFiltered += 1
+      jobsInserted += 1
+      log.info("Total jobs: [{}]. Jobs to process: [{}] | Processed jobs: [{}]",
+        totalJobs, jobsToProcessRequired, jobsProcessed)
+      if (jobsToProcessRequired == jobsProcessed) {
+        initializer.foreach(_ ! (jobsProcessed, jobsFiltered, jobsInserted))
+      }
+    case Messages.SkippedCounter =>
       jobsProcessed += 1
       log.info("Total jobs: [{}]. Jobs to process: [{}] | Processed jobs: [{}]",
         totalJobs, jobsToProcessRequired, jobsProcessed)
       if (jobsToProcessRequired == jobsProcessed) {
-        initializer.foreach(_ ! jobsProcessed)
+        initializer.foreach(_ ! (jobsProcessed, jobsFiltered, jobsInserted))
+      }
+    case Messages.FailedCounter =>
+      jobsProcessed += 1
+      log.info("Total jobs: [{}]. Jobs to process: [{}] | Processed jobs: [{}]",
+        totalJobs, jobsToProcessRequired, jobsProcessed)
+      if (jobsToProcessRequired == jobsProcessed) {
+        initializer.foreach(_ ! (jobsProcessed, jobsFiltered, jobsInserted))
       }
     case Messages.Stop =>
       log.warning("Exiting!")

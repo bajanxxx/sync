@@ -69,14 +69,6 @@ class ProcessJobPosting(url: String,
     Stream.continually(in.readLine()).takeWhile(_ != null).mkString("\n")
   }
 
-//  def processRequest(url: String): HttpResponse[String] = {
-//    Http(url)
-//      .option(_.setInstanceFollowRedirects(true))
-//      .option(HttpOptions.connTimeout(10000))
-//      .option(HttpOptions.readTimeout(50000))
-//      .asString
-//  }
-
   def keepPosting(content: String, searchTerm: String): Boolean = {
     content contains searchTerm
   }
@@ -133,6 +125,7 @@ class ProcessJobPosting(url: String,
                 // check if the url exists with same date posted then ignore it
                 case Some(o) =>
                   log.info("Document with url: [{}] and date: [{}] already exists", url, date)
+                  sender() ! Messages.JobUrlDuplicate
                 case None =>
                   log.info("Repeated job posting fond: [{}]", url)
                   val existingDate = obj("date_posted")
@@ -141,6 +134,7 @@ class ProcessJobPosting(url: String,
                     "$addToSet" -> MongoDBObject("pdates" -> existingDate)
                   )
                   collection.update(sObj, update)
+                  sender() ! Messages.JobUrlRepeated
               }
             case None =>
               // construct a mongo object to insert
@@ -163,19 +157,18 @@ class ProcessJobPosting(url: String,
               )
               log.info("Inserting: [{}]", iObj.toString)
               collection.insert(iObj)
+              // Update the sender and notify that job url processing completed
+              sender() ! Messages.JobUrlInserted
           }
-
-          // Update the sender and notify that job url processing completed
-          sender() ! Messages.JobUrlProcessed
         } else {
           log.debug("Skipping [{}] as grep_term:'{}' not found", iUrl, grepWord)
-          sender() ! Messages.JobUrlProcessed
+          sender() ! Messages.JobUrlSkipped
         }
       } catch {
         case ex: Exception =>
           // exception as the first arg will print the stack trace
           log.error(ex, "Failed parsing url: [{}] because of [{}]", iUrl, ex.getMessage)
-          sender() ! Messages.JobUrlProcessed
+          sender() ! Messages.JobUrlFailed
       }
     case x =>
       log.warning("Message not recognized: [{}]. Path: [{}]", x, sender().path)
