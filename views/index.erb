@@ -24,6 +24,7 @@
 
 <script type="text/javascript">
 $(document).ready(function() {
+  <% if @username %>
   // Load the fonts
   Highcharts.createElement('link', {
     href: '//fonts.googleapis.com/css?family=Unica+One',
@@ -324,5 +325,6 @@ $(document).ready(function() {
       }]     
     });
   });
+  <% end %>
 });
 </script>
