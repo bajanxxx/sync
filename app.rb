@@ -29,86 +29,16 @@ require 'fileutils'
 require 'active_support/all'
 
 # Load the mongo models
-require_relative 'models/air_ticket_request'
-require_relative 'models/application'
-require_relative 'models/attachment'
-require_relative 'models/attachments'
-require_relative 'models/campaign'
-require_relative 'models/consultant'
-require_relative 'models/consultants'
-require_relative 'models/detail'
-require_relative 'models/project'
-require_relative 'models/usecase'
-require_relative 'models/requirement'
-require_relative 'models/cluster_configuration'
-require_relative 'models/illustration'
-require_relative 'models/project_document'
-require_relative 'models/email'
-require_relative 'models/fetcher'
-require_relative 'models/job'
-require_relative 'models/resume'
-require_relative 'models/resumes'
-require_relative 'models/session'
-require_relative 'models/sessions'
-require_relative 'models/template'
-require_relative 'models/user'
-require_relative 'models/users'
-require_relative 'models/vendor'
-require_relative 'models/customer'
-require_relative 'models/tracking'
-require_relative 'models/document_template'
-require_relative 'models/document_signature'
-require_relative 'models/document_layout'
-require_relative 'models/document_request'
-require_relative 'models/cloud_image'
-require_relative 'models/cloud_request'
-require_relative 'models/cloud_instance'
-require_relative 'models/cloud_flavor'
-require_relative 'models/training_topic'
-require_relative 'models/training_sub_topic'
-require_relative 'models/content_slide'
-require_relative 'models/content_thumbnail'
-require_relative 'models/pdf_file'
-require_relative 'models/timesheet'
-require_relative 'models/timesheet_detail'
-require_relative 'models/time_project'
-require_relative 'models/time_vendor'
-require_relative 'models/time_client'
-require_relative 'models/time_contact'
-require_relative 'models/time_project_assignment'
-require_relative 'models/time_project_task'
-require_relative 'models/timesheet_attachment'
-require_relative 'models/certification_request'
+Dir[File.dirname(__FILE__) + '/models/*.rb'].each {|file| require file }
 
 # Load core stuff
-require_relative 'lib/process_dice'
-require_relative 'lib/settings'
-require_relative 'lib/vendor_campaign'
-require_relative 'lib/customer_campaign'
+Dir[File.dirname(__FILE__) + '/lib/*.rb'].each {|file| require file }
 
 # Delyed job handlers
-require_relative 'lib/dj/simple_task'
-require_relative 'lib/dj/custom_task'
-require_relative 'lib/dj/campaign_mail'
-require_relative 'lib/dj/email_job_posting'
-require_relative 'lib/dj/email_job_posting_remainder'
-require_relative 'lib/dj/generate_document'
-require_relative 'lib/dj/email_request_status'
-require_relative 'lib/dj/email_document_request'
-require_relative 'lib/dj/email_airticket_request'
-require_relative 'lib/dj/email_certification_request'
-require_relative 'lib/dj/email_certification_notification_priorday'
-require_relative 'lib/dj/email_certification_notification_postday'
-require_relative 'lib/dj/email_project_notification'
-require_relative 'lib/dj/create_cloud_instances'
-require_relative 'lib/dj/delete_cloud_instances'
-require_relative 'lib/dj/convert_to_pdf'
+Dir[File.dirname(__FILE__) + '/lib/dj/*.rb'].each {|file| require file }
 
 # Prawn PDF Generators
-require_relative 'lib/prawn/leave_letter'
-require_relative 'lib/prawn/offer_letter'
-require_relative 'lib/prawn/employment_letter'
-require_relative 'lib/prawn/project_document'
+Dir[File.dirname(__FILE__) + '/lib/prawn/*.rb'].each {|file| require file }
 
 #
 # Monkey Patch Sinatra flash to bootstrap alert
@@ -284,6 +214,9 @@ class Sync < Sinatra::Base
     @air_requests = AirTicketRequest.where(status: 'pending').count
     @certification_requests = CertificationRequest.where(status: 'pending').count
     @requests_count = @doc_requests + @air_requests + @certification_requests
+
+    # Common Variables
+    @email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
   end
 
   # after do
@@ -1533,7 +1466,6 @@ Admin</a> </p>
 
   # Parse csv, tsv file and upload them to mongo
   post '/vendors/bulkadd' do
-    email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
     parsed_records = 0
     failed_records = 0
     new_records_inserted = 0
@@ -1541,7 +1473,7 @@ Admin</a> </p>
     csv = CSV.parse(File.read(params[:file][:tempfile]), headers: true)
     csv.each do |vendor|
       if vendor['email']
-        if vendor.fetch('email') =~ email_regex
+        if vendor.fetch('email') =~ @email_regex
           parsed_records += 1
           _vendor = Vendor.find_by(email: vendor.fetch('email'))
           if _vendor
@@ -1664,7 +1596,6 @@ Admin</a> </p>
 
   # Parse csv, tsv file and upload them to mongo
   post '/customers/bulkadd' do
-    email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
     parsed_records = 0
     failed_records = 0
     new_records_inserted = 0
@@ -1676,7 +1607,7 @@ Admin</a> </p>
           end
     csv.each do |customer|
       if customer['Email']
-        if customer.fetch('Email') =~ email_regex
+        if customer.fetch('Email') =~ @email_regex
           parsed_records += 1
           _customer = Customer.find_by(email: customer.fetch('Email'))
           if _customer
@@ -2225,7 +2156,6 @@ Admin</a> </p>
   end
 
   post '/documents/send/:type' do |document_type|
-    email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
     cname = params[:name]
     email = params[:email]
     company = params[:company]
@@ -2343,7 +2273,7 @@ Admin</a> </p>
 
       end
 
-      if email !~ email_regex
+      if email !~ @email_regex
         success = false
         message = "email not formatted properly"
       else
@@ -2379,7 +2309,6 @@ Admin</a> </p>
   # send the documents to admin instead
   # TODO replace this with download/preview of documents
   post '/documents/send/:type/admin' do |document_type|
-    email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
     cname = params[:name]
     email = params[:email]
     company = params[:company]
@@ -2497,7 +2426,7 @@ Admin</a> </p>
 
       end
 
-      if email !~ email_regex
+      if email !~ @email_regex
         success = false
         message = "email not formatted properly"
       else
@@ -3014,11 +2943,6 @@ Admin</a> </p>
       success = false
       message = "Amount is not properly formatted"
     end
-
-    # unless time =~ /^\d{2}:\d{2}$/
-    #   success = false
-    #   message = "Time is not properly formatted (ex: 09:00)"
-    # end
 
     if success
       cr = CertificationRequest.find(rid)
@@ -3846,40 +3770,130 @@ Admin</a> </p>
 
   get '/training' do
     erb :training, locals: {
-      training_topics: TrainingTopic.all
+      training_tracks: TrainingTrack.all.entries
     }
   end
 
-  post '/training/topic/create' do
-    topic_name = params[:tname]
-    email = params[:email]
+  post '/training/track/create' do
+    track_name = params[:tname]
+    short_code = params[:tcode]
 
     success    = true
-    message    = "Successfully added new training topic #{topic_name}"
+    message    = "Successfully added new training track #{short_code}"
 
-    TrainingTopic.find_or_create_by(
-      name: topic_name.downcase.tr(' ', '_'), # parse the topic to more referrable format
-      content_managed_by: email
-    )
+    if TrainingTrack.find_by(code: short_code)
+      success = false
+      message = "Training Track with code #{short_code} already exists, please choose another code"
+    end
 
-    flash[:info] = message
+    if success
+      TrainingTrack.create(
+        code: short_code,
+        name: track_name
+      )
+
+      flash[:info] = message
+    end
+
     { success: success, msg: message }.to_json
   end
 
-  # TODO deprecate this
-  post '/training/topic/delete/:id' do |id|
-    topic = TrainingTopic.find(id)
+
+  get '/training/track/:tid' do |tid|
+    erb :training_track, locals: {
+      track: TrainingTrack.find(tid)
+    }
+  end
+
+  post '/training/track/:trackid/topic/create' do |trackid|
+    topic_name = params[:tname]
+    topic_code = params[:tcode]
+    email = params[:email]
+
+    success = true
+
+    %w(tname tcode email).each do |param|
+      if params[param.to_sym].empty?
+        success = false
+        message = "Field '#{param}' cannot be empty"
+      end
+      return { success: success, msg: message }.to_json unless success
+    end
+
+    if email !~ @email_regex
+      success = false
+      message = "email not formatted properly"
+    end
+
+    if TrainingTrack.find(trackid).training_topics.find_by(code: topic_code)
+      success = false
+      message = "Training Topic with code #{topic_code} already exists, please choose another code"
+    end
+
+    if success
+      track = TrainingTrack.find(trackid)
+      track.training_topics.create(
+        code: topic_code,
+        name: topic_name,
+        contact: email
+      )
+
+      message = "Successfully added new training topic #{topic_name} to track #{track.code}"
+      flash[:info] = message
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  # TODO remove this - this is too dangerous
+  post '/training/track/:trackid/topic/delete/:topicid' do |trackid, topicid|
+    topic = TrainingTopic.find(topicid)
     topic.training_sub_topics.delete_all
     topic.delete
   end
 
-  get '/training/topic/:id' do |id|
+  get '/training/track/:trackid/topic/:topicid' do |trackid, topicid|
+    track = TrainingTrack.find(trackid)
+    topic = TrainingTopic.find(topicid)
+
+    sub_topics = []
+
+    topic.training_sub_topics.order_by(:name.asc).each do |sub_topic|
+      slides_count =  if sub_topic.content_thumbnails
+                        sub_topic.content_thumbnails.count
+                      else
+                        0
+                      end
+      thumbnail =   if sub_topic.content_thumbnails.find_by(name: "first")
+                      Base64.encode64(download_file(sub_topic.content_thumbnails.find_by(name: "first").file_id).read)
+                    else
+                      nil
+                    end
+      uploaded =  if sub_topic.pdf_file
+                    "#{time_ago_in_words(Time.now, sub_topic.pdf_file.uploaded_date)} ago"
+                  else
+                    'N/A'
+                  end
+      views = sub_topic.views
+      sub_topics << {
+        id: sub_topic.id,
+        title: sub_topic.name,
+        uploaded: uploaded,
+        slides_count: slides_count,
+        thumbnail: thumbnail,
+        views: views,
+        presentation_status: sub_topic.state
+      }
+    end
+
     erb :training_topic, locals: {
-      topic: TrainingTopic.find(id)
+      track: track,
+      topic: topic,
+      sub_topics: sub_topics
     }
   end
 
-  post '/training/topic/:tid/subtopic/create' do |tid|
+  post '/training/track/:trackid/topic/:topicid/subtopic/create' do |trackid, topicid|
     sub_topic_name = params[:tname]
     et_topic = params[:et]
 
@@ -3887,8 +3901,8 @@ Admin</a> </p>
       success = false
       message = "It's not recommended to put sub topics greater than 3 hours"
     else
-      TrainingTopic.find(tid).training_sub_topics.find_or_create_by(
-        name: sub_topic_name.downcase.tr(' ', '_'), # parse the topic to more referrable format
+      TrainingTopic.find(topicid).training_sub_topics.find_or_create_by(
+        name: sub_topic_name,
         et: et_topic.to_i
       )
       success    = true
@@ -3900,8 +3914,8 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
-  post '/training/topic/:tid/subtopic/delete/:stid' do |tid, stid|
-    sub_topic = TrainingSubTopic.find(stid)
+  post '/training/track/:trackid/topic/:topicid/subtopic/delete/:subtopicid' do |trackid, topicid, subtopicid|
+    sub_topic = TrainingSubTopic.find(subtopicid)
     if sub_topic
       content_slide_files = []
       content_thumbnail_files = []
@@ -3933,22 +3947,25 @@ Admin</a> </p>
     end
   end
 
-  get '/training/topic/:tid/subtopic/:stid' do |tid, stid|
-    topic = TrainingTopic.find(tid)
+  get '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid' do |trackid, topicid, subtopicid|
+    track = TrainingTrack.find(trackid)
+    topic = TrainingTopic.find(topicid)
+
     erb :training_sub_topic, locals: {
+      track: track,
       topic: topic,
-      sub_topic: topic.training_sub_topics.find(stid)
+      sub_topic: topic.training_sub_topics.find(subtopicid)
     }
   end
 
-  post '/training/topic/:tid/subtopic/:stid/upload' do |tid, stid|
+  post '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/upload' do |trackid, topicid, subtopicid|
     file = params[:pdf][:tempfile]
     file_name = params[:pdf][:filename]
     file_type = params[:pdf][:type]
     file_id = upload_file(file, file_name)
 
-    topic = TrainingTopic.find(tid)
-    sub_topic = topic.training_sub_topics.find(stid)
+    topic = TrainingTopic.find(topicid)
+    sub_topic = topic.training_sub_topics.find(subtopicid)
 
     if file_id
       sub_topic.pdf_file = PdfFile.create(
@@ -3973,10 +3990,20 @@ Admin</a> </p>
     redirect back
   end
 
-  get '/training/topic/:tid/subtopic/:stid/ss' do |tid, stid|
-    topic = TrainingTopic.find(tid)
-    sub_topic = topic.training_sub_topics.find(stid)
+  get '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/ss' do |trackid, topicid, subtopicid|
+    topic = TrainingTopic.find(topicid)
+    sub_topic = topic.training_sub_topics.find(subtopicid)
     total_slides = sub_topic.content_slides.count
+
+    # increment the views on this presentation by 1
+    sub_topic.inc(:views, 1)
+    # store detail visit for this presentation
+    TrainingPresetationView.create(
+      track: trackid,
+      topic: topicid,
+      subtopic: subtopicid,
+      consultant: @username
+    )
 
     thumbnails = []
 
@@ -4000,14 +4027,15 @@ Admin</a> </p>
       locals: {
         slides_count: total_slides,
         thumbnails: thumbnails,
-        tid: tid,
-        stid: stid
+        trackid: trackid,
+        tid: topicid,
+        stid: subtopicid
       }
   end
 
-  get '/training/topic/:tid/subtopic/:stid/ss/:slideid' do |tid, stid, slideid|
-    topic = TrainingTopic.find(tid)
-    sub_topic = topic.training_sub_topics.find(stid)
+  get '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/ss/:slideid' do |trackid, topicid, subtopicid, slideid|
+    topic = TrainingTopic.find(topicid)
+    sub_topic = topic.training_sub_topics.find(subtopicid)
     total_slides = sub_topic.content_slides.count
 
     if slideid == "0"
@@ -4064,6 +4092,35 @@ Admin</a> </p>
     (d.beginning_of_week...d.beginning_of_week+7).map{|a|
       yield a
     }
+  end
+
+  # time_ago_in_words(Time.now, 1.day.ago) # => 1 day
+  # time_ago_in_words(Time.now, 1.hour.ago) # => 1 hour
+  def time_ago_in_words(t1, t2)
+    s = t1.to_i - t2.to_i # distance between t1 and t2 in seconds
+
+    resolution = if s > 29030400 # seconds in a year
+      [(s/29030400), 'years'] 
+    elsif s > 2419200
+      [(s/2419200), 'months']
+    elsif s > 604800
+      [(s/604800), 'weeks']
+    elsif s > 86400
+      [(s/86400), 'days']
+    elsif s > 3600 # seconds in an hour
+      [(s/3600), 'hours'] 
+    elsif s > 60
+      [(s/60), 'minutes']
+    else
+      [s, 'seconds']
+    end
+
+    # singular v. plural resolution
+    if resolution[0] == 1
+      resolution.join(' ')[0...-1]
+    else
+      resolution.join(' ')
+    end
   end
 
   # Creates an openstack connection

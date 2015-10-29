@@ -22,25 +22,24 @@
               <!-- content from slide.erb -->
             </div>
           </div>
-
-          <div id="footer navbar-fixed-bottom">
-            <div class="container">
-              <p class="text-muted text-center">
-                <b>Slides:</b> <span id="slidecounter"></span>/<%= slides_count - 1 %> | <b>Legend</b>: &#8594; (next slide), &#8592; (prev slide), &#8593; (first slide), &#8595; (last slide), ESC (go back to topics), &#47; Slider
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   </div>
+  <div class="footer navbar-fixed-bottom">
+    <div class="container">
+      <p class="text-muted text-center">
+        <b>Slides:</b> <span id="slidecounter"></span>/<%= slides_count - 1 %> | <b>Legend</b>: &#8594; (next slide), &#8592; (prev slide), &#8593; (first slide), &#8595; (last slide), ESC (go back to topics), &#47; Slider
+      </p>
+    </div>
+  </div>  
 </div>
 
 <script type='text/javascript'>
   <% thumbnails.each_with_index do |slide, index| %>
   $(function(){
     $(".slide-<%= index %>").click(function(){
-      $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/<%= index %>");
+      $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/<%= index %>");
       $("#slidecounter").html(<%= index %>);
     });
   });
@@ -56,7 +55,7 @@
   console.log(document.getElementById('page-content-wrapper').clientHeight + "x" + document.getElementById('page-content-wrapper').clientWidth);
 
   // load the first slide of the slide deck
-  $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/0");
+  $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/0");
   $("#slidecounter").html("0");
 
   document.onkeydown = function() {
@@ -65,7 +64,7 @@
         // left key
         cPos -= 1
         if (cPos >= 0) {
-          $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
+          $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
           $("#slidecounter").html(cPos);
           // window.location = url.substring(0,url.lastIndexOf("/")) + "/" + cPos
         } else {
@@ -76,14 +75,14 @@
       case 38:
         // up key
         cPos = 0 // reset the current position
-        $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/0");
+        $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/0");
         $("#slidecounter").html(cPos);
         break;
       case 39:
         // right key
         cPos += 1
         if (cPos < slidesCount) {
-          $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
+          $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
           $("#slidecounter").html(cPos);
         } else {
           cPos = slidesCount - 1
@@ -93,7 +92,7 @@
       case 40:
         // down key pressed
         cPos = slidesCount - 1
-        $("#slidecontent").load("/training/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
+        $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
         $("#slidecounter").html(cPos);
         break;
       case 191:
@@ -102,7 +101,7 @@
         break;
       case 27:
         // escape key
-        window.location = url.substring(0, url.lastIndexOf("/"))
+        window.location = url.substring(0, url.lastIndexOf("subtopic")-1)
         break;
     }
   }
