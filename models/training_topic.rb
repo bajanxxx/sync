@@ -3,8 +3,10 @@ class TrainingTopic
 
   # name of the topic (ex: Hadoop, Spark, Cassandra)
   field :name, type: String
+  field :code, type: String
   # who manages the content (email address)
-  field :content_managed_by, type: String
+  field :contact, type: String
 
+  belongs_to :training_track
   has_many :training_sub_topics
 end

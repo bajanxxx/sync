@@ -1,31 +1,31 @@
 <!-- Modal Definitions -->
 <!-- Create a topic -->
-<div class="modal fade" id="CreateTopic" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="CreateTrack" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title" id="myModalLabel">Create a new Training Topic</h4>
+        <h4 class="modal-title" id="myModalLabel">Create a new Training Track</h4>
       </div>
       <div class="modal-body">
-        <form role="form" id="LLCreateForm">
+        <form role="form">
           <div class="form-group">
-            <label for="TopicName">Topic Name:</label>
-              <input type="text" class="form-control" id="TopicName" name="TopicName" placeholder="Training topic to create (ex: hadoop, spark, ...)" value="" required="required" />
+            <label for="TrackName">Track Name:</label>
+              <input type="text" class="form-control" id="TrackName" name="TrackName" placeholder="Training track to create (ex: devops, data engineer, etc.)" value="" required="required" />
               <span class="help-block"></span>
           </div>
           <div class="form-group">
-            <label for="Email">Email Address of content developer:</label>
-            <input type="email" class="form-control" id="Email" name="Email" placeholder="email address of the content developer" value="" required="required" />
-            <span class="help-block"></span>
+            <label for="TrackCode">Track Short Code:</label>
+              <input type="text" class="form-control" id="TrackCode" name="TrackCode" placeholder="Unique code name for track name (ex: DOPS, DE, etc.)" value="" required="required" />
+              <span class="help-block"></span>
           </div>
         </form>
-        <p id="CreateTopicFormLabel" class="text-center"></p>
+        <p id="CreateTrackFormLabel" class="text-center"></p>
         <hr />
         <div class="row-fluid">
           <div class="span3"></div>
           <div class="span6 text-center">
-            <button id="SubmitCreateTopicBtn" name="SubmitBtn" class="btn btn-large btn-primary">Create Topic</button>
+            <button id="SubmitCreateTrackBtn" name="SubmitBtn" class="btn btn-large btn-primary">Create Training Track</button>
           </div>
           <div class="span3"></div>
         </div>
@@ -37,7 +37,7 @@
 <!-- Actual Container -->
 <div class="container theme-showcase" role="main">
   <div class="page-header">
-    <h2>Training Content Management
+    <h2>Training Portal
       <% if @admin_user %>
         <div class="btn-group pull-right">
           <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
@@ -45,13 +45,8 @@
           </button>
           <ul class="dropdown-menu" role="menu">
             <li>
-              <a id="CreateTopicBtn" data-toggle="modal" href="#CreateTopic">
-                Create New Training Topic
-              </a>
-            </li>
-            <li>
-              <a id="ManageTopics">
-                Manage Topics
+              <a id="CreateTrackBtn" data-toggle="modal" href="#CreateTrack">
+                Create New Training Track
               </a>
             </li>
           </ul>
@@ -60,108 +55,80 @@
     </h2>
   </div>
   <!-- Training Topics -->
-  <h3>Training Topics</h3>
-  <div class="panel panel-info">
-    <div class="panel-heading">
-      <strong>Parent Topics</strong>
-    </div>
-    <% if training_topics.empty? %>
-    <div class="bs-callout bs-callout-info">
-      <p class="lead">No new topics have yet been created. Create a new one using <code>Start Here</code> button.</p>
-    </div>
-    <% else %>
-    <ul class="list-group">
-      <% training_topics.each do |topic| %>
-      <li class="list-group-item">
-        <button type="button" id="DeleteTopic-<%= topic.id %>" class="btn btn-default btn-xs pull-right deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this topic"></span></button>
-        <% if @admin_user %>
-        <span><b><a href="/training/topic/<%= topic.id %>"><%= topic.name.tr('_', ' ').split.map(&:capitalize).join(' ') %></a></b> (it's content managed by <%= topic.content_managed_by %>)</span>
-        <% else %>
-        <span><b><a href="/training/topic/<%= topic.id %>"><%= topic.name.tr('_', ' ').split.map(&:capitalize).join(' ') %></a></b></span>
-        <% end %>
-      </li>
-      <% end %>
-    </ul>
+  <div class="row-fluid">
+    <% training_tracks.each do |track| %>
+      <a style="display:block" href="/training/track/<%= track.id %>">
+      <div class="col-xs-3 spacer">
+        <div id="track-<%= track.id %>" class="well" style="height:250px; background-color: black;">
+          <p align="center" class="font-responsive-large"><font color="white"><%= track.name %></font></p>
+          <br>
+          <p align="center" class="font-responsive-small"><font color="white"><%= track.code %></font></p>
+        </div>
+      </div>
+      </a>
     <% end %>
   </div>
 </div>
 
-<script type="text/javascript">
-$('.deletebutton').tooltip();
+<style type="text/css">
+.spacer {
+  margin-top: 20px;
+}
 
-$('#SubmitCreateTopicBtn').click(function() {
+.font-responsive-large {
+  overflow:auto;
+  font-size: 2.5vw;
+}
+.font-responsive-small {
+  overflow:auto;
+  font-size: 1.5vw;
+}
+</style>
+
+<script src="/js/jquery.fittext.js"></script>
+<script src="/js/randomColor.min.js"></script>
+<script type="text/javascript">
+$('.editbutton').tooltip();
+
+$(".font-responsive-large").fitText(0.7);
+$(".font-responsive-small").fitText();
+
+<% training_tracks.each do |track| %>
+document.querySelector('#track-<%= track.id %>').style.background = randomColor({hue: 'blue'});
+<% end %>
+
+$('#SubmitCreateTrackBtn').click(function() {
   _this = $(this);
   _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
   _this.attr('disabled', true); // no double submit
 
-  var tname = $("#TopicName").val();
-  var email = $("#Email").val();
+  var tname = $("#TrackName").val();
+  var tcode = $("#TrackCode").val();
 
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "/training/topic/create",
-    data: { 'tname': tname, 'email': email },
+    url: "/training/track/create",
+    data: { 'tname': tname, 'tcode': tcode },
     success: function(data) {
       if(!data.success) {
         console.log("Error: " + data.msg);
         _this.attr('disabled', false); // re-enable submit
         _this.html('Re-submit');
-        $('#CreateTopicFormLabel').addClass('text-danger').html(data.msg);
+        $('#CreateTrackFormLabel').addClass('text-danger').html(data.msg);
       } else {
         console.log("Sucess: " + data.msg);
         _this.html("Submitted");
-        $('#CreateTopicFormLabel').addClass('text-info').html(data.msg);
-        $('#CreateTopic').modal('hide');
+        $('#CreateTrackFormLabel').addClass('text-info').html(data.msg);
+        $('#CreateTrack').modal('hide');
         location.reload();
       }
     },
     error: function(data) {
       _this.attr('disabled', false); // re-enable submit
       _this.text('Re-submit');
-      $('#CreateTopicFormLabel').addClass('text-danger').html('Something went wrong adding creating new topic!!!');
+      $('#CreateTrackFormLabel').addClass('text-danger').html('Something went wrong adding creating new topic!!!');
     }
   });
-});
-
-// Disapprove requests
-$(document).ready(function(){
-  var show = false;
-
-  $('.deleteicon').hide();
-
-  $('#ManageTopics').click(function() {
-    _this = $(this);
-
-    if(show) {
-      $('.deleteicon').hide();
-      show = false;
-      _this.html('Manage Topics');
-    } else {
-      $('.deleteicon').show();
-      show = true;
-      _this.html('Hide Delete');
-    }
-  })
-
-  <% training_topics.each do |topic| %>
-  $('#DeleteTopic-<%= topic.id %>').click(function() {
-    console.log("Initializing call");
-    _this = $(this);
-    _this.html('<i class="fa fa-spinner fa-spin"></i>');
-    _this.attr('disabled', true); // no double submit
-
-    $.ajax({
-      type: "POST",
-      url: "/training/topic/delete/<%= topic.id %>",
-      success: function(data){
-        location.reload();
-      },
-      error: function(e){
-        alert("Error occurred!");
-      }
-    });
-  });
-  <% end %>
 });
 </script>

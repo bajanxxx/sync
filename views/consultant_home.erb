@@ -3,59 +3,63 @@
     <p class="lead">Hello <code><%= @userfullname.split.map(&:capitalize).join(' ') %></code>. Welcome to Cloudwick's SYNC Portal.</p>
   </div>
 
-  <div class="bs-callout bs-callout-warning">
-  <p class="lead">
-    This project is in active development so expect to see a lot of changes. Please take a look at the following specific module readiness.
-  </p>
+  <h3>Sync is a centralized portal for making requests for documents, certifications, air tickets, servers; view training content; Fill timesheets; update your projects and related information.</h3>
+
+  <br>
+
+  <h3>Other tools:</h3>
+
+  <div class="col-xs-3 spacer">
+    <div class="well" style="height:250px; background-color: #337ab7;">
+      <p align="center" class="font-responsive-large"><a href="https://cloudwick.atlassian.net/wiki"><font color="white">Cloudwick Athenaeum</font></a></p>
+      <br>
+      <p align="center"><font color="white">Centralized knowledge management. You will be able to sign in using your cloudwick email address.</font></p>
+    </div>
+  </div>
+  <div class="col-xs-3 spacer">
+    <div class="well" style="height:250px; background-color: #5bc0de;">
+      <p align="center" class="font-responsive-large"><a href="https://cloudwick.atlassian.net/wiki/questions"><font color="white">Cloudwick Questions</font></a></p>
+      <br>
+      <p align="center"><font color="white">If you have any technical questions this is the place to ask. You will be able to sign in using your cloudwick email address.</font></p>
+    </div>
+  </div>
+  <div class="col-xs-3 spacer">
+    <div class="well" style="height:250px; background-color: #5cb85c;">
+      <p align="center" class="font-responsive-large"><a href="https://cloudwick.hipchat.com"><font color="white">HipChat</font></a></p>
+      <br>
+      <p align="center"><font color="white">Team colloboration and chat. To sign up to hipchat use this <a href="https://cloudwick.hipchat.com/invite/132959/a3b976f705b0c09ecf462f9ce7d3ba02">link</a> and use your cloudwick email address when signing up.</font></p>
+    </div>
+  </div>
+  <div class="col-xs-3 spacer">
+    <div class="well" style="height:250px; background-color: #f0ad4e;">
+      <p align="center" class="font-responsive-large"><a href="https://github.com/cloudwicklabs"><font color="white">Cloudwick Github</font></a></p>
+      <br>
+      <p align="center"><font color="white">Code sharing.</font></p>
+    </div>
   </div>
 
-  <p><code>Suggestions</code>: We will be happy to hear back from you on how to better build this platform. Contact Sync <a href="mailto:syncadmin@cloudwick.com?subject:Suggestion about Sync from <%= @userfullname %>">admin(s)</a> for more information or to send suggestions.</p>
+  <br>
 
-  <div class="page-header">
-    <h3>Modules ready</h3>
-  </div>
-  <div class="list-group">
-    <a href="/consultant/<%= @username %>/jobs" class="list-group-item">
-      <h4 class="list-group-item-heading">Job portal</h4>
-        <p class="list-group-item-text">Management of job applications forwarded by our admin(s).</p>
-    </a>
-    <a href="/consultant/<%= @username %>/projects" class="list-group-item">
-      <h4 class="list-group-item-heading">Projects Information</h4>
-        <p class="list-group-item-text">Place where you could manage projects you are currently working with and previously worked on. We are looking forward to know about your usecases and better train our resources.</p>
-    </a>
-    <a href="/documents/<%= @username %>" class="list-group-item">
-      <h4 class="list-group-item-heading">Document Requests</h4>
-        <p class="list-group-item-text">You'll be able to request the documents you need by filling out a form and able to track any of your current or previous requests. Once a request is made admin(s) will be able to generate and forward the PDF version of the document.</p>
-    </a>
-    <a href="/airtickets/<%= @username %>" class="list-group-item">
-      <h4 class="list-group-item-heading">AirTicket Requests</h4>
-        <p class="list-group-item-text">You'll be able to request the air ticket bookings you need by filling out a form and able to track any of your current or previous requests. Once the request is made admin(s) will be able book a ticket on your behalf.</p>
-    </a>
-    <a href="/certifications/<%= @username %>" class="list-group-item">
-      <h4 class="list-group-item-heading">Certification Requests</h4>
-        <p class="list-group-item-text">You'll be able to request for a certification that you want to take. Once the request is made admin(s) will be able book a certification slot on your behalf.</p>
-    </a>
-    <a href="/cloudservers/requests/<%= @username %>" class="list-group-item">
-      <h4 class="list-group-item-heading">Cloud Servers</h4>
-        <p class="list-group-item-text">Portal for creating/managing servers (virtual machines) in openstack hosted by cloudwick.</p>
-    </a>
-    <a href="/training" class="list-group-item">
-      <h4 class="list-group-item-heading">Training Content</h4>
-        <p class="list-group-item-text">Portal for viewing/presenting the training content.</p>
-    </a>
-    <a href="#" class="list-group-item">
-      <h4 class="list-group-item-heading">Timesheets</h4>
-        <p class="list-group-item-text">Manage your timesheet's.</p>
-    </a>
-  </div>
-
-  <div class="page-header">
-    <h3>Modules in development</h3>
-  </div>
-  <div class="list-group">
-    <a href="#" class="list-group-item">
-      <h4 class="list-group-item-heading">Expenses</h4>
-        <p class="list-group-item-text">Manage your expenses.</p>
-    </a>
-  </div>
+  <p><code>Feedback</code>: We will be happy to hear back from you on how to better build this platform. Contact Sync <a href="mailto:syncadmin@cloudwick.com?subject:Suggestion about Sync from <%= @userfullname %>">admin(s)</a> for more information or to send suggestions.</p>
 </div>
+
+<style type="text/css">
+.spacer {
+  margin-top: 20px;
+}
+
+.font-responsive-large {
+  overflow:auto;
+  font-size: 2.5vw;
+}
+.font-responsive-small {
+  overflow:auto;
+  font-size: 1.5vw;
+}
+</style>
+
+<script src="/js/jquery.fittext.js"></script>
+<script type="text/javascript">
+$(".font-responsive-large").fitText();
+$(".font-responsive-small").fitText();
+</script>

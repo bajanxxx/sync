@@ -1,4 +1,5 @@
 require 'mongo'
+require 'mongoid'
 require 'tempfile'
 require 'RMagick'
 require 'fileutils'
@@ -8,7 +9,7 @@ require_relative '../../models/content_thumbnail'
 
 class ConvertPdfToImages < Struct.new(:sub_topic, :file_id)
   def perform
-    local_file = "/tmp/#{sub_topic.name}_#{file_id}.pdf"
+    local_file = "/tmp/#{file_id}.pdf"
     begin
       sub_topic.update_attributes!(lock?: true, state: 'PROCESSING')
       log "Fetching the file from Mongo to convert"
@@ -18,13 +19,14 @@ class ConvertPdfToImages < Struct.new(:sub_topic, :file_id)
       log "Writing pdf file to temp location #{local_file}"
       # convert pdf to images
       pdf_images = Magick::ImageList.new(local_file) { self.density = 200 }
+
       # iterate over each image in the pdf and write that out to mongo
       pdf_images.each_with_index do |page_img, _i|
         img_tmp_file = Tempfile.new(["#{file_id}_#{_i}", '.png'])
         thumb_tmp_file = Tempfile.new(["#{file_id}_#{_i}_thumb", '.png'])
         page_img.write(img_tmp_file.path)
 
-        _t = page_img.scale(0.075) # scale the image down to 7.5% of original
+        _t = page_img.scale(0.1) # scale the image down to 10% of original
         _t.write(thumb_tmp_file.path)
 
         if _i == 0
