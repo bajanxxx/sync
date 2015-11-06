@@ -671,12 +671,14 @@ Admin</a> </p>
     message = "Successfully updated #{update_key} to #{update_value}"
 
     begin
-      # case update_key
-      # when 'trainings'
-      #   Detail.find_by(consultant_id: consultant_id).add_to_set(update_key.to_sym, update_value)
-      # else
+      case update_key
+      when 'certifications', 'training_tracks'
+        update_value = [] if update_value.nil?
         Detail.find_by(consultant_id: consultant_id).update_attribute(update_key.to_sym, update_value)
-      # end
+      else
+        Detail.find_by(consultant_id: consultant_id).update_attribute(update_key.to_sym, update_value)
+      end
+        
     rescue
       success = false
       message = "Failed to update(#{update_key})"
@@ -685,18 +687,28 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
-  get '/deatils/certifications/possible_values' do
+  get '/details/certifications/possible_values' do
     status_values = []
-    status_values << { text: 'Cloudera Certified Professional: Data Scientist', value:  'ccpds' }
-    status_values << { text: 'Cloudera Certified Developer for Apache Hadoop', value:  'ccdh' }
-    status_values << { text: 'Cloudera Certified Administrator for Apache Hadoop', value: 'ccah' }
-    status_values << { text: 'Cloudera Certified Specialist in Apache HBase', value: 'ccshb' }
-    status_values << { text: 'HortonWorks Certified Apache Hadoop Java Develper', value: 'hcjd' }
-    status_values << { text: 'HortonWorks Certified Apache Hadoop Develper', value: 'hchd' }
-    status_values << { text: 'HortonWorks Certified Apache Hadoop Admin', value: 'hcha' }
-    status_values << { text: 'DataStasx Certified Cassandra 1.2 Developer', value: 'dsccd' }
-    status_values << { text: 'MongoDB Certified DBA Associate', value: 'c100dba' }
-    status_values << { text: 'MongoDB Certified Developer Associate', value: 'c100dev' }
+    file = File.read(File.expand_path("../public/assets/certifications.json", __FILE__))
+    c_hash = JSON.parse(file)
+    c_hash.each do |c|
+      status_values << { text: "#{c['name']}", value: "#{c['short']}" }
+    end
+
+    if request.xhr?
+      halt 200, status_values.to_json
+    else
+      status_values.to_json
+    end
+  end
+
+  get '/details/training_tracks/possible_values' do
+    status_values = []
+    tracks = TrainingTrack.all.entries
+    tracks.each do |track|
+      status_values << { text: "#{track.name}", value: "#{track.code}" }
+    end
+    puts status_values
 
     if request.xhr?
       halt 200, status_values.to_json
@@ -3768,12 +3780,105 @@ Admin</a> </p>
     redirect '/login' if !@username
   end
 
+  # Render training home page for admin, trainer and trainee
   get '/training' do
-    erb :training, locals: {
-      training_tracks: TrainingTrack.all.entries
+    if @admin_user
+      erb :training, locals: {
+        training_tracks: TrainingTrack.all.entries,
+        users: Consultant.all.entries
+      }
+    elsif User.find(@username).trainer
+      trainer = Trainer.find(@username)
+      topics_assigned = []
+      teams = []
+      trainer.trainer_topics.map do |_tt|
+        track = TrainingTrack.find(_tt.track)
+        teams << _tt.team
+        topics_assigned << { 
+          track: track, 
+          topic: track.training_topics.find(_tt.topic), 
+          team: _tt.team 
+        }
+      end
+
+      erb :trainer_portal, locals: {
+          training_tracks: TrainingTrack.all.entries,
+          trainer: Trainer.find(@username),
+          topics_assigned: topics_assigned,
+          notifications: TrainingNotification.where(:created_at.gt => (Date.today-30) , :team.in => teams)
+        }
+    else
+      consultant = Consultant.find(@username)
+      if consultant.team.nil?
+        erb :trainee_portal_noaccess
+      else
+        # progress
+        # calculate progress of this user
+        self_progress = build_training_progess(consultant)
+        team_progress = Hash.new { |hash, key| hash[key] = {} }
+        Consultant.where(team: consultant.team).ne(email: username).each do |member|
+          team_progress[member.email.to_sym] = build_training_progess(member)
+        end
+        
+        erb :trainee_portal, locals: {
+          consultant: consultant,
+          training_tracks: TrainingTrack.all.entries,
+          self_progress: self_progress,
+          team_progress: team_progress,
+          notifications: TrainingNotification.where(:created_at.gt => (Date.today-30) , broadcast: 'T', team: consultant.team)
+        }
+      end
+    end
+  end
+
+  # Associates trainer to a specific track and team, so that trainer can get notifications and class progress
+  post '/training/trainer/associate' do
+    trainer_email = params[:temail]
+    tt = params[:ttrack]
+    track_code = tt.split("|").first
+    topic_code = tt.split("|").last
+    tteam = params[:tteam]
+
+    success = true
+    message = "Successfully assigned trainer to track: #{track_code} (topic: #{topic_code})"
+
+    User.find(trainer_email).update_attributes(trainer: true)
+    if Trainer.find(trainer_email).nil?
+      Trainer.create(email: trainer_email)
+    end
+
+    trainer = Trainer.find(trainer_email)
+
+    trainer.trainer_topics.create(
+      track: TrainingTrack.find_by(code: track_code).id,
+      topic: TrainingTopic.find_by(code: topic_code).id,
+      team: tteam
+    )
+
+    { success: success, msg: message }.to_json
+  end
+
+  # Trainer's page to track class notifications and progress
+  get '/training/trainer/track/:trackid/topic/:topicid/team/:teamid' do |trackid, topicid, teamid|
+    track = TrainingTrack.find(trackid)
+    topic = TrainingTopic.find(topicid)
+    notifications = TrainingNotification.where(track: trackid, topic: topicid, team: teamid)
+
+    team_progress = Hash.new { |hash, key| hash[key] = {} }
+
+    Consultant.where(team: teamid).each do |member|
+      team_progress[member.email.to_sym] = build_training_progess(member)
+    end
+
+    erb :trainer_topic_overview, locals: {
+      track: track,
+      topic: topic,
+      notifications: notifications,
+      team_progress: team_progress
     }
   end
 
+  # Creates a new training track
   post '/training/track/create' do
     track_name = params[:tname]
     short_code = params[:tcode]
@@ -3798,21 +3903,83 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
-
+  # Render specific training track page
   get '/training/track/:tid' do |tid|
-    erb :training_track, locals: {
-      track: TrainingTrack.find(tid)
-    }
+    track = TrainingTrack.find(tid)
+    if @admin_user
+      file = File.read(File.expand_path("../public/assets/certifications.json", __FILE__))
+      c_hash = JSON.parse(file)
+      erb :training_track, locals: {
+        track: track,
+        preqs: track.training_topics.where(category: 'P'),
+        core: track.training_topics.where(category: 'C'),
+        adv: track.training_topics.where(category: 'A'),
+        opt: track.training_topics.where(category: 'O'),
+        c_hash: c_hash,
+        access: { preq: true, core: true, adv: true, opt: true } # just a place holder
+      }
+    else
+      consultant = Consultant.find(@username)
+      if consultant.details.training_tracks.include?(track.code)
+        erb :training_track, locals: {
+          track: track,
+          preqs: track.training_topics.where(category: 'P'),
+          core: track.training_topics.where(category: 'C'),
+          adv: track.training_topics.where(category: 'A'),
+          opt: track.training_topics.where(category: 'O'),
+          access: user_track_access_breakdown(consultant, track)
+        }
+      else
+        erb :training_track_noaccess, locals: {
+          track: track
+        }
+      end
+    end
   end
 
+  # return back topics of a specified track
+  get '/training/track/:trackcode/topics' do |trackcode|
+    topics = TrainingTrack.find_by(code: trackcode).training_topics
+    values = []
+
+    topics.each do |t|
+      values << t.name
+    end
+
+    if request.xhr?
+      halt 200, values.to_json
+    else
+      values.to_json
+    end
+  end
+
+  # Associates a specific certification to a track
+  post '/training/track/:trackid/associate/certification' do |trackid|
+    cert = params[:cert]
+
+    success = true
+    message = "Successfully associated certification to topic"
+
+    track = TrainingTrack.find(trackid)
+
+    if track.certifications.include?(cert)
+      message = "Cert already associated, ignoring!"
+    else
+      track.push(:certifications, cert)
+    end
+    { success: success, msg: message }.to_json
+  end
+
+  # Create a new topic in a specified track
   post '/training/track/:trackid/topic/create' do |trackid|
     topic_name = params[:tname]
     topic_code = params[:tcode]
     email = params[:email]
+    category = params[:category]
 
     success = true
 
-    %w(tname tcode email).each do |param|
+    %w(tname tcode email category).each do |param|
       if params[param.to_sym].empty?
         success = false
         message = "Field '#{param}' cannot be empty"
@@ -3835,7 +4002,8 @@ Admin</a> </p>
       track.training_topics.create(
         code: topic_code,
         name: topic_name,
-        contact: email
+        contact: email,
+        category: category
       )
 
       message = "Successfully added new training topic #{topic_name} to track #{track.code}"
@@ -3845,57 +4013,173 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
-  # TODO remove this - this is too dangerous
+  # Delete a topic from a specified track
   post '/training/track/:trackid/topic/delete/:topicid' do |trackid, topicid|
     topic = TrainingTopic.find(topicid)
-    topic.training_sub_topics.delete_all
-    topic.delete
+    if topic.training_sub_topics.count == 0
+      topic.delete
+    else
+      flash[:warning] = "There are sub topics in the topic you are trying to delete!"
+    end
   end
 
+  # Render topic page for a specified track
   get '/training/track/:trackid/topic/:topicid' do |trackid, topicid|
     track = TrainingTrack.find(trackid)
     topic = TrainingTopic.find(topicid)
 
-    sub_topics = []
+    if @admin_user  
+      order = if topic.training_sub_topics.count == 0
+                1
+              else
+                topic.training_sub_topics.desc(:order).limit(1).first.order + 1
+              end
 
-    topic.training_sub_topics.order_by(:name.asc).each do |sub_topic|
-      slides_count =  if sub_topic.content_thumbnails
-                        sub_topic.content_thumbnails.count
-                      else
-                        0
-                      end
-      thumbnail =   if sub_topic.content_thumbnails.find_by(name: "first")
-                      Base64.encode64(download_file(sub_topic.content_thumbnails.find_by(name: "first").file_id).read)
-                    else
-                      nil
-                    end
-      uploaded =  if sub_topic.pdf_file
-                    "#{time_ago_in_words(Time.now, sub_topic.pdf_file.uploaded_date)} ago"
-                  else
-                    'N/A'
-                  end
-      views = sub_topic.views
-      sub_topics << {
-        id: sub_topic.id,
-        title: sub_topic.name,
-        uploaded: uploaded,
-        slides_count: slides_count,
-        thumbnail: thumbnail,
-        views: views,
-        presentation_status: sub_topic.state
+      erb :training_topic, locals: {
+        track: track,
+        topic: topic,
+        assignable_sub_topic_order: order
       }
+    else
+      if user_access_to_topic(@username, track, topic)
+        erb :training_topic, locals: {
+          track: track,
+          topic: topic,
+          assignable_sub_topic_order: 0 # just a place holder
+        } 
+      else
+        erb :training_topic_noaccess, locals: {
+          track: track,
+          topic: topic
+        }
+      end
     end
-
-    erb :training_topic, locals: {
-      track: track,
-      topic: topic,
-      sub_topics: sub_topics
-    }
   end
 
+  # Create a new project for a specified topic of a track
+  post '/training/track/:trackid/topic/:topicid/project' do |trackid, topicid|
+    success    = true
+    message    = "Successfully added project"
+
+    topic = TrainingTopic.find(topicid)
+    heading = params[:heading]
+    description = params[:description]
+    athenaeumlink = params[:athenaeumlink]
+
+    if !athenaeumlink.empty? && !athenaeumlink.start_with?('https://cloudwick.atlassian.net')
+      success = false
+      message = "description link should start with 'https://cloudwick.atlassian.net'"
+    end
+
+    if success
+      project_num = topic.training_projects.count.to_i + 1
+
+      topic.training_projects.create(
+        name: "Project \##{project_num}",
+        heading: heading,
+        description: description,
+        description_link: athenaeumlink
+      )
+    end
+    
+    { success: success, msg: message }.to_json
+  end
+
+  # Update project contents
+  post '/training/track/:trackid/topic/:topicid/project/:projectid/update' do |trackid, topicid, projectid|
+    success    = true
+    message    = "Successfully updated project"
+
+    topic = TrainingTopic.find(topicid)
+    heading = params[:heading]
+    description = params[:description]
+    athenaeumlink = params[:athenaeumlink]
+
+    if !athenaeumlink.empty? && !athenaeumlink.start_with?('https://cloudwick.atlassian.net')
+      success = false
+      message = "description link should start with 'https://cloudwick.atlassian.net'"
+    end
+
+    if success
+      topic.training_projects.find(projectid).update_attributes(
+        heading: heading,
+        description: description,
+        description_link: athenaeumlink
+      )
+    end
+    
+    { success: success, msg: message }.to_json
+  end
+
+  # Submit project by consultants
+  post '/training/track/:trackid/topic/:topicid/project/:projectid/submit' do |trackid, topicid, projectid|
+    success    = true
+    message    = "Successfully updated project"
+
+    topic = TrainingTopic.find(topicid)
+    
+    submission_link = params[:submissionlink]
+
+    if !submission_link.start_with?('https://github.com/cloudwicklabs')
+      success = false
+      message = "submission link should start with 'https://github.com/cloudwicklabs'"
+    end
+
+    if success
+      user = Consultant.find(@username)
+      project = topic.training_projects.find(projectid)
+
+      project_submission = project.training_project_submissions.find_by(
+        consultant_id: @username
+      )
+
+      if project_submission
+        project_submission.update_attributes(
+          submission_link: submission_link
+        )
+        # TODO add slack notifications
+        TrainingNotification.create(
+          originator: user.email,
+          name: "#{user.first_name} #{user.last_name}",
+          broadcast: 'T',
+          team: user.team,
+          type: 'PROJECT',
+          sub_type: 'RESUBMISSION',
+          track: trackid,
+          topic: topicid,
+          submission_link: submission_link,
+          project_id: projectid,
+          message: "Re-submitted project: #{project.name} of topic: #{topic.name}"
+        )
+      else
+        project.training_project_submissions.create(
+          consultant_id: @username,
+          submission_link: submission_link
+        )
+        TrainingNotification.create(
+          originator: user.email,
+          name: "#{user.first_name} #{user.last_name}",
+          broadcast: 'T',
+          team: user.team,
+          type: 'PROJECT',
+          sub_type: 'SUBMISSION',
+          track: trackid,
+          topic: topicid,
+          submission_link: submission_link,
+          project_id: projectid,
+          message: "Submitted project: #{project.name} of topic: #{topic.name}"
+        )
+      end
+    end
+    
+    { success: success, msg: message }.to_json
+  end  
+
+  # Creates a new subtopic for a specified topic of a track
   post '/training/track/:trackid/topic/:topicid/subtopic/create' do |trackid, topicid|
     sub_topic_name = params[:tname]
     et_topic = params[:et]
+    order = params[:order]
 
     if et_topic.to_i > 180
       success = false
@@ -3903,7 +4187,8 @@ Admin</a> </p>
     else
       TrainingTopic.find(topicid).training_sub_topics.find_or_create_by(
         name: sub_topic_name,
-        et: et_topic.to_i
+        et: et_topic.to_i,
+        order: order.to_i
       )
       success    = true
       message    = "Successfully added new training sub topic #{sub_topic_name}"
@@ -3914,6 +4199,7 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
+  # Deletes a specified subtopic
   post '/training/track/:trackid/topic/:topicid/subtopic/delete/:subtopicid' do |trackid, topicid, subtopicid|
     sub_topic = TrainingSubTopic.find(subtopicid)
     if sub_topic
@@ -3947,15 +4233,202 @@ Admin</a> </p>
     end
   end
 
+  # Render sub topic
   get '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid' do |trackid, topicid, subtopicid|
     track = TrainingTrack.find(trackid)
     topic = TrainingTopic.find(topicid)
+    consultant = Consultant.find(@username)
+    sub_topic = topic.training_sub_topics.find(subtopicid)
 
-    erb :training_sub_topic, locals: {
+    if !@admin_user && !user_access_to_subtopic(consultant, track, topic, sub_topic)
+      erb :training_sub_topic_noaccess, locals: {
+          track: track,
+          topic: topic,
+          sub_topic: sub_topic
+        }
+    else
+      slides_count =  if sub_topic.content_thumbnails
+                        sub_topic.content_thumbnails.count
+                      else
+                        0
+                      end
+      slide =   if sub_topic.content_slides.find_by(name: "first")
+                  Base64.encode64(download_file(sub_topic.content_slides.find_by(name: "first").file_id).read)
+                else
+                  nil
+                end
+      uploaded =  if sub_topic.pdf_file
+                    "#{time_ago_in_words(Time.now, sub_topic.pdf_file.uploaded_date)} ago"
+                  else
+                    'N/A'
+                  end
+      total_assignments = sub_topic.training_assignments.count
+      assignment_submissions = 0
+      assignments_approved = 0
+      sub_topic.training_assignments.each do |assignment|
+        assignment_submissions += assignment.training_assignment_submissions.where(consultant_id: @username, status: 'SUBMITTED').count
+      end
+      sub_topic.training_assignments.each do |assignment|
+        assignments_approved += assignment.training_assignment_submissions.where(consultant_id: @username, status: 'APPROVED').count
+      end
+
+      erb :training_sub_topic, locals: {
+        track: track,
+        topic: topic,
+        sub_topic: sub_topic,
+        slides_count: slides_count,
+        slide: slide,
+        uploaded: uploaded,
+        views: sub_topic.views,
+        presentation_status: sub_topic.state,
+        total_assignments: total_assignments,
+        assignment_submissions: assignment_submissions,
+        assignments_approved: assignments_approved
+      }
+    end
+  end
+
+  # admin page for uploading slides deck to a subtopic
+  get '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/admin' do |trackid, topicid, subtopicid|
+    track = TrainingTrack.find(trackid)
+    topic = TrainingTopic.find(topicid)
+    sub_topic = topic.training_sub_topics.find(subtopicid)
+    erb :training_sub_topic_admin, locals: {
       track: track,
       topic: topic,
-      sub_topic: topic.training_sub_topics.find(subtopicid)
+      sub_topic: sub_topic
     }
+  end
+
+  post '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/references' do |trackid, topicid, subtopicid|
+    success    = true
+    message    = "Successfully updated references"
+
+    sub_topic = TrainingSubTopic.find(subtopicid)
+    references = params[:references]
+
+    sub_topic.update_attributes(
+      references: references
+    )
+    
+    { success: success, msg: message }.to_json
+  end
+
+  post '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/assignment' do |trackid, topicid, subtopicid|
+    success    = true
+    message    = "Successfully added assignment"
+
+    sub_topic = TrainingSubTopic.find(subtopicid)
+    heading = params[:heading]
+    description = params[:description]
+    athenaeumlink = params[:athenaeumlink]
+
+    if !athenaeumlink.empty? && !athenaeumlink.start_with?('https://cloudwick.atlassian.net')
+      success = false
+      message = "description link should start with 'https://cloudwick.atlassian.net'"
+    end
+
+    if success
+      assignment_num = sub_topic.training_assignments.count.to_i + 1
+
+      sub_topic.training_assignments.create(
+        name: "Assignment \##{assignment_num}",
+        heading: heading,
+        description: description,
+        description_link: athenaeumlink
+      )
+    end
+    
+    { success: success, msg: message }.to_json
+  end
+
+  post '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/assignment/:assignmentid/update' do |trackid, topicid, subtopicid, assignmentid|
+    success    = true
+    message    = "Successfully updated assignment"
+
+    sub_topic = TrainingSubTopic.find(subtopicid)
+    heading = params[:heading]
+    description = params[:description]
+    athenaeumlink = params[:athenaeumlink]
+
+    if !athenaeumlink.empty? && !athenaeumlink.start_with?('https://cloudwick.atlassian.net')
+      success = false
+      message = "description link should start with 'https://cloudwick.atlassian.net'"
+    end
+
+    if success
+      sub_topic.training_assignments.find(assignmentid).update_attributes(
+        heading: heading,
+        description: description,
+        description_link: athenaeumlink
+      )
+    end
+    
+    { success: success, msg: message }.to_json
+  end
+
+  post '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/assignment/:assignmentid/submit' do |trackid, topicid, subtopicid, assignmentid|
+    success    = true
+    message    = "Successfully updated assignment"
+
+    sub_topic = TrainingSubTopic.find(subtopicid)
+    
+    submission_link = params[:submissionlink]
+
+    if !submission_link.start_with?('https://github.com/cloudwicklabs')
+      success = false
+      message = "submission link should start with 'https://github.com/cloudwicklabs'"
+    end
+
+    if success
+      user = Consultant.find(@username)
+      assignment = sub_topic.training_assignments.find(assignmentid)
+
+      assignment_submission = assignment.training_assignment_submissions.find_by(
+        consultant_id: @username
+      )
+
+      if assignment_submission
+        assignment_submission.update_attributes(
+          submission_link: submission_link
+        )
+        TrainingNotification.create(
+          originator: user.email,
+          name: "#{user.first_name} #{user.last_name}",
+          broadcast: 'T',
+          team: user.team,
+          type: 'ASSIGNMENT',
+          sub_type: 'RESUBMISSION',
+          track: trackid,
+          topic: topicid,
+          sub_topic: subtopicid,
+          submission_link: submission_link,
+          assignment_id: assignmentid,
+          message: "Re-submitted assignment: #{assignment.name} of sub-topic: #{sub_topic.name}"
+        )
+      else
+        assignment.training_assignment_submissions.create(
+          consultant_id: @username,
+          submission_link: submission_link
+        )
+        TrainingNotification.create(
+          originator: user.email,
+          name: "#{user.first_name} #{user.last_name}",
+          team: user.team,
+          broadcast: 'T',
+          type: 'ASSIGNMENT',
+          sub_type: 'SUBMISSION',
+          track: trackid,
+          topic: topicid,
+          sub_topic: subtopicid,
+          submission_link: submission_link,
+          assignment_id: assignmentid,
+          message: "Submitted assignment: #{assignment.name}"
+        )
+      end
+    end
+    
+    { success: success, msg: message }.to_json
   end
 
   post '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/upload' do |trackid, topicid, subtopicid|
@@ -3981,7 +4454,7 @@ Admin</a> </p>
         priority: 10,
         run_at: 5.seconds.from_now
       )
-      puts "Uploaded sucessfully #{file_id}"
+      puts "Uploaded successfully #{file_id}"
       flash[:info] = "Successfully uploaded presentation '#{file_id}'"
     else
       puts "Failed uploading pdf. pdf with #{file_name} already exists!."
@@ -4512,4 +4985,150 @@ Admin</a> </p>
     end
     return true
   end
-end
+
+  # Calculate topic progress which is aggregate from all subtopics and project's for this topic. 70% of weightage is for subtopics and 30% is for projects
+  def topic_progress(consultant, topic)
+    projects_progress = topic_projects_progress(consultant, topic)
+    projects_progress_weighted = projects_progress * 0.30
+
+    sub_topics_progress = []
+    topic.training_sub_topics.each do |subtopic|
+      sub_topics_progress << sub_topic_progress(consultant, subtopic)
+    end
+    aggregate_sub_topics_progress = if sub_topics_progress.empty?
+        0.0
+      else
+        ( sub_topics_progress.inject(:+) / sub_topics_progress.count ).to_f
+      end
+    sub_topics_progress_weighted = aggregate_sub_topics_progress * 0.70
+
+    projects_progress_weighted + sub_topics_progress_weighted
+  end
+
+  # Calculate projects progress for a specified topic
+  def topic_projects_progress(consultant, topic)
+    total_projects = topic.training_projects.count
+    topic_projects_progress = []
+    if total_projects != 0 # only consider progress if there are projects associated with a topic
+      project_submissions = 0
+      project_approvals = 0
+
+      topic.training_projects.each do |_p|
+        # TODO handle other status values
+        project_submissions += _p.training_project_submissions.where(consultant_id: consultant.email, status: 'SUBMITTED').count
+        project_approvals += _p.training_project_submissions.where(consultant_id: consultant.email, status: 'APPROVED').count
+      end
+
+      topic_projects_progress << (((project_submissions * 1.0) + project_approvals * 1.0) / (total_projects * 2.0)).to_f
+    end
+
+    if topic_projects_progress.empty?
+      0.0
+    else
+      ( topic_projects_progress.inject(:+) / topic_projects_progress.count )
+    end
+  end
+
+  # Calculate subtopic progress this is calculated from assignments progress, 50% of weightage is for assignments submissions and 50% is for approvals
+  def sub_topic_progress(consultant, subtopic)
+    # total assignments in this subtopic
+    total_assignments = subtopic.training_assignments.count
+    subtopic_assignments_progress = []
+    if total_assignments != 0 # only consider progress if there are assignments associated with this sub-topic
+      assignment_submissions = 0
+      assignment_approvals = 0
+      subtopic.training_assignments.each do |_a|
+        # TODO handle other status values
+        assignment_submissions += _a.training_assignment_submissions.where(consultant_id: consultant.email, status: 'SUBMITTED').count
+        assignment_approvals += _a.training_assignment_submissions.where(consultant_id: consultant.email, status: 'APPROVED').count
+      end
+      
+      subtopic_assignments_progress << (((assignment_submissions * 1.0) + assignment_approvals * 1.0) / (total_assignments * 2.0)).to_f
+    end
+
+    if subtopic_assignments_progress.empty? 
+      0.0
+    else
+      ( subtopic_assignments_progress.inject(:+) / subtopic_assignments_progress.count )  
+    end
+  end
+
+  # access: {preq: true, core: false, adv: false, opt: false}
+  def user_track_access_breakdown(consultant, track)
+    access = { preq: true, core: false, adv: false, opt: false, certs: false }
+    topics = track.training_topics.entries
+    topics_by_category = topics.group_by { |t| t[:category] }
+    
+    
+    if topics_by_category['P'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f } > 80
+      access[:core] = true
+    end
+
+    if topics_by_category['C'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f } > 80
+      access[:adv] = true
+    end
+
+    if topics_by_category['A'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f } > 80
+      access[:opt] = true
+    end
+
+    if topics_by_category['O'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f } > 80
+      access[:certs] = true
+    end
+
+    access
+  end
+
+  # does the user has access to this topic or not
+  # return true or false
+  def user_access_to_topic(consultant, track, topic)
+    topic_category = topic.category
+    access = user_track_access_breakdown(consultant, track)
+    case topic_category
+    when 'P'
+      access[:preq]
+    when 'C'
+      access[:core]
+    when 'A'
+      access[:adv]
+    when 'O'
+      access[:opt]
+    end
+  end
+
+  def user_access_to_subtopic(consultant, track, topic, subtopic)
+    user_access_to_topic(consultant, track, topic)
+  end
+
+  # Builds out training progress for a given consultant in the following format
+  # {:DO=>{:progress=>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], :topics=>[:LX, :SCP, :BD101, :HDOPS, :CDOPS, :AUTO, :AWS, :SCR, :BD501, :VCS, :JIRA, :CI], :LX=>{:progress=>0.0}, :SCP=>{:progress=>0.0}, :BD101=>{:progress=>0.0}, :HDOPS=>{:progress=>0.0}, :CDOPS=>{:progress=>0.0}, :AUTO=>{:progress=>0.0}, :AWS=>{:progress=>0.0}, :SCR=>{:progress=>0.0}, :BD501=>{:progress=>0.0}, :VCS=>{:progress=>0.0}, :JIRA=>{:progress=>0.0}, :CI=>{:progress=>0.0}, :overall=>0.0}}
+  def build_training_progess(consultant)
+    progress = Hash.new { |hash, key| hash[key] = {} }
+
+    if !consultant.details.training_tracks.empty?
+      consultant.details.training_tracks.each do |_tcode|
+        _track = TrainingTrack.find_by(code: _tcode)
+
+        # for each track find progress
+        progress[_track.code.to_sym] = Hash.new { |hash, key| hash[key] = {} }
+        progress[_track.code.to_sym][:progress] = []
+        progress[_track.code.to_sym][:topics] = []
+
+        _track.training_topics.each do |_topic|
+          progress[_track.code.to_sym][:topics] << _topic.code.to_sym
+          progress[_track.code.to_sym][_topic.code.to_sym][:progress] = topic_progress(consultant, _topic)
+
+          progress[_track.code.to_sym][:progress] << progress[_track.code.to_sym][_topic.code.to_sym][:progress]
+        end # topics
+        progress[_track.code.to_sym][:overall] = if !progress[_track.code.to_sym][:progress].empty?
+            progress[_track.code.to_sym][:progress].inject(:+) / progress[_track.code.to_sym][:progress].count
+          else
+            0.0
+          end
+      end
+    end
+
+    progress
+  end
+
+end # END MAIN

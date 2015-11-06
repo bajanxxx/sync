@@ -13,5 +13,6 @@ class Consultant
 
   has_many :applications, class_name: 'Application'
   has_many :resumes, class_name: 'Resume'
+  has_many :training_assignment_submissions
   has_one :details, class_name: 'Detail'
 end

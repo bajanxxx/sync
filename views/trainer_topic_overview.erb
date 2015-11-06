@@ -1,0 +1,103 @@
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>
+      <a href="/training">Trainers Portal</a> <small><%= track.code %> > <%= topic.name %> > Class Overview</small>
+    </h2>
+  </div>
+  
+  <!-- Placeholder Table -->
+  <table class="table">
+    <tr>
+      <td>
+        <h4>Class Progress</h4>
+          <% team_progress.keys.each_with_index do |member, i| %>
+            <%
+              # calculate each user progress
+              overall_progress = []
+              team_progress[member].keys.map { |tt|
+                overall_progress << team_progress[member][tt][:overall] 
+              }
+              overall_progress_percent =  if overall_progress.empty?
+                                            0.0
+                                          else
+                                            (overall_progress.inject(:+) / overall_progress.count) * 100
+                                          end
+            %>
+            <% user_initials = member.to_s.split('@').first.split('.').map{ |a| a[0]}.join().upcase %>
+            <div class = "media">
+              <div class = "pull-left">
+                <div id="traineedp-<%= i %>" class="dpcircle"><%= user_initials %></div>
+              </div>
+
+              <div class = "media-body">
+                <h4 class = "media-heading"><%= member.to_s.split('@').first.split('.').first.capitalize %>'s Overall Progress</h4>
+                <div class="progress">
+                  <div class="progress-bar" role="progressbar" aria-valuenow="<%= overall_progress_percent.to_i %>" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: <%= overall_progress_percent.to_i %>%;">
+                    <%= overall_progress_percent.to_i %>%
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>        
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <h4>Validation Requests</h4>
+        <div class="notifications">
+          <ul class="list-group">
+            <% notifications.each do |notification| %>
+              <li class="list-group-item">
+                <span class="pull-right">
+                  <a target="_blank" href="<%= notification.submission_link %>" class="notification-links"><i class="fa fa-link fa-lg"></i></a>
+                  <a href="" class="notification-links"><i class="fa fa-thumbs-o-up fa-lg"></i></a>
+                  <a href="" class="notification-links"><i class="fa fa-thumbs-o-down fa-lg"></i></a>
+                </span>
+                <strong><%= notification.name %></strong>
+                <div>
+                  <small><%= notification.created_at %></small>
+                </div>
+                <div>
+                  <%= notification.message %>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<style type="text/css">
+.table {
+  border-bottom:0px !important;
+}
+.table th, .table td {
+  border: 0px !important;
+}
+.notification-links {
+  margin-left : 1px;
+  margin-right : 1px;
+}
+.dpcircle{
+  width:50px;
+  height:50px;
+  border-radius:50px;
+  font-size:20px;
+  color:#fff;
+  line-height:50px;
+  text-align:center;
+  background:#000
+}
+</style>
+
+<script src="/js/randomColor.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+  <% team_progress.keys.each_with_index do |member, i| %>
+  document.querySelector('#traineedp-<%= i %>').style.background = randomColor({hue: 'random',luminosity: 'random'});
+  <% end %>  
+});
+</script>

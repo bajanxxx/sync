@@ -3,7 +3,18 @@
     <p class="lead">Hello <code><%= @userfullname.split.map(&:capitalize).join(' ') %></code>. Welcome to Cloudwick's SYNC Portal.</p>
   </div>
 
-  <h3>Sync is a centralized portal for making requests for documents, certifications, air tickets, servers; view training content; Fill timesheets; update your projects and related information.</h3>
+  <h3><strong>Sync</strong> is a centralized portal for:</h3> 
+  <ul>
+    <li>
+      <h4>Accessing self-service <a href="/training">training portal</a></h4>
+    </li>
+    <li>
+      <h4>Tracking Time using <a href="/timesheets/<%= @username %>/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%U') %>">timesheets</a> module</h4>
+    </li>
+    <li>
+      <h4>Requesting <a href="/documents/<%= @username %>">documents</a>, <a href="/certifications/<%= @username %>">certifications</a>, <a href="/airtickets/<%= @username %>">air-tickets</a>, <a href="/cloudservers/requests/<%= @username %>">cloud servers</a></h4>
+    </li>
+  </ul>
 
   <br>
 
@@ -25,9 +36,9 @@
   </div>
   <div class="col-xs-3 spacer">
     <div class="well" style="height:250px; background-color: #5cb85c;">
-      <p align="center" class="font-responsive-large"><a href="https://cloudwick.hipchat.com"><font color="white">HipChat</font></a></p>
+      <p align="center" class="font-responsive-large"><a href="https://cloudwick.slack.com"><font color="white">Slack</font></a></p>
       <br>
-      <p align="center"><font color="white">Team colloboration and chat. To sign up to hipchat use this <a href="https://cloudwick.hipchat.com/invite/132959/a3b976f705b0c09ecf462f9ce7d3ba02">link</a> and use your cloudwick email address when signing up.</font></p>
+      <p align="center"><font color="white">Team collaboration and chat. To sign up to Slack use this <a href="https://cloudwick.slack.com/signup">link</a> and use your cloudwick email address when signing up. This is crucial as we send all notifications to Slack.</font></p>
     </div>
   </div>
   <div class="col-xs-3 spacer">

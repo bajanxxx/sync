@@ -1,3 +1,4 @@
+<% if @admin_user %>
 <!-- Modal Definitions -->
 <!-- Create a topic -->
 <div class="modal fade" id="CreateTopic" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -24,6 +25,17 @@
             <input type="email" class="form-control" id="Email" name="Email" placeholder="email address of the content developer" value="" required="required" />
             <span class="help-block"></span>
           </div>
+          <div class="form-group">
+            <label for="Category">Category:</label>
+            <select class="form-control" id="Category" name="Category" required="required">
+              <option selected value=''>Start typing the category</option>
+              <option value='P'>Prerequisite</option>
+              <option value='C'>Core</option>
+              <option value='A'>Advanced</option>
+              <option value='O'>Optional</option>
+            </select>
+            <span class="help-block"></span>
+          </div>
         </form>
         <p id="CreateTopicFormLabel" class="text-center"></p>
         <hr />
@@ -39,10 +51,47 @@
   </div>
 </div>
 
+<!-- Modal Definitions -->
+<!-- Associate certifications -->
+<div class="modal fade" id="AssociateCertification" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Associate certification to this track</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <div class="form-group">
+            <label for="Certification">Certification:</label>
+            <select class="form-control" id="Certification" name="Certification" required="required">
+              <option selected value=''>Start typing the certification name</option>
+              <% c_hash.each do |c| %>
+                <option value="<%= c['short'] %>|<%= c['name'] %>"><%= c['name'] %></option>
+              <% end %>
+            </select>
+            <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="AssociateCertificationFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="SubmitAssociateCertificationBtn" name="SubmitBtn" class="btn btn-large btn-primary">Associate</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>
+
 <!-- Actual Container -->
 <div class="container theme-showcase" role="main">
   <div class="page-header">
-    <h2><a href="/training">Training Portal</a> > <%= track.code %>
+    <h2><a href="/training">Training Portal</a> > <%= track.code %> > Topics
       <% if @admin_user %>
         <div class="btn-group pull-right">
           <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
@@ -55,6 +104,11 @@
               </a>
             </li>
             <li>
+              <a id="AssociateCertificationBtn" data-toggle="modal" href="#AssociateCertification">
+                Associate Certification
+              </a>
+            </li>
+            <li>
               <a id="ManageTopics">
                 Manage Topics
               </a>
@@ -64,27 +118,190 @@
       <% end %>
     </h2>
   </div>
-  <!-- Training Topics -->
-  <h3>Training Topics</h3>
   
   <br>
 
-  <div class="row-fluid">
-    <% track.training_topics.each do |topic| %>
-    <div class="col-xs-2 spacer">
-      <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
-        <div id="topic-<%= topic.id %>" class="circle-multiline">
-          <div class="font-responsive">
-            <%= topic.name %>
-          </div>
-        </div>
-      </a>
-    </div>
+  <table class="table">
+    <tr>
+      <td class="col-xs-2" style="vertical-align:middle; position:relative;">
+        <h3>Prerequisites</h3>
+      </td>
+      <td class="col-xs-10">
+        <% if preqs.count == 0 %>
+          <h4>There are no prerequisite courses to this track.</h4>
+        <% else %>
+          <% preqs.each do |topic| %>
+            <div class="col-xs-3 spacer">
+              <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#00565A">
+                <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                  <div class="font-responsive">
+                    <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                  </div>
+                </a>
+                <% if @admin_user %>
+                  <button type="button" id="DeleteTopic-<%= topic.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </td>
+    </tr>
+    <tr>
+      <td class="col-xs-2" style="vertical-align:middle; position:relative;">
+        <h3>Core</h3>
+      </td>
+      <td class="col-xs-10">
+        <% if core.count == 0 %>
+          <h4>No core courses have been added yet to this track.</h4>
+        <% else %>
+          <% core.each do |topic| %>
+            <div class="col-xs-3 spacer">
+              <% if @admin_user %>
+                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                  <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                    <div class="font-responsive">
+                      <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                    </div>
+                  </a>
+                  <button type="button" id="DeleteTopic-<%= topic.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
+                </div>
+              <% else %>
+                <% if access[:core] %>
+                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                    <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                      <div class="font-responsive">
+                        <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                      </div>
+                    </a>
+                  </div>
+                <% else %>
+                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#666666">
+                    <div class="font-responsive">
+                      <a class="popoverData" class="btn" href="#" data-content="You have to complete 80% of Prerequisite topics to gain access to core topics" rel="popover" data-placement="bottom" data-original-title="No Access" data-trigger="hover" style="color:white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</a>
+                    </div>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+      </td>
+    </tr>
+    <% if adv.count != 0 %>
+      <tr>
+        <td class="col-xs-2" style="vertical-align:middle; position:relative;">
+          <h3>Advanced</h3>
+        </td>
+        <td class="col-xs-10">
+          <% adv.each do |topic| %>
+            <div class="col-xs-3 spacer">
+              <% if @admin_user %>
+                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                  <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                    <div class="font-responsive">
+                      <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                    </div>
+                  </a>
+                  <button type="button" id="DeleteTopic-<%= topic.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
+                </div>
+              <% else %>
+                <% if access[:adv] %>
+                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                    <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                      <div class="font-responsive">
+                        <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                      </div>
+                    </a>
+                  </div>
+                <% else %>
+                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#666666">
+                    <div class="font-responsive">
+                      <a class="popoverData" class="btn" href="#" data-content="You have to complete 80% of Core topics to gain access to Advanced topics" rel="popover" data-placement="bottom" data-original-title="No Access" data-trigger="hover" style="color:white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</a>
+                    </div>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </td>
+      </tr>
     <% end %>
+    <% if opt.count != 0 %>
+      <tr>
+        <td class="col-xs-2" style="vertical-align:middle; position:relative;">
+          <h3>Others</h3>
+        </td>
+        <td class="col-xs-10">
+          <% opt.each do |topic| %>
+            <div class="col-xs-3 spacer">
+              <% if @admin_user %>
+                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                  <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                    <div class="font-responsive">
+                      <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                    </div>
+                  </a>
+                  <button type="button" id="DeleteTopic-<%= topic.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
+                </div>
+              <% else %>
+                <% if access[:opt] %>
+                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                    <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                      <div class="font-responsive">
+                        <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                      </div>
+                    </a>
+                  </div>
+                <% else %>
+                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#666666">
+                    <div class="font-responsive">
+                      <a class="popoverData" class="btn" href="#" data-content="You have to complete 80% of Advanced topics to gain access to optional topics" rel="popover" data-placement="bottom" data-original-title="No Access" data-trigger="hover" style="color:white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</a>
+                    </div>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+    <tr>
+      <td class="col-xs-2" style="vertical-align:middle; position:relative;">
+        <h3>Certifications</h3>
+      </td>
+      <% if track.certifications.nil? %>
+        <td class="col-xs-10" style="vertical-align:middle; position:relative;">
+          <h4>No certifications have yet been linked to this track.</h4>
+        </td>    
+      <% elsif track.certifications.count == 0 %>
+        <td class="col-xs-10" style="vertical-align:middle; position:relative;">
+          <h4>No certifications have yet been linked to this track.</h4>
+        </td>
+      <% else %>
+        <td class="col-xs-10">
+          <% track.certifications.each_with_index do |certification, _i| %>
+            <div class="col-xs-3 spacer">
+              <div id="cert-<%= _i + 1 %>" class="well" style="height:100px; background-color: black;">
+                <p align="center" class="font-responsive-large"><font color="white"><%= certification.split('|').last %></font></p>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </td>
+    </tr>
+  </table>
   </div>
 </div>
 
 <style type="text/css">
+.table {
+  border-bottom:0px !important;
+}
+.table th, .table td {
+  border: 0px !important;
+}
+
 .spacer {
   margin-top: 20px;
 }
@@ -96,60 +313,114 @@
   text-align: center;
   vertical-align: middle;
   border-radius: 50%;
-  background: purple;
+  /*background: purple;*/
   color: white;
+}
+
+.deleteicon:hover {
+  background-color: #FF7F00;
+}
+
+.popover-title {
+  color: #333333;
+}
+.popover-content {
+  color: #333333;
 }
 </style>
 
 <script src="/js/jquery.fittext.js"></script>
 <script src="/js/randomColor.min.js"></script>
 <script type="text/javascript">
-$(".font-responsive").fitText();
-
-<% track.training_topics.each do |topic| %>
-document.querySelector('#topic-<%= topic.id %>').style.background = randomColor({luminosity: 'dark',hue: 'blue'});
-<% end %>
-
-$('.deletebutton').tooltip();
-
-$('#SubmitCreateTopicBtn').click(function() {
-  _this = $(this);
-  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
-  _this.attr('disabled', true); // no double submit
-
-  var tname = $("#TopicName").val();
-  var tcode = $("#TopicCode").val();
-  var email = $("#Email").val();
-
-  $.ajax({
-    type: "POST",
-    dataType: "json",
-    url: "/training/track/<%= track.id %>/topic/create",
-    data: { 'tname': tname, 'tcode': tcode, 'email': email },
-    success: function(data) {
-      if(!data.success) {
-        console.log("Error: " + data.msg);
-        _this.attr('disabled', false); // re-enable submit
-        _this.html('Re-submit');
-        $('#CreateTopicFormLabel').addClass('text-danger').html(data.msg);
-      } else {
-        console.log("Sucess: " + data.msg);
-        _this.html("Submitted");
-        $('#CreateTopicFormLabel').addClass('text-info').html(data.msg);
-        $('#CreateTopic').modal('hide');
-        location.reload();
-      }
-    },
-    error: function(data) {
-      _this.attr('disabled', false); // re-enable submit
-      _this.text('Re-submit');
-      $('#CreateTopicFormLabel').addClass('text-danger').html('Something went wrong adding creating new topic!!!');
-    }
-  });
-});
-
-// Disapprove requests
 $(document).ready(function(){
+  $(".font-responsive").fitText();
+  $('#Category').select2();
+  $('#Certification').select2();
+  $("[rel='tooltip'], .tooltip").tooltip();
+  $('.popoverData').popover();
+
+  <% if ! track.certifications.nil? %>
+    <% track.certifications.each_with_index do |cert, _i| %>
+    document.querySelector('#cert-<%= _i + 1 %>').style.background = randomColor({luminosity: 'dark', hue: 'blue'});
+    <% end %>
+  <% end %>
+
+  <% if @admin_user %>
+  $('.deletebutton').tooltip();
+
+
+  $('#SubmitCreateTopicBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var tname = $("#TopicName").val();
+    var tcode = $("#TopicCode").val();
+    var email = $("#Email").val();
+    var category = $('#Category').val();
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/training/track/<%= track.id %>/topic/create",
+      data: { 'tname': tname, 'tcode': tcode, 'email': email, 'category': category },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#CreateTopicFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg);
+          _this.html("Submitted");
+          $('#CreateTopicFormLabel').addClass('text-info').html(data.msg);
+          $('#CreateTopic').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#CreateTopicFormLabel').addClass('text-danger').html('Something went wrong adding creating new topic!!!');
+      }
+    });
+  });
+
+  $('#SubmitAssociateCertificationBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var cert = $("#Certification").val();
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/training/track/<%= track.id %>/associate/certification",
+      data: { 'cert': cert },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#CreateTopicFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg);
+          _this.html("Submitted");
+          $('#CreateTopicFormLabel').addClass('text-info').html(data.msg);
+          $('#CreateTopic').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#CreateTopicFormLabel').addClass('text-danger').html('Something went wrong associating certification!!!');
+      }
+    });
+  });
+
+  // Disapprove requests
   var show = false;
 
   $('.deleteicon').hide();
@@ -168,24 +439,25 @@ $(document).ready(function(){
     }
   })
 
-  <% track.training_topics.each do |topic| %>
-  $('#DeleteTopic-<%= topic.id %>').click(function() {
-    console.log("Initializing call");
-    _this = $(this);
-    _this.html('<i class="fa fa-spinner fa-spin"></i>');
-    _this.attr('disabled', true); // no double submit
+    <% track.training_topics.each do |topic| %>
+    $('#DeleteTopic-<%= topic.id %>').click(function() {
+      console.log("Initializing call");
+      _this = $(this);
+      _this.html('<i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
 
-    $.ajax({
-      type: "POST",
-      url: "/training/track/<%= track.id %>/topic/delete/<%= topic.id %>",
-      success: function(data){
-        location.reload();
-      },
-      error: function(e){
-        alert("Error occurred!");
-      }
+      $.ajax({
+        type: "POST",
+        url: "/training/track/<%= track.id %>/topic/delete/<%= topic.id %>",
+        success: function(data){
+          location.reload();
+        },
+        error: function(e){
+          alert("Error occurred!");
+        }
+      });
     });
-  });
+    <% end %>
   <% end %>
 });
 </script>
