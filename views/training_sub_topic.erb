@@ -1,163 +1,498 @@
+<!-- Modal Definitions -->
+<div class="modal fade modal-wide" id="AddAssignment" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Add Assignment</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="LLCreateForm">
+          <div class="form-group">
+            <label for="Heading">Heading:</label>
+            <input type="text" class="form-control" id="Heading" name="Heading" placeholder="Heading for the assignment" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="Description">Description:</label>
+            <textarea rows="5" class="form-control" id="Description" name="Description"></textarea>
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="AthenaeumLink">Athenaeum Link:</label>
+            <input type="text" class="form-control" id="AthenaeumLink" name="AthenaeumLink" placeholder="detailed description link (optional)" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="AddAssignmentFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="AssignmentSubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary">Add Assignment</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% sub_topic.training_assignments.each do |assignment| %>
+<div class="modal fade modal-wide" id="EditAssignment-<%= assignment.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Edit <%= assignment.name %></h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="LLCreateForm">
+          <div class="form-group">
+            <label for="Heading-<%= assignment.id %>">Heading:</label>
+            <input type="text" class="form-control" id="Heading-<%= assignment.id %>" name="Heading-<%= assignment.id %>" placeholder="Heading for the assignment" value="<%= assignment.heading %>" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="Description-<%= assignment.id %>">Description: (markdown allowed)</label>
+            <textarea rows="5" class="form-control" id="Description-<%= assignment.id %>" name="Description-<%= assignment.id %>"><%= assignment.description %></textarea>
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="AthenaeumLink-<%= assignment.id %>">Athenaeum Link:</label>
+            <input type="text" class="form-control" id="AthenaeumLink-<%= assignment.id %>" name="AthenaeumLink-<%= assignment.id %>" placeholder="detailed description link (optional)" value="<%= assignment.description_link %>" required="required" />
+            <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="EditAssignmentFormLabel-<%= assignment.id %>" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="EditAssignmentSubmitBtn-<%= assignment.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Update Assignment</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade modal-wide" id="SubmitAssignment-<%= assignment.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Submit <%= assignment.name %></h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="LLCreateForm">
+          <div class="form-group">
+            <label for="AssignmentSubmissionLink-<%= assignment.id %>">Assignment Submission Link:</label>
+            <input type="text" class="form-control" id="AssignmentSubmissionLink-<%= assignment.id %>" name="AssignmentSubmissionLink-<%= assignment.id %>" placeholder="Please enter cloudwicklabs github url" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="SubmitAssignmentFormLabel-<%= assignment.id %>" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="SubmitAssignmentSubmitBtn-<%= assignment.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Submit Assignment</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>
+
+<div class="modal fade modal-wide" id="EditReferences" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Edit References</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="LLCreateForm">
+          <div class="form-group">
+            <label class="control-label" for="References">References:</label>
+            <textarea rows="5" class="form-control" id="References" name="References"><%= sub_topic.references %></textarea>
+              <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="EditReferencesFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="SubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary">Update References</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Actual Container -->
 <div class="container theme-showcase" role="main">
   <div class="page-header">
-    <h2><a href="/training">Training Portal</a> > <a href="/training/track/<%= track.id %>"><%= track.code %></a> > <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>"><%= topic.name %></a>
+    <h2><a href="/training">Training Portal</a> > <a href="/training/track/<%= track.id %>"><%= track.code %></a> > <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>"><%= topic.code %></a> > Sub Topic
+    <a data-toggle="tooltip" class="tooltipLink pull-right" data-original-title="Submissions: <%= assignment_submissions %>, Approvals: <%= assignments_approved %>" data-placement="bottom">
+      <span style="font-size: 15px">
+        <div id="progress-circle"></div>
+      </span>
+    </a>
     </h2>
   </div>
-
   <h3><%= sub_topic.name %></h3>
+  <br>
 
-  <% if @admin_user %>
-    <div class="row-fluid">
-      <div class="col-md-6">
-        <div class="panel panel-info">
-          <div class="panel-heading">
-            <strong>Presentation</strong>
-          </div>
-          <div class="panel-body">
-            <ul class="list-group">
-              <li class="list-group-item">
-                <span class="badge alert-info">Slides count: <%= sub_topic.content_slides.count %></span>
-                <span class="badge alert-info">Status: <%= sub_topic.state %></span>
-                <% if sub_topic.state == 'PROCESSING' %>
-                  <i class="fa fa-circle-o-notch fa-spin fa-lg"></i>
-                <% elsif sub_topic.state == 'SUCCESS' %>
-                  <i class="fa fa-check-square fa-lg"></i>
-                <% end %>
-                <span>Presentation conversion status</span>
-              </li>
-              <li class="list-group-item">
-                <span class="badge alert-info"><%= sub_topic.et %></span>
-                <span>Duration (in minutes)</span>
-              </li>
-            </ul>
-            <% if sub_topic.state == 'SUCCESS' %>
-            <a class="btn btn-primary center-block" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/ss">Start Presentation</a>
+  <!-- Placeholder Table -->
+  <table class="table">
+    <tr>
+      <!-- Slides -->
+      <td class="col-xs-6">
+        <h4>Slides</h4>
+        <hr>
+        <!-- Slides area -->  
+        <div id="twell-<%= sub_topic.id %>" class="twell" style="height:300px; width:500px">
+          <% if slide %>
+            <div class="image-in-well" style="position:relative; height:300px; width:500px">
+              <img src='data:image/png;base64,<%= slide %>' data-src="holder.js/500x300" class="img-rounded img-responsive" height="300">
+              <% if presentation_status == 'SUCCESS' %>
+              <div id="spb-<%= sub_topic.id %>" class="hidden" style="position:absolute; bottom:0;">
+                <a class="btn btn-primary" style="width:500px" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/ss">Start Presentation</a>
+              </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="image-in-well" style="height:300px; width:500px;">
+              <img src="/img/no_presentation_linked.png" data-src="holder.js/500x300" class="img-rounded img-responsive" height="300">
+            </div>
+          <% end %>
+        </div>
+        <div class="bwell" style="height:100px; width:500px">
+          <p align="left">
+            <% if @admin_user %>
+              <a class="truncate" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/admin"><font size="+1"><%= sub_topic.name %></font></a>
+            <% else %>
+              <div class="truncate"><font size="+1"><%= sub_topic.name %></font></div>
+            <% end %>
+            
+            <small>Uploaded <%= uploaded %>, <%= slides_count %> slides</small>
+            <br/>
+            <i class="fa fa-eye"></i> <small><%= views %> time(s)</small>
+          </p>
+        </div>
+      </td>
+      <!--Assignments-->
+      <td rowspan="2" class="col-xs-6">
+        <h4>Assignments
+          <a id="AddAssignmentBtn" data-toggle="modal" href="#AddAssignment">
+            <i class="fa fa-plus-square-o fa-lg pull-right"></i>
+          </a>
+        </h4>
+        <hr>
+        <div class="awell spacer sidebar-nav" style="height : 900px;">
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            <% if sub_topic.training_assignments.empty? %>
+              No assignments have yet been added, stay tuned for more updates.
+            <% else %>
+              <% sub_topic.training_assignments.each do |assignment| %>
+                <div class="panel panel-default">
+                  <div class="panel-heading" role="tab" id="ass-<%= assignment.id %> %>">
+                    <h4 class="panel-title">
+                      <% if assignment.name == 'Assignment #1' %>
+                      <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-<%= assignment.id %>" aria-expanded="true" aria-controls="collapse-<%= assignment.id %>">
+                      <% else %>
+                      <a role="button" class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse-<%= assignment.id %>" aria-expanded="false" aria-controls="collapse-<%= assignment.id %>">
+                      <% end %>
+                        <%= assignment.name %> <%= "(#{assignment.training_assignment_submissions.find_by(consultant_id: @username).status.downcase})" if assignment.training_assignment_submissions.find_by(consultant_id: @username) %>
+                        <a id="SubmitAssignmentBtn-<%= assignment.id %>" data-toggle="modal" href="#SubmitAssignment-<%= assignment.id %>">
+                          <i class="fa fa-check-square-o pull-right"></i>
+                        </a>
+                        <a id="EditAssignmentBtn-<%= assignment.id %>" data-toggle="modal" href="#EditAssignment-<%= assignment.id %>">
+                          <i class="fa fa-pencil-square-o pull-right"></i>
+                        </a>
+                      </a>
+                    </h4>
+                  </div>
+                  <div id="collapse-<%= assignment.id %>" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="ass-<%= assignment.id %> %>">
+                    <div class="panel-body">
+                      <h4><%= assignment.heading %></h4>
+                      <div id="assignmentcontent-<%= assignment.id %>">
+                      </div>
+                      <% if !assignment.description_link.empty? %>
+                      <br>
+                      <a href="<%= assignment.description_link %>">More info</a>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
             <% end %>
           </div>
         </div>
-        <div class="panel panel-warning">
-          <div class="panel-heading">
-            <strong>Slide Navigation Legend</strong>
-          </div>
-          <div class="panel-body">
-            <ul>
-              <li><code>&#8594;</code> to navigate to <b>next slide</b></li>
-              <li><code>&#8592;</code> to navigate to <b>previous slide</b></li>
-              <li><code>&#8593;</code> to navigate to <b>first slide</b></li>
-              <li><code>&#8595;</code> to navigate to <b>last slide</b></li>
-              <li><code>&#47;</code> to open and close the <b>sidebar</b></li>
-              <li><code>ESC</code> to navigate to <b>topics list</b></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <% if sub_topic.file == 'NIL' %>
-          <div class="panel panel-warning">
-            <div class="panel-heading">
-              <strong>Link a presentation to this sub topic</strong>
-            </div>
-            <div class="panel-body">
-              <!-- upload new resumes -->
-              <form role="form" id="upload" method="post" action="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/upload" enctype="multipart/form-data">
-                <input type="file" class="form-control" title="Select pdf to upload" name="pdf" data-filename-placement="inside"/>
-                <ul id="fileList"></ul>
-                <button type="submit" class="btn btn-primary center-block" id="SubmitBtn"><i class="fa fa-cloud-upload fa-lg"></i> Upload Presentation</button>
-              </form>
-            </div>
-          </div>
-        <% else %>
-          <div class="panel panel-success">
-            <div class="panel-heading">
-              <a><strong>Presentation already linked to this topic</strong></a>
-            </div>
-            <div class="panel-body">
-              <ul class="list-group">
-                <li class="list-group-item">Linked file: <%= sub_topic.pdf_file.filename %></li>
-              </ul>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    </div>
-  <% else %>
-    <div class="row-fluid">
-      <div class="col-md-12">
-        <div class="panel panel-info">
-          <div class="panel-heading">
-            <strong>Presentation</strong>
-          </div>
-          <div class="panel-body">
-            <ul class="list-group">
-              <li class="list-group-item">
-                <span class="badge alert-info">Slides count: <%= sub_topic.content_slides.count %></span>
-                <span class="badge alert-info">Status: <%= sub_topic.state %></span>
-                <% if sub_topic.state == 'PROCESSING' %>
-                  <i class="fa fa-circle-o-notch fa-spin fa-lg"></i>
-                <% elsif sub_topic.state == 'SUCCESS' %>
-                  <i class="fa fa-check-square fa-lg"></i>
-                <% end %>
-                <span>Presentation conversion status</span>
-              </li>
-              <li class="list-group-item">
-                <span class="badge alert-info"><%= sub_topic.et %></span>
-                <span>Duration (in minutes)</span>
-              </li>
-            </ul>
-            <% if sub_topic.state == 'SUCCESS' %>
-            <a class="btn btn-primary center-block" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/ss">Start Presentation</a>
-            <% end %>
-          </div>
-        </div>
-        <div class="panel panel-warning">
-          <div class="panel-heading">
-            <strong>Slide Navigation Legend</strong>
-          </div>
-          <div class="panel-body">
-            <ul>
-              <li><code>&#8594;</code> to navigate to <b>next slide</b></li>
-              <li><code>&#8592;</code> to navigate to <b>previous slide</b></li>
-              <li><code>&#8593;</code> to navigate to <b>first slide</b></li>
-              <li><code>&#8595;</code> to navigate to <b>last slide</b></li>
-              <li><code>&#47;</code> to open and close the <b>sidebar</b></li>
-              <li><code>ESC</code> to navigate to <b>topics list</b></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  <% end %>
+      </td>
+    </tr>
+    <!-- References -->
+    <tr>
+      <td>
+        <h4>References
+          <a id="EditReferencesBtn" data-toggle="modal" href="#EditReferences">
+            <i class="fa fa-pencil-square-o fa-lg pull-right"></i>
+          </a>
+        </h4>
+        <hr>
+        <div id="referencescontent" class="rwell spacer"></div>
+      </td>
+    </tr>
+  </table>
 </div>
 
-<script src="/js/bootstrap.file-input.js"></script>
-<script type="text/javascript">
-$(document).ready(function() {
-  $('input[type=file]').bootstrapFileInput();
-  $('.file-inputs').bootstrapFileInput();
+<style type="text/css">
+.table {
+  border-bottom:0px !important;
+}
+.table th, .table td {
+  border: 0px !important;
+}
 
-  // validate resume upload
-  $('#upload').bootstrapValidator({
-    feedbackIcons: {
-      valid: 'glyphicon glyphicon-ok',
-      invalid: 'glyphicon glyphicon-remove',
-      validating: 'glyphicon glyphicon-refresh'
+.twell {
+  min-height: 20px;
+  padding: 0px;
+  border: 1px solid #eeeeee;
+  overflow: hidden;
+}
+.bwell {
+  min-height: 20px;
+  padding: 15px;
+  margin-bottom: 20px;
+  background-color: #f5f5f5;
+  border: 1px solid #eeeeee;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+}
+.rwell {
+  min-height: 20px;
+  max-height: 400px;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #0160B4;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+  overflow:scroll;
+  overflow-x:hidden;
+}
+.awell {
+  min-height: 20px;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #0160B4;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+  overflow:scroll;
+  overflow-x:hidden;
+}
+.spacer {
+  margin-top: 20px;
+}
+.truncate {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.deleteicon:hover {
+  background-color: #FF7F00;
+}
+.deleteicon:hover {
+  background-color: #FF7F00;
+}
+#progress-circle {
+    width: 50px;
+    height: 50px;
+}
+#progress-circle > svg {
+    width: 100%;
+    display: block;
+}
+</style>
+
+<script src="/js/marked.js"></script>
+<script src="/js/progressbar.min.js"></script>
+<script type="text/javascript">
+$("a.tooltipLink").tooltip();
+$(".tooltip").tooltip();
+
+$('#twell-<%= sub_topic.id %>').hover(function () {
+    $('#spb-<%= sub_topic.id %>').removeClass('hidden'); 
+}, function () {
+    $('#spb-<%= sub_topic.id %>').addClass('hidden');
+});
+
+var circle = new ProgressBar.Circle('#progress-circle', {
+  color: '#0160B4',
+  strokeWidth: 10,
+  text: {
+    value: '<%= assignment_submissions %>/<%= total_assignments %>',
+  }
+});
+
+// 0.0 to 1.0
+circle.animate(<%= (((assignment_submissions * 1.0) + assignments_approved * 1.0) / (total_assignments * 2.0)).to_f %>);
+console.log("Submissions: <%= assignment_submissions %>");
+console.log("Approved: <%= assignments_approved %>");
+console.log("Progress: <%= (((assignment_submissions * 1.0) + assignments_approved * 1.0) / (total_assignments * 2.0)).to_f %>");
+
+document.getElementById('referencescontent').innerHTML = marked(<%= sub_topic.references.dump %>);
+
+<% sub_topic.training_assignments.each do |assignment| %>
+document.getElementById('assignmentcontent-<%= assignment.id %>').innerHTML = marked(<%= assignment.description.dump %>);
+<% end %>
+
+$('#SubmitBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var references = $("#References").val();
+ 
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/references",
+    data: { 'references': references },
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#EditReferencesFormLabel').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Sucess: " + data.msg);
+        _this.html("Submitted");
+        $('#EditReferencesFormLabel').addClass('text-info').html(data.msg);
+        $('#EditReferences').modal('hide');
+        location.reload();
+      }
     },
-    fields: {
-      'pdf': {
-        validators: {
-          notEmpty: {
-            message: 'The presentation file is required'
-          },
-          file: {
-            extension: 'pdf',
-            type: 'application/pdf',
-            maxSize: 30 * 1024 * 1024,   // 30 MB
-            message: 'Currently we only accept pdf format with size limit of 30MB'
-          }
-        }
-      },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
+      $('#EditReferencesFormLabel').addClass('text-danger').html('Something went wrong adding/updating reference!!!');
     }
   });
 });
+
+$('#AssignmentSubmitBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var heading = $("#Heading").val();
+  var description = $("#Description").val();
+  var athenaeumlink = $("#AthenaeumLink").val();
+ 
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/assignment",
+    data: { 'heading': heading, 'description': description, 'athenaeumlink': athenaeumlink },
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#AddAssignmentFormLabel').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Sucess: " + data.msg);
+        _this.html("Submitted");
+        $('#AddAssignmentFormLabel').addClass('text-info').html(data.msg);
+        $('#AddAssignment').modal('hide');
+        location.reload();
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
+      $('#AddAssignmentFormLabel').addClass('text-danger').html('Something went wrong adding assignment!!!');
+    }
+  });
+});
+
+<% sub_topic.training_assignments.each do |assignment| %>
+$('#EditAssignmentSubmitBtn-<%= assignment.id %>').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var heading = $("#Heading-<%= assignment.id %>").val();
+  var description = $("#Description-<%= assignment.id %>").val();
+  var athenaeumlink = $("#AthenaeumLink-<%= assignment.id %>").val();
+ 
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/assignment/<%= assignment.id %>/update",
+    data: { 'heading': heading, 'description': description, 'athenaeumlink': athenaeumlink },
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#EditAssignmentFormLabel-<%= assignment.id %>').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Success: " + data.msg);
+        _this.html("Submitted");
+        $('#EditAssignmentFormLabel-<%= assignment.id %>').addClass('text-info').html(data.msg);
+        $('#EditAssignment-<%= assignment.id %>').modal('hide');
+        location.reload();
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
+      $('#EditAssignmentFormLabel-<%= assignment.id %>').addClass('text-danger').html('Something went wrong updating assignment!!!');
+    }
+  });
+});
+
+$('#SubmitAssignmentSubmitBtn-<%= assignment.id %>').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var submissionlink = $("#AssignmentSubmissionLink-<%= assignment.id %>").val();
+ 
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/assignment/<%= assignment.id %>/submit",
+    data: { 'submissionlink': submissionlink },
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#SubmitAssignmentFormLabel-<%= assignment.id %>').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Success: " + data.msg);
+        _this.html("Submitted");
+        $('#SubmitAssignmentFormLabel-<%= assignment.id %>').addClass('text-info').html(data.msg);
+        $('#SubmitAssignment-<%= assignment.id %>').modal('hide');
+        location.reload();
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
+      $('#SubmitAssignmentFormLabel-<%= assignment.id %>').addClass('text-danger').html('Something went wrong submitting assignment!!!');
+    }
+  });
+});
+<% end %>
 </script>

@@ -15,11 +15,16 @@ class TrainingSubTopic
   field :et, type: Integer, default: 0
   # specifies if any dj process is working on it
   field :lock?, type: Boolean, default: false
-  # number fo times users have started this topic presentation
+  # number of times users have started this topic presentation
   field :views, type: Integer, default: 0
+  # order of the sub topic in the topic
+  field :order, type: Integer, default: 0
+  # references content
+  field :references, type: String, default: ''
 
   belongs_to :training_topic
   has_one :pdf_file
   has_many :content_slides
   has_many :content_thumbnails
+  has_many :training_assignments
 end

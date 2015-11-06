@@ -1,0 +1,201 @@
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Trainee Portal</h2>
+  </div>
+
+  <!-- Progress -->
+  <div class="row-fluid">
+    <!-- self progress -->
+    <div class="col-xs-6 spacer">
+      <div class="progress-container">
+        <div class = "media">
+           <div class = "pull-left">
+              <div id="traineedp" class="dpcircle"><%= @username.to_s.split('@').first.split('.').map{ |a| a[0]}.join().upcase %></div>
+           </div>
+           
+           <div class = "media-body">
+           <!-- {:DO=>{:progress=>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], :topics=>[:LX, :SCP, :BD101, :HDOPS, :CDOPS, :AUTO, :AWS, :SCR, :BD501, :VCS, :JIRA, :CI], :LX=>{:progress=>0.0}, :SCP=>{:progress=>0.0}, :BD101=>{:progress=>0.0}, :HDOPS=>{:progress=>0.0}, :CDOPS=>{:progress=>0.0}, :AUTO=>{:progress=>0.0}, :AWS=>{:progress=>0.0}, :SCR=>{:progress=>0.0}, :BD501=>{:progress=>0.0}, :VCS=>{:progress=>0.0}, :JIRA=>{:progress=>0.0}, :CI=>{:progress=>0.0}, :overall=>0.0}} -->
+              <% 
+                # calculate user overall progress
+                overall_progress_self = [] 
+                self_progress.keys.each do |tt|
+                  overall_progress_self << self_progress[tt][:overall]
+                end
+                overall_progress_percent_self = if overall_progress_self.empty?
+                                                  0.0
+                                                else
+                                                  (overall_progress_self.inject(:+) / overall_progress_self.count) * 100
+                                                end
+              %>
+              <h4 class = "media-heading">Your Overall Training Progress</h4>
+              <div class="progress">
+                <div class="progress-bar" role="progressbar" aria-valuenow="<%= overall_progress_percent_self.to_i %>" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: <%= overall_progress_percent_self.to_i %>%;">
+                  <!-- <span class="sr-only"> 60% Complete</span>-->
+                  <%= overall_progress_percent_self.to_i %>%
+                </div>
+              </div>
+              <% self_progress.keys.each do |track| %>
+                <% overall_track_progress_percent = (self_progress[track][:overall] * 100).to_i %>
+                <h5 class = "media-heading">Track <%= track.to_s %> Progress</h5>
+                <div class="progress">
+                  <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="<%= overall_track_progress_percent %>" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: <%= overall_track_progress_percent %>%;">
+                    <%= overall_track_progress_percent %>%
+                  </div>
+                </div>
+                <div class="pull-right" style="width: 90%;">
+                  <% self_progress[track][:topics].each do |topic| %>
+                  <% overall_topic_progress_percent = (self_progress[track][topic][:progress] * 100).to_i %>
+                    <h5 class = "media-heading">Topic <%= topic.to_s %> Progress</h5>
+                    <div class="progress">
+                      <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="<%= overall_topic_progress_percent %>" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: <%= overall_topic_progress_percent %>%;">
+                      <%= overall_topic_progress_percent %>%
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+           </div>  
+        </div>
+      </div>
+    </div>
+    <!-- team progress -->
+    <div class="col-xs-6 spacer">
+      <div class="progress-container">
+        <% if consultant.team.nil? %>
+          You are not assigned to a team yet, please ask admin to associate you to a team to track your class/team progress.
+        <% elsif team_progress.keys.empty? %>
+          There are no members yet associated with your team.
+        <% else %>
+          <% team_progress.keys.each_with_index do |member, i| %>
+            <%
+              # calculate each user progress
+              overall_progress = []
+              team_progress[member].keys.map { |tt|
+                overall_progress << team_progress[member][tt][:overall] 
+              }
+              overall_progress_percent =  if overall_progress.empty?
+                                            0.0
+                                          else
+                                            (overall_progress.inject(:+) / overall_progress.count) * 100
+                                          end
+            %>
+            <% user_initials = member.to_s.split('@').first.split('.').map{ |a| a[0]}.join().upcase %>
+            <div class = "media">
+              <div class = "pull-left">
+                <div id="traineedp-<%= i %>" class="dpcircle"><%= user_initials %></div>
+              </div>
+
+              <div class = "media-body">
+                <h4 class = "media-heading"><%= member.to_s.split('@').first.split('.').first.capitalize %>'s Overall Progress</h4>
+                <div class="progress">
+                  <div class="progress-bar" role="progressbar" aria-valuenow="<%= overall_progress_percent.to_i %>" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: <%= overall_progress_percent.to_i %>%;">
+                    <%= overall_progress_percent.to_i %>%
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tracks & Notifications -->
+  <div class="row-fluid">
+    <!-- Tracks -->
+    <div class="col-xs-8">
+      <h3>Tracks</h3>
+      <hr>
+
+      <% training_tracks.each do |track| %>
+        <a style="display:block" href="/training/track/<%= track.id %>">
+        <div class="col-xs-3 spacer">
+          <div id="track-<%= track.id %>" class="well" style="height:100px; background-color: black;">
+            <p align="center" class="font-responsive-large"><font color="white"><%= track.name %></font></p>
+            <p align="center" class="font-responsive-small"><font color="white"><%= track.code %></font></p>
+          </div>
+        </div>
+        </a>
+      <% end %>
+    </div>
+      
+    <!-- Notifications -->
+    <div class="col-xs-4 spacer" style="border-left: 1px solid #333;">
+      <h3>Notifications</h3>
+      <hr>
+      <% if consultant.team.nil? %>
+        You are not assigned to a team yet, please ask admin to associate you to a team to get team notifications.
+      <% else %>
+        <div class="notifications">
+          <% if notifications.empty? %>
+            There are currently 0 notifications.
+          <% else %>
+          <ul class="list-group">
+            <% notifications.each do |notification| %>
+              <li class="list-group-item"><%= notification.message %></li>
+            <% end %>
+          </ul>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style type="text/css">
+.spacer {
+  margin-top: 20px;
+}  
+.notifications {
+  min-height: 20px;
+  padding: 19px;
+  margin-bottom: 20px;
+  background-color: white;
+  border: 1px solid #0160B4;
+  height: 400px;
+  overflow:scroll;
+  overflow-x:hidden;
+}
+.progress-container {
+  min-height: 20px;
+  padding: 19px;
+  margin-bottom: 20px;
+  background-color: white;
+  border: 1px solid #0160B4;
+  height: 300px;
+  overflow: scroll;
+  overflow-x: hidden;
+}
+.dpcircle{
+  width:50px;
+  height:50px;
+  border-radius:50px;
+  font-size:20px;
+  color:#fff;
+  line-height:50px;
+  text-align:center;
+  background:#000
+}
+</style>
+
+<script src="/js/jquery.fittext.js"></script>
+<script src="/js/randomColor.min.js"></script>
+<script type="text/javascript">
+console.log('<%= self_progress %>');
+console.log('<%= team_progress %>');
+
+$('.editbutton').tooltip();
+
+$(".font-responsive-large").fitText(0.7);
+$(".font-responsive-small").fitText();
+
+<% training_tracks.each do |track| %>
+document.querySelector('#track-<%= track.id %>').style.background = randomColor({hue: 'blue'});
+<% end %>
+
+document.querySelector('#traineedp').style.background = randomColor({hue: 'random',luminosity: 'random'});
+<% team_progress.keys.each_with_index do |member, i| %>
+document.querySelector('#traineedp-<%= i %>').style.background = randomColor({hue: 'random',luminosity: 'random'});
+<% end %>
+</script>

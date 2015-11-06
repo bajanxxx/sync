@@ -7,6 +7,7 @@ class Detail
 
   field :trainings, type: Array, default: []
   field :certifications, type: Array, default: []
+  field :training_tracks, type: Array, default: []
   field :current_company, type: String
 
   embeds_many :projects, class_name: 'Project'

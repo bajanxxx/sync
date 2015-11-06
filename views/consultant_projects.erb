@@ -86,9 +86,9 @@
           </td>
         </tr>
         <tr>
-          <td width="35%"><strong>Trainings</strong></td>
+          <td width="35%"><strong>Training Tracks</strong></td>
           <td width="65%">
-            <a href="#" id="trainings" data-type="select2" data-pk="<%= details.consultant_id %>" data-value="<%= details.trainings && details.trainings.join(',') || '' %>" data-url="/consultant/details/update" data-title="Enter your trainings"></a>
+            <a href="#" id="training_tracks"><%= details.training_tracks.join(', ') %></a>
           </td>
         </tr>
       </table>
@@ -496,6 +496,20 @@ $(document).ready(function() {
         if(!response.status) return response.msg;
       },
   });
+  $("#training_tracks").editable({
+    type: 'checklist',
+    title: 'Update user training tracks',
+    placement: 'right',
+    url: '/consultant/details/update',
+    separator: ',', // used to separate values as array from data-value
+    emptytext: 'Click here associate user to training track',
+    source: '/details/training_tracks/possible_values',
+    pk: '<%= details.consultant_id %>',
+    name: 'training_tracks',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
   <% end %>
 
   $('#phone').editable({
@@ -545,25 +559,14 @@ $(document).ready(function() {
     title: 'Update your certifications',
     placement: 'right',
     url: '/consultant/details/update',
-    separator: ',', // used to seperate values as arary from data-value
+    separator: ',', // used to separate values as array from data-value
     emptytext: 'Click here to add a certification',
-    source: '/deatils/certifications/possible_values',
+    source: '/details/certifications/possible_values',
     pk: '<%= details.consultant_id %>',
     name: 'certifications',
     success: function(response, newValue) {
       if(!response.status) return response.msg;
     },
-  });
-
-  $("#trainings").editable({
-    type: 'select2',
-    tpl: "<input type='text' style='width: 400px'>",
-    inputclass: 'input-large',
-    emptytext: 'Click here to add a training you had from internal',
-    placement: 'right',
-    select2: {
-      tags: ['Mongodb Developer', 'Mongodb Admin']
-    }
   });
 
   // projects inline editing

@@ -1,0 +1,117 @@
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Trainers Portal</h2>
+  </div>
+
+  <!-- Placeholder Table -->
+  <table class="table">
+    <tr>
+      <!-- Courses Assigned -->
+      <td colspan="2">
+        <h4>Courses Assigned</h4>
+        <hr>
+        The following are the courses assigned to you for teaching by the admin, if you don't any intended course please contact admin.
+        <br>
+
+        <% topics_assigned.each do |_t| %>
+          <div class="col-xs-3 spacer">
+            <div id="topic-<%= _t[:topic].id %>" class="circle-multiline">
+              <a href="/training/trainer/track/<%= _t[:track].id %>/topic/<%= _t[:topic].id %>/team/<%= _t[:team] %>">
+                <div class="font-responsive">
+                  <font color="white">
+                    <strong><%= _t[:track].name %></strong>
+                    <br>
+                    <%= _t[:topic].name %>
+                    <br>
+                    Team <%= _t[:team] %>
+                  </font>
+                </div>
+              </a>
+            </div>
+          </div>
+        <% end %>
+      </td>
+    </tr>
+    <tr>
+      <!-- Training Tracks -->
+      <td class="col-xs-8">
+        <h4>Training Tracks</h4>
+        <hr>
+        <div class="row-fluid">
+          <% training_tracks.each do |track| %>
+            <a style="display:block" href="/training/track/<%= track.id %>">
+            <div class="col-xs-3 spacer">
+              <div id="track-<%= track.id %>" class="well" style="height:100px; background-color: black;">
+                <p align="center" class="font-responsive-large"><font color="white"><%= track.name %></font></p>
+                <p align="center" class="font-responsive-small"><font color="white"><%= track.code %></font></p>
+              </div>
+            </div>
+            </a>
+          <% end %>
+        </div>
+      </td>
+      <!-- Notifications -->
+      <td class="col-xs-4">
+        <h4>Notifications</h4>
+        <hr>
+        <div class="notifications">
+          <ul class="list-group">
+            <% notifications.each do |notification| %>
+              <li class="list-group-item"><%= notification.message %></li>
+            <% end %>
+          </ul>
+        </div>        
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<style type="text/css">
+.table {
+  border-bottom:0px !important;
+}
+.table th, .table td {
+  border: 0px !important;
+}
+.spacer {
+  margin-top: 20px;
+}
+.deleteicon:hover {
+  background-color: #FF7F00;
+}
+.circle-multiline {
+  display: table-cell;
+  height: 200px;
+  width: 200px;
+  text-align: center;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: purple;
+  color: white;
+}
+.notifications {
+  min-height: 20px;
+  padding: 19px;
+  margin-bottom: 20px;
+  background-color: white;
+  border: 1px solid #0160B4;
+  height: 400px;
+  overflow:scroll;
+  overflow-x:hidden;
+}
+</style>
+
+<script src="/js/jquery.fittext.js"></script>
+<script src="/js/randomColor.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+  $(".font-responsive-large").fitText(0.7);
+  $(".font-responsive-small").fitText();
+
+  <% training_tracks.each do |track| %>
+    document.querySelector('#track-<%= track.id %>').style.background = randomColor({hue: 'blue'});
+  <% end %>
+});
+</script>

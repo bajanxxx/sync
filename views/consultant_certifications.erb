@@ -147,7 +147,7 @@ $(document).ready(function(){
               message: 'The first name is required and cannot be empty'
           },
           stringLength: {
-              min: 6,
+              min: 2,
               max: 100,
               message: 'The first name must be more than 6 and less than 100 characters long'
           },
@@ -160,7 +160,7 @@ $(document).ready(function(){
               message: 'The last name is required and cannot be empty'
           },
           stringLength: {
-              min: 6,
+              min: 2,
               max: 100,
               message: 'The last name must be more than 6 and less than 100 characters long'
           },
@@ -196,7 +196,7 @@ $(document).ready(function(){
       error: function(data) {
         _this.attr('disabled', false); // re-enable submit
         _this.text('Re-submit');
-        $('#CreateCertificationRequestLabel').addClass('text-danger').html('Something went wrong requesting air ticket!!!');
+        $('#CreateCertificationRequestLabel').addClass('text-danger').html('Something went wrong requesting certification!!!');
       }
     });
   });
