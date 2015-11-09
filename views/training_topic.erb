@@ -199,9 +199,11 @@
   <div class="row-fluid">
     <div class="col-xs-12 spacer">
       <h3>Projects
+        <% if @admin_user %>
         <a id="AddProjectBtn" data-toggle="modal" href="#AddProject">
           <i class="fa fa-plus-square-o fa-lg pull-right"></i>
         </a>
+        <% end %>
       </h3>
       <hr>
       <div class="pwell spacer">
