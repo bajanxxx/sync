@@ -191,9 +191,11 @@
       <!--Assignments-->
       <td rowspan="2" class="col-xs-6">
         <h4>Assignments
+          <% if @admin_user %>
           <a id="AddAssignmentBtn" data-toggle="modal" href="#AddAssignment">
             <i class="fa fa-plus-square-o fa-lg pull-right"></i>
           </a>
+          <% end %>
         </h4>
         <hr>
         <div class="awell spacer sidebar-nav" style="height : 900px;">
@@ -242,9 +244,11 @@
     <tr>
       <td>
         <h4>References
+          <% if @admin_user %>
           <a id="EditReferencesBtn" data-toggle="modal" href="#EditReferences">
             <i class="fa fa-pencil-square-o fa-lg pull-right"></i>
           </a>
+          <% end %>
         </h4>
         <hr>
         <div id="referencescontent" class="rwell spacer"></div>
