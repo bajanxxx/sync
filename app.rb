@@ -4027,6 +4027,7 @@ Admin</a> </p>
   get '/training/track/:trackid/topic/:topicid' do |trackid, topicid|
     track = TrainingTrack.find(trackid)
     topic = TrainingTopic.find(topicid)
+    consultant = Consultant.find(@username)
 
     if @admin_user  
       order = if topic.training_sub_topics.count == 0
@@ -4041,7 +4042,7 @@ Admin</a> </p>
         assignable_sub_topic_order: order
       }
     else
-      if user_access_to_topic(@username, track, topic)
+      if user_access_to_topic(consultant, track, topic)
         erb :training_topic, locals: {
           track: track,
           topic: topic,
