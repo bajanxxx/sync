@@ -117,7 +117,7 @@
       <div class="modal-body">
         <form role="form" id="LLCreateForm">
           <div class="form-group">
-            <label class="control-label" for="References">References:</label>
+            <label class="control-label" for="References">References: (Markdown allowed)</label>
             <textarea rows="5" class="form-control" id="References" name="References"><%= sub_topic.references %></textarea>
               <span class="help-block"></span>
           </div>
@@ -139,7 +139,7 @@
 <!-- Actual Container -->
 <div class="container theme-showcase" role="main">
   <div class="page-header">
-    <h2><a href="/training">Training Portal</a> > <a href="/training/track/<%= track.id %>"><%= track.code %></a> > <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>"><%= topic.code %></a> > Sub Topic
+    <h2><a href="/training">Training Portal</a> <small> <a href="/training/track/<%= track.id %>"><%= track.code %></a> > <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>"><%= topic.code %></a> > Sub Topic</small>
     <a data-toggle="tooltip" class="tooltipLink pull-right" data-original-title="Submissions: <%= assignment_submissions %>, Approvals: <%= assignments_approved %>" data-placement="bottom">
       <span style="font-size: 15px">
         <div id="progress-circle"></div>
@@ -152,7 +152,7 @@
 
   <!-- Placeholder Table -->
   <table class="table">
-    <tr>
+    <tr style="height:350px">
       <!-- Slides -->
       <td class="col-xs-6">
         <h4>Slides</h4>

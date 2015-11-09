@@ -123,12 +123,12 @@
             subtopics_count += topic.training_sub_topics.count
           end
         %>
-        <a style="display:block" href="/training/track/<%= track.id %>">
+        <a class="button hvr-float" style="display:block" href="/training/track/<%= track.id %>">
         <div class="col-xs-3 spacer">
           <div id="track-<%= track.id %>" class="well" style="height:175px; background-color: black;">
-            <p align="center" class="font-responsive-large"><font color="white"><%= track.name %></font></p>
-            <p align="center" class="font-responsive-small"><font color="white"><%= track.code %></font></p>
-            <p align="center" class="font-responsive-small"><font color="white" size="1">Topics: <%= track.training_topics.count %> | SubTopics: <%= subtopics_count %><small></p>
+            <div align="center" class="font-responsive-large"><font color="white"><%= track.name %></font></div>
+            <div align="center" class="font-responsive-small"><font color="white"><%= track.code %></font></div>
+            <div align="center" class="font-responsive-small"><font color="white" size="1">Topics: <%= track.training_topics.count %> | SubTopics: <%= subtopics_count %><small></div>
           </div>
         </div>
         </a>
@@ -137,6 +137,7 @@
   </div>
 </div>
 
+<link href="/css/hover-min.css" rel="stylesheet" media="all">
 <style type="text/css">
 .spacer {
   margin-top: 20px;

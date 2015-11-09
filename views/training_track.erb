@@ -91,7 +91,7 @@
 <!-- Actual Container -->
 <div class="container theme-showcase" role="main">
   <div class="page-header">
-    <h2><a href="/training">Training Portal</a> > <%= track.code %> > Topics
+    <h2><a href="/training">Training Portal</a> <small> <%= track.code %> > Topics</small>
       <% if @admin_user %>
         <div class="btn-group pull-right">
           <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
@@ -158,7 +158,7 @@
           <% core.each do |topic| %>
             <div class="col-xs-3 spacer">
               <% if @admin_user %>
-                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#006788">
                   <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                     <div class="font-responsive">
                       <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
@@ -168,7 +168,7 @@
                 </div>
               <% else %>
                 <% if access[:core] %>
-                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#006788">
                     <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                       <div class="font-responsive">
                         <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
@@ -197,7 +197,7 @@
           <% adv.each do |topic| %>
             <div class="col-xs-3 spacer">
               <% if @admin_user %>
-                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#005573">
                   <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                     <div class="font-responsive">
                       <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
@@ -207,7 +207,7 @@
                 </div>
               <% else %>
                 <% if access[:adv] %>
-                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#005573">
                     <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                       <div class="font-responsive">
                         <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
@@ -236,7 +236,7 @@
           <% opt.each do |topic| %>
             <div class="col-xs-3 spacer">
               <% if @admin_user %>
-                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#071174">
                   <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                     <div class="font-responsive">
                       <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
@@ -246,7 +246,7 @@
                 </div>
               <% else %>
                 <% if access[:opt] %>
-                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#08385E">
+                  <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#071174">
                     <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                       <div class="font-responsive">
                         <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
@@ -294,6 +294,7 @@
   </div>
 </div>
 
+<link href="/css/hover-min.css" rel="stylesheet" media="all">
 <style type="text/css">
 .table {
   border-bottom:0px !important;

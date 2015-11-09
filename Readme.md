@@ -1,13 +1,20 @@
 Cloudwick Sync
 --------------
 
-Central portal which manages
+Central portal featuring:
 
-* Fetches jobs from several popular job portals like **DICE** and **INDEED**
-* Manages job applications for all the consultants
-* Central location for managing Cloudwick's Email Campaigning
-* Document Request Management
-* Manage (Create|Destroy|Upgrade|Start|Stop) cloud server's/cluster's both in public (AWS/RackSpace) adn in private (OpenStack) cloud environments.
+* Job Portal
+  * Fetches jobs from several popular job portals like **DICE** and **INDEED**
+  * Manages job applications for all the consultants
+* Email Campaigning Portal
+  * Central location for managing Cloudwick's Email Campaigning
+* Consultant Requests Portal
+  * Document Request Management
+  * Certification Request Management
+  * Air tickets request management
+  * Cloud servers request management
+* Training Portal
+  * Trainer/Trainee Portal for accessing and tracking trainee progress
 
 Get it
 ------
@@ -26,39 +33,63 @@ Install Dependencies:
 **Install Ruby 2.0.0:**
 
 ```
-curl -L get.rvm.io | bash -s stable
-source ~/.rvm/scripts/rvm || source /usr/local/rvm/scripts/rvm || source /etc/profile.d/rvm.sh
-rvm requirements --verify-downloads 1
-rvm install 2.0.0
-rvm use 2.0.0 --default
-rvm rubygems current
-rvm @globla do gem install bundler
+yum install -y git-core zlib zlib-devel gcc-c++ patch readline readline-devel libyaml-devel libffi-devel openssl-devel make bzip2 autoconf automake libtool bison curl sqlite-devel
+cd
+git clone git://github.com/sstephenson/rbenv.git .rbenv
+echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
+exec $SHELL
+
+git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
+echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> ~/.bash_profile
+exec $SHELL
+
+rbenv install -v 2.0.0-p647
+rbenv global 2.0.0-p647
+echo "gem: --no-document" > ~/.gemrc
 ```
 
 **Install External Dependencies:**
 
 * [ImageMagick](http://www.imagemagick.org/script/binary-releases.php#unix)
 
-> If its a Ubuntu based system then install `apt-get install libmagickwand-dev imagemagick`
+> Redhat: `yum -y install ImageMagick ImageMagick-devel`
+> Ubuntu: `apt-get install libmagickwand-dev imagemagick`
 
 **Install Gem Dependencies:**
 
 ```
 cd /opt/sync
-rvm @global do bundle install
+bundle install
+rbenv rehash
 ```
 
 Install MongoDB:
 ----------------
-The following commands will install a single MongoDB instance on the local
-system:
+The following commands will install a single MongoDB instance on the local system (this will by default install mongo v2.4.9):
 
 ```
-cd $HOME
+cd
 curl -sO https://raw.githubusercontent.com/cloudwicklabs/scripts/master/mongo_install.sh
 chmod +x mongo_install.sh
 ./mongo_install.sh
 ```
+
+Install Nginx:
+-------------
+
+```
+cat > /etc/yum.repos.d/nginx.repo <<EOF
+[nginx]
+name=nginx repo
+baseurl=http://nginx.org/packages/rhel/6/$basearch/
+gpgcheck=0
+enabled=1
+EOF
+
+yum install nginx
+```
+
 
 Configure it:
 -------------
@@ -71,53 +102,15 @@ mongo instance
 
 Configure `config/config.yml` to specify Mail gun API keys and email addresses to use.
 
-**Configuring new relic for monitoring**
-
-Configure `config/newrelic.yml` to specify license_key.
-
 **Configuring nginx web server:**
 
 Copy `config/nginx.conf` to `/etc/nginx` and replace the path variables to reflect your environment.
 
 Run it:
 ------
-**Start unicorn application server:**
 
 ```
-cd /opt/sync
-RAILS_ENV='production' unicorn --config-file config/unicorn.rb --host 0.0.0.0 --port 9292 --env development --daemonize config.ru
-# bundle exec rackup -s thin >> /var/log/sync.log 2>&1 &
-```
-
-**Starting Nginx web server:**
-
-```
-/etc/init.d/nginx start
-```
-
-**Starting 8 delayed_job processes:**
-
-```
-RAILS_ENV=production bin/delayed_job.rb -n 8 start
-```
-
-**stopping and restarting all processes**
-
-```
-cd /opt/sync
-cat tmp/pids/unicorn.pid | xargs kill -QUIT
-RAILS_ENV=production bin/delayed_job.rb stop
-/etc/init.d/nginx stop
-
-RAILS_ENV='production' unicorn --config-file config/unicorn.rb --host 0.0.0.0 --port 9292 --env development --daemonize config.ru
-RAILS_ENV=production bin/delayed_job.rb -n 8 start
-/etc/init.d/nginx start
-```
-
-Or use the built-in script:
-
-```
-bin/sync_init.sh
+bin/sync_init.sh start all
 ```
 
 **Creating indexes for collections** (Onetime)
