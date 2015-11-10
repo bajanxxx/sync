@@ -216,9 +216,11 @@
                         <a id="SubmitAssignmentBtn-<%= assignment.id %>" data-toggle="modal" href="#SubmitAssignment-<%= assignment.id %>">
                           <i class="fa fa-check-square-o pull-right"></i>
                         </a>
+                        <% if @admin_user %>
                         <a id="EditAssignmentBtn-<%= assignment.id %>" data-toggle="modal" href="#EditAssignment-<%= assignment.id %>">
                           <i class="fa fa-pencil-square-o pull-right"></i>
                         </a>
+                        <% end %>
                       </a>
                     </h4>
                   </div>
