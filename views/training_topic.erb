@@ -224,9 +224,11 @@
                     <a id="SubmitProjectBtn-<%= project.id %>" data-toggle="modal" href="#SubmitProject-<%= project.id %>">
                       <i class="fa fa-check-square-o pull-right"></i>
                     </a>
+                    <% if @admin_user %>
                     <a id="EditProjectBtn-<%= project.id %>" data-toggle="modal" href="#EditProject-<%= project.id %>">
                       <i class="fa fa-pencil-square-o pull-right"></i>
                     </a>
+                    <% end %>
                   </a>
                 </h4>
               </div>
