@@ -2887,7 +2887,7 @@ Admin</a> </p>
         twilio.account.messages.create(
           from: @settings[:twilio_phone],
           to: to_phone,
-          body: "SYNC: #{cname} air ticket booking"
+          body: "SYNC: #{cfname} #{clname} air ticket booking"
         )
       end
     end
