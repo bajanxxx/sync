@@ -20,7 +20,10 @@
         <li class="list-group-item">
           <button type="button" id="DisapproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-remove disapprovebutton" data-original-title="Disapprove this request"></span></button>
           <button type="button" id="ApproveRequest-<%= request.id %>" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-ok approvebutton" data-original-title="Approve this request"></span></button>
-          <span><%= request.consultant %> has logged <%= request.total_hours %> for the week of <%= request.week %></span>
+          <span>
+            <a href="/timesheets/<%= request.consultant %>/<%= request.week.strftime('%Y') %>/<%= (request.week + 7).strftime('%U') %>"><%= request.consultant %> has logged <%= request.total_hours %> for the week of <%= request.week %>
+            </a>
+          </span>
         </li>
       <% end %>
     </ul>
