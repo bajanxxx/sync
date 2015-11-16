@@ -12,12 +12,10 @@
           <div class="form-group">
             <label for="TrackName">Track Name:</label>
               <input type="text" class="form-control" id="TrackName" name="TrackName" placeholder="Training track to create (ex: devops, data engineer, etc.)" value="" required="required" />
-              <span class="help-block"></span>
           </div>
           <div class="form-group">
             <label for="TrackCode">Track Short Code:</label>
               <input type="text" class="form-control" id="TrackCode" name="TrackCode" placeholder="Unique code name for track name (ex: DOPS, DE, etc.)" value="" required="required" />
-              <span class="help-block"></span>
           </div>
         </form>
         <p id="CreateTrackFormLabel" class="text-center"></p>
@@ -52,7 +50,6 @@
                 <option value="<%= u.email %>"><%= u.first_name %> <%= u.last_name %></option>
               <% end %>
             </select>
-            <span class="help-block"></span>
           </div>
           <div class="form-group">
             <label for="TrainerTrack">Trainers Track:</label>
@@ -64,12 +61,10 @@
                 <% end %>
               <% end %>
             </select>
-            <span class="help-block"></span>
           </div>
           <div class="form-group">
             <label for="TrainerTeam">Trainer Team:</label>
             <input type="text" class="form-control" id="TrainerTeam" name="TrainerTeam" placeholder="Team to which trainer will teach this topic" value="" required="required" />
-            <span class="help-block"></span>
           </div>
         </form>
         <p id="AssociateTrainerFormLabel" class="text-center"></p>
@@ -90,27 +85,25 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2>Training Admin Portal
-      <% if @admin_user %>
-        <div class="btn-group pull-right">
-          <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-            Start Here <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu" role="menu">
-            <li>
-              <a id="CreateTrackBtn" data-toggle="modal" href="#CreateTrack">
-                Create New Training Track
-              </a>
-            </li>
-            <li>
-              <a id="AssociateTrainerBtn" data-toggle="modal" href="#AssociateTrainer">
-                Associate Trainer to Topic
-              </a>
-            </li>
-          </ul>
-        </div>
-      <% end %>
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+          Start Here <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li>
+            <a id="CreateTrackBtn" data-toggle="modal" href="#CreateTrack">
+              Create New Training Track
+            </a>
+          </li>
+          <li>
+            <a id="AssociateTrainerBtn" data-toggle="modal" href="#AssociateTrainer">
+              Associate Trainer to Topic
+            </a>
+          </li>
+        </ul>
+      </div>
     </h2>
-  </div>
+  </div> <!-- page-header -->
   <!-- Training Topics -->
   <div class="row-fluid">
     <% if training_tracks.empty? %>
@@ -128,11 +121,39 @@
           <div id="track-<%= track.id %>" class="well" style="height:175px; background-color: black;">
             <div align="center" class="font-responsive-large"><font color="white"><%= track.name %></font></div>
             <div align="center" class="font-responsive-small"><font color="white"><%= track.code %></font></div>
-            <div align="center" class="font-responsive-small"><font color="white" size="1">Topics: <%= track.training_topics.count %> | SubTopics: <%= subtopics_count %><small></div>
+            <div align="center" class="font-responsive-small"><font color="white" size="1">Topics: <%= track.training_topics.count %> | SubTopics: <%= subtopics_count %></font></div>
           </div>
         </div>
         </a>
       <% end %>
+    <% end %>
+  </div>
+  <!-- Classes overview -->
+  <div class="row-fluid">
+    <h3>Classes Overview</h3>
+    <hr>
+    <!-- render trainers overview links here -->
+    <% if trainers.empty? %>
+      No trainers have been associated yet. Please do so by clicking 'Start Here' > 'Associate Trainer to Topic'.
+    <% else %>
+      <ul class="list-group">
+      <% trainers.each do |trainer| %>
+        <% trainer.trainer_topics.each do |details| %>
+          <li class="list-group-item">
+            <span class="pull-right">
+              <span class="badge progress-bar-info"><a href="/training/trainer/track/<%= details.track %>/topic/<%= details.topic %>/team/<%= details.team %>" style="color:white;">Goto Class</a></span>
+            </span>
+            <strong><%= get_user_fullname(trainer.email) %></strong>
+            <div>
+              <small><%= time_ago_in_words(Time.now, details.created_at) %> ago</small>
+            </div>
+            <div>
+              Associated to track: '<%= get_track_name(details.track) %>', topic: '<%= get_topic_name(details.topic) %>' for team: <%= details.team %>
+            </div>
+          </li>
+        <% end %>
+      <% end %>
+      </ul>
     <% end %>
   </div>
 </div>
@@ -162,7 +183,7 @@ $(".font-responsive-large").fitText(0.7);
 $(".font-responsive-small").fitText();
 
 <% training_tracks.each do |track| %>
-document.querySelector('#track-<%= track.id %>').style.background = randomColor({hue: 'blue'});
+document.querySelector('#track-<%= track.id %>').style.background = randomColor({hue: 'blue', luminosity: 'dark'});
 <% end %>
 
 $("#TrainerTrack").select2();

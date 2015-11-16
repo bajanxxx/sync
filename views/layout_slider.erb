@@ -17,8 +17,8 @@
 		}
 
 		#slideimg {
-			height: 75%;
-			width: 75%;
+			height: 90%;
+			width: 90%;
 		}
 
 		#wrapper {
@@ -36,10 +36,10 @@
 		#sidebar-wrapper {
 			z-index: 1000;
 			position: fixed;
-			left: 220px;
+			left: 250px;
 			width: 0;
 			height: 100%;
-			margin-left: -220px;
+			margin-left: -250px;
 			overflow-y: auto;
 			background: #000;
 			-webkit-transition: all 0.5s ease;
@@ -49,7 +49,7 @@
 		}
 
 		#wrapper.toggled #sidebar-wrapper {
-			width: 220px;
+			width: 250px;
 		}
 
 		#page-content-wrapper {
@@ -60,7 +60,7 @@
 
 		#wrapper.toggled #page-content-wrapper {
 			position: absolute;
-			margin-right: -220px;
+			margin-right: -250px;
 		}
 
 		/* Sidebar Styles */
@@ -68,7 +68,7 @@
 		.sidebar-nav {
 			position: absolute;
 			top: 0;
-			width: 220px;
+			width: 250px;
 			margin: 0;
 			padding: 0px 10px; /* left slide thumbnail padding */
 			list-style: none;
@@ -113,7 +113,7 @@
 
 		@media(min-width:768px) {
 			#wrapper {
-				padding-left: 220px;
+				padding-left: 250px;
 			}
 
 			#wrapper.toggled {
@@ -121,7 +121,7 @@
 			}
 
 			#sidebar-wrapper {
-				width: 220px;
+				width: 250px;
 			}
 
 			#wrapper.toggled #sidebar-wrapper {

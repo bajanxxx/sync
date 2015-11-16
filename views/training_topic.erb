@@ -154,9 +154,10 @@
   <div class="page-header">
     <h2><a href="/training">Training Portal</a> <small> <a href="/training/track/<%= track.id %>"><%= track.code %></a> > <%= topic.code %> > Sub Topics</small>
       <% if @admin_user %>
+        <!-- buttons -->
         <div class="btn-group pull-right">
           <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-            Start Here <span class="caret"></span>
+            Manage <span class="caret"></span>
           </button>
           <ul class="dropdown-menu" role="menu">
             <li>
@@ -169,6 +170,11 @@
                 Manage Sub Topics
               </a>
             </li>
+            <li>
+              <a id="ManageProjects">
+                Manage Projects
+              </a>
+            </li>
           </ul>
         </div>
       <% end %>
@@ -176,82 +182,134 @@
   </div>
   
   <br>
-
+  
+  <!-- Sub topics in circles -->
   <div class="row-fluid">
     <% if topic.training_sub_topics.count == 0 %>
       <h3>No sub topics have been added yet</h3>
     <% else %>
       <% topic.training_sub_topics.asc(:order).all.entries.each do |sub_topic| %>
         <div class="col-xs-2 spacer">
-          <div id="sub_topic-<%= sub_topic.id %>" class="circle-multiline">
-            <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>">
-              <div class="font-responsive">
-                <font color="white"><%= sub_topic.name %></font>
+          <% if @admin_user %>
+            <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>">
+              <div id="sub_topic-<%= sub_topic.id %>" class="circle-multiline">
+                <div class="font-responsive">
+                  <font color="white"><%= sub_topic.name %></font>
+                </div>
+                <button type="button" id="DeleteTopic-<%= sub_topic.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
               </div>
             </a>
-            <button type="button" id="DeleteTopic-<%= sub_topic.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
-          </div>
+          <% else %>
+            <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>">
+              <div id="sub_topic-<%= sub_topic.id %>" class="circle-multiline">
+                <div class="font-responsive">
+                  <font color="white"><%= sub_topic.name %></font>
+                </div>
+              </div>
+            </a>
+          <% end %>
         </div>
       <% end %>
     <% end %>
   </div>
 
+  <!-- Projects -->
   <div class="row-fluid">
     <div class="col-xs-12 spacer">
       <h3>Projects
         <% if @admin_user %>
-        <a id="AddProjectBtn" data-toggle="modal" href="#AddProject">
-          <i class="fa fa-plus-square-o fa-lg pull-right"></i>
-        </a>
+          <span class="pull-right">
+            <a class="addproject" role="left" href="#AddProject" data-toggle="modal" data-placement="left" data-original-title='Add a new project'>
+              <i class="fa fa-plus-square-o fa-lg"></i>
+            </a>
+          </span>
         <% end %>
       </h3>
       <hr>
       <div class="pwell spacer">
-        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        <!-- accordion -->
+        <div class="panel-group" id="projectsaccordion">
           <% if topic.training_projects.empty? %>
             <h4>No projects have yet been added to this topic.</h4>
           <% else %>
-          <% topic.training_projects.each do |project| %>
-            <div class="panel panel-default">
-              <div class="panel-heading" role="tab" id="proj-<%= project.id %> %>">
-                <h4 class="panel-title">
-                  <% if project.name == 'Project #1' %>
-                  <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-<%= project.id %>" aria-expanded="true" aria-controls="collapse-<%= project.id %>">
+            <% topic.training_projects.each do |project| %>
+              <!-- change the panel color based on the status of the submission -->
+              <% if @consultant %>
+                <% if project.training_project_submissions.find_by(consultant_id: @username) %>
+                  <% if project.training_project_submissions.find_by(consultant_id: @username).status == 'APPROVED' %>
+                  <div class="panel panel-success">
+                  <% elsif project.training_project_submissions.find_by(consultant_id: @username).status == 'REDO' %>
+                  <div class="panel panel-warning">  
                   <% else %>
-                  <a role="button" class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse-<%= project.id %>" aria-expanded="false" aria-controls="collapse-<%= project.id %>">
+                  <div class="panel panel-default">
                   <% end %>
-                    <%= project.name %> <%= "(#{project.training_project_submissions.find_by(consultant_id: @username).status.downcase})" if project.training_project_submissions.find_by(consultant_id: @username) %>
-                    <a id="SubmitProjectBtn-<%= project.id %>" data-toggle="modal" href="#SubmitProject-<%= project.id %>">
-                      <i class="fa fa-check-square-o pull-right"></i>
+                <% else %>
+                <div class="panel panel-default">
+                <% end %>
+              <% else %>
+              <div class="panel panel-default">
+              <% end %>
+                <div class="panel-heading">
+                  <h4 class="panel-title">
+                    <!-- buttons -->
+                    <span class="pull-right">
+                      <a class="submitproject" href="#SubmitProject-<%= project.id %>" data-toggle="modal" data-placement="top" data-original-title='Submit project'>
+                        <i class="fa fa-check-square-o"></i>
+                      </a>
+                      <% if @admin_user %>
+                      <a class="editproject" href="#EditProject-<%= project.id %>" data-toggle="modal" data-placement="top" data-original-title='Edit project'>
+                        <i class="fa fa-pencil-square-o"></i>  
+                      </a>
+                      <button type="button" id="DeleteProject-<%= project.id %>" class="btn btn-default btn-xs deleteprojecticon">
+                        <span class="deleteproject" data-original-title="Delete this project">
+                          <i class="fa fa-trash-o"></i>  
+                        </span>
+                      </button>
+                      <% end %>
+                    </span>
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#projectsaccordion" href="#collapse-<%= project.id %>">
+                      <%= project.name %> <%= "(#{project.training_project_submissions.find_by(consultant_id: @username).status.downcase})" if project.training_project_submissions.find_by(consultant_id: @username) %>
                     </a>
-                    <% if @admin_user %>
-                    <a id="EditProjectBtn-<%= project.id %>" data-toggle="modal" href="#EditProject-<%= project.id %>">
-                      <i class="fa fa-pencil-square-o pull-right"></i>
-                    </a>
+                  </h4>
+                </div>
+                <% if project.name == 'Project #1' %>
+                <div id="collapse-<%= project.id %>" class="panel-collapse collapse in">
+                <% else %>
+                <div id="collapse-<%= project.id %>" class="panel-collapse collapse">
+                <% end %>
+                  <div class="panel-body project-content">
+                    <div class="project-content-owner">
+                      <small>
+                        <% if project.last_edited_by.nil? %>
+                          Created <%= time_ago_in_words(Time.now, project.created_at) %> ago, by: <%= project.created_by  %>.
+                        <% elsif project.last_edited_by == project.created_by %>
+                          Modified <%= time_ago_in_words(Time.now, project.last_edited_at) %> ago, by: <%= project.last_edited_by %>.
+                        <% else %>
+                          Modified <%= time_ago_in_words(Time.now, project.last_edited_at) %> ago, by: <%= project.last_edited_by %>, created by: <%= project.created_by %>.
+                        <% end %>
+                      </small>
+                    </div>
+                    <h4>
+                      <%= project.heading %>
+                    </h4>
+                    <div id="projectcontent-<%= project.id %>">
+                    </div>
+                    <% if !project.description_link.empty? %>
+                    <br>
+                    <a href="<%= project.description_link %>">More info</a>
                     <% end %>
-                  </a>
-                </h4>
-              </div>
-              <div id="collapse-<%= project.id %>" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="proj-<%= project.id %> %>">
-                <div class="panel-body">
-                  <h4><%= project.heading %></h4>
-                  <div id="projectcontent-<%= project.id %>">
                   </div>
-                  <% if !project.description_link.empty? %>
-                  <br>
-                  <a href="<%= project.description_link %>">More info</a>
-                  <% end %>
                 </div>
               </div>
-            </div>
+            <% end %>
           <% end %>
-          <% end %>
-        </div>        
-      </div>
+        </div> <!-- end accordion -->
+      </div> <!-- pwell -->
     </div>
   </div>
 </div>
 
+<link href="/css/hover-min.css" rel="stylesheet" media="all">
 <style type="text/css">
 .spacer {
   margin-top: 20px;
@@ -279,6 +337,15 @@
   overflow:scroll;
   overflow-x:hidden;
 }
+.project-content {
+  position:relative;
+}
+.project-content-owner {
+  position:absolute;
+  top:0;
+  right:0;
+  margin-right: 5px;
+}
 </style>
 
 <script src="/js/jquery.fittext.js"></script>
@@ -288,6 +355,10 @@
 $(document).ready(function(){
   $(".font-responsive").fitText();
   $('.deletebutton').tooltip();
+  $('.addproject').tooltip();
+  $('.submitproject').tooltip();
+  $('.editproject').tooltip();
+  $('.deleteproject').tooltip();
 
   <% topic.training_sub_topics.each do |sub_topic| %>
   document.querySelector('#sub_topic-<%= sub_topic.id %>').style.background = randomColor({luminosity: 'dark', hue: 'blue'});
@@ -335,8 +406,10 @@ $(document).ready(function(){
   
   // delete buttons
   var show = false;
+  var showproject = false;
 
   $('.deleteicon').hide();
+  $('.deleteprojecticon').hide();
 
   $('#ManageSubTopics').click(function() {
     _this = $(this);
@@ -350,7 +423,21 @@ $(document).ready(function(){
       show = true;
       _this.html('Hide Delete');
     }
-  })
+  });
+
+  $('#ManageProjects').click(function() {
+    _this = $(this);
+
+    if(showproject) {
+      $('.deleteprojecticon').hide();
+      showproject = false;
+      _this.html('Manage Projects');
+    } else {
+      $('.deleteprojecticon').show();
+      showproject = true;
+      _this.html('Hide Delete');
+    }
+  });
 
   <% topic.training_sub_topics.each do |sub_topic| %>
   $('#DeleteTopic-<%= sub_topic.id %>').click(function() {
@@ -478,6 +565,26 @@ $(document).ready(function(){
       }
     });
   });
-  <% end %>  
+  <% end %>
+
+  <% topic.training_projects.each do |project| %>
+  $('#DeleteProject-<%= project.id %>').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/project/<%= project.id %>/delete",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  <% end %>
 });
 </script>

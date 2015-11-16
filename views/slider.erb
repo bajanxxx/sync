@@ -29,23 +29,25 @@
   <div class="footer navbar-fixed-bottom">
     <div class="container">
       <p class="text-muted text-center">
-        <b>Slides:</b> <span id="slidecounter"></span>/<%= slides_count - 1 %> | <b>Legend</b>: &#8594; (next slide), &#8592; (prev slide), &#8593; (first slide), &#8595; (last slide), ESC (go back to topics), &#47; Slider
+        <b>Slides:</b> <span id="slidecounter"></span>/<%= slides_count - 1 %> | <b>Legend</b>: &#8594; (next slide), &#8592; (prev slide), &#47; (toggle slider), ESC (go back to topics)
+        <!-- &#8593; (first slide), &#8595; (last slide) -->
       </p>
     </div>
   </div>  
 </div>
 
 <script type='text/javascript'>
+  var cPos = 0;
+
   <% thumbnails.each_with_index do |slide, index| %>
   $(function(){
     $(".slide-<%= index %>").click(function(){
       $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/<%= index %>");
       $("#slidecounter").html(<%= index %>);
+      cPos = <%= index %>;
     });
   });
   <% end %>
-
-  var cPos = 0
 
   var slidesCount = <%= slides_count %>
 
@@ -72,12 +74,12 @@
           console.log("reached the beginning of the slidedeck")
         }
         break;
-      case 38:
-        // up key
-        cPos = 0 // reset the current position
-        $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/0");
-        $("#slidecounter").html(cPos);
-        break;
+      // case 38:
+      //   // up key
+      //   cPos = 0 // reset the current position
+      //   $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/0");
+      //   $("#slidecounter").html(cPos);
+      //   break;
       case 39:
         // right key
         cPos += 1
@@ -89,12 +91,12 @@
           console.log("reached the end of the slidedeck")
         }
         break;
-      case 40:
-        // down key pressed
-        cPos = slidesCount - 1
-        $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
-        $("#slidecounter").html(cPos);
-        break;
+      // case 40:
+      //   // down key pressed
+      //   cPos = slidesCount - 1
+      //   $("#slidecontent").load("/training/track/<%= trackid %>/topic/<%= tid %>/subtopic/<%= stid %>/ss/" + cPos);
+      //   $("#slidecounter").html(cPos);
+      //   break;
       case 191:
         // forward slash pressed
         $("#wrapper").toggleClass("toggled");
@@ -108,8 +110,8 @@
 
   window.onresize = function(){
     $('img').css({
-      maxHeight: window.innerHeight * 0.75,
-      maxWidth: window.innerWidth * 0.75
+      maxHeight: window.innerHeight * 0.90,
+      maxWidth: window.innerWidth * 0.90
     });
   };
 </script>
