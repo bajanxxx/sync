@@ -18,7 +18,7 @@ class ConvertPdfToImages < Struct.new(:sub_topic, :file_id)
       File.open(local_file, 'w') { |_f| _f.write(file_contents) }
       log "Writing pdf file to temp location #{local_file}"
       # convert pdf to images
-      pdf_images = Magick::ImageList.new(local_file) { self.density = 200 }
+      pdf_images = Magick::ImageList.new(local_file) { self.density = 600 }
 
       # iterate over each image in the pdf and write that out to mongo
       pdf_images.each_with_index do |page_img, _i|
@@ -26,7 +26,7 @@ class ConvertPdfToImages < Struct.new(:sub_topic, :file_id)
         thumb_tmp_file = Tempfile.new(["#{file_id}_#{_i}_thumb", '.png'])
         page_img.write(img_tmp_file.path)
 
-        _t = page_img.scale(0.1) # scale the image down to 10% of original
+        _t = page_img.scale(0.25) # scale the image down to 25% of original for rendering thumbnails
         _t.write(thumb_tmp_file.path)
 
         if _i == 0

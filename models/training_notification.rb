@@ -1,7 +1,7 @@
 class TrainingNotification
   include Mongoid::Document
 
-  # consultant id which is the point of origin of this notification
+  # consultant / trainer which is the point of origin of this notification
   field :originator, type: String
   # full user name
   field :name, type: String
@@ -10,6 +10,10 @@ class TrainingNotification
   # destination email address or id
   field :destination, type: String
   field :team, type: Integer
+  # mark if the message is read
+  field :read, type: Boolean, default: false
+  # mark if the message is dismissed
+  field :hide, type: Boolean, default: false
   # type of notification -> ASSIGNMENT, PROJECT, ACCESS
   field :type, type: String
   # sub-type of notification

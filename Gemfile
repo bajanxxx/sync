@@ -34,3 +34,4 @@ gem 'rmagick'
 # Development for `rerun 'rackup --server thin'`
 gem 'thin'
 gem 'slack-ruby-client'
+gem 'celluloid-io' # for slack-real-time client concurrency

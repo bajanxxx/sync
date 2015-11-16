@@ -78,6 +78,9 @@
               <ul class="list-group">
                 <li class="list-group-item">Linked file: <%= sub_topic.pdf_file.filename %></li>
               </ul>
+              <% if sub_topic.file == 'LINKED' %>
+              <a class="btn btn-warning center-block" id="unlink-presentation">Unlink and delete presentation</a>
+              <% end %>
             </div>
           </div>
         <% end %>
@@ -160,6 +163,24 @@ $(document).ready(function() {
         }
       },
     }
+  });
+
+  $('#unlink-presentation').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/unlink",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
   });
 });
 </script>

@@ -3,7 +3,7 @@ class TrainingTopic
 
   # name of the topic (ex: Hadoop, Spark, Cassandra)
   field :name, type: String
-  # short code for the topic, unique name for the topic
+  # short code for the topic, unique name for the topic (should be <=10 chars), will be used for slack group name
   field :code, type: String
   # who manages the content (email address)
   field :contact, type: String

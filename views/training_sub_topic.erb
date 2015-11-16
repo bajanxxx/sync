@@ -14,7 +14,7 @@
             <span class="help-block"></span>
           </div>
           <div class="form-group">
-            <label class="control-label" for="Description">Description:</label>
+            <label class="control-label" for="Description">Description: (Markdown allowed)</label>
             <textarea rows="5" class="form-control" id="Description" name="Description"></textarea>
               <span class="help-block"></span>
           </div>
@@ -54,7 +54,7 @@
             <span class="help-block"></span>
           </div>
           <div class="form-group">
-            <label class="control-label" for="Description-<%= assignment.id %>">Description: (markdown allowed)</label>
+            <label class="control-label" for="Description-<%= assignment.id %>">Description: (Markdown allowed)</label>
             <textarea rows="5" class="form-control" id="Description-<%= assignment.id %>" name="Description-<%= assignment.id %>"><%= assignment.description %></textarea>
               <span class="help-block"></span>
           </div>
@@ -140,11 +140,27 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2><a href="/training">Training Portal</a> <small> <a href="/training/track/<%= track.id %>"><%= track.code %></a> > <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>"><%= topic.code %></a> > Sub Topic</small>
-    <a data-toggle="tooltip" class="tooltipLink pull-right" data-original-title="Submissions: <%= assignment_submissions %>, Approvals: <%= assignments_approved %>" data-placement="bottom">
-      <span style="font-size: 15px">
-        <div id="progress-circle"></div>
-      </span>
-    </a>
+    <% if @admin_user %>
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+          Manage <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li>
+            <a id="ManageAssignments">
+              Manage Assignments
+            </a>
+          </li>
+        </ul>
+      </div>
+    <% end %>
+    <% if @consultant %>
+      <a data-toggle="tooltip" class="tooltipLink pull-right" data-original-title="Submissions: <%= assignment_submissions %>, Approvals: <%= assignments_approved %>" data-placement="bottom">
+        <span style="font-size: 15px">
+          <div id="progress-circle"></div>
+        </span>
+      </a>
+    <% end %>
     </h2>
   </div>
   <h3><%= sub_topic.name %></h3>
@@ -192,9 +208,11 @@
       <td rowspan="2" class="col-xs-6">
         <h4>Assignments
           <% if @admin_user %>
-          <a id="AddAssignmentBtn" data-toggle="modal" href="#AddAssignment">
-            <i class="fa fa-plus-square-o fa-lg pull-right"></i>
-          </a>
+            <span class="pull-right">
+              <a id="AddAssignmentBtn" class="addassignment" href="#AddAssignment" data-toggle="modal" data-placement="left" data-original-title='Add assignment'>
+                <i class="fa fa-plus-square-o fa-lg"></i>
+              </a>
+            </span>
           <% end %>
         </h4>
         <hr>
@@ -204,28 +222,60 @@
               No assignments have yet been added, stay tuned for more updates.
             <% else %>
               <% sub_topic.training_assignments.each do |assignment| %>
+                <% if @consultant %>
+                  <% if assignment.training_assignment_submissions.find_by(consultant_id: @username) %>
+                    <% if assignment.training_assignment_submissions.find_by(consultant_id: @username).status == 'APPROVED' %>
+                    <div class="panel panel-success">
+                    <% elsif assignment.training_assignment_submissions.find_by(consultant_id: @username).status == 'REDO' %>
+                    <div class="panel panel-warning">
+                    <% else %>
+                    <div class="panel panel-default">  
+                    <% end %>
+                  <% else %>
+                  <div class="panel panel-default">
+                  <% end %>
+                <% else %>
                 <div class="panel panel-default">
+                <% end %>
                   <div class="panel-heading" role="tab" id="ass-<%= assignment.id %> %>">
                     <h4 class="panel-title">
+                      <span class="pull-right">
+                        <a class="submitassignment" id="SubmitAssignmentBtn-<%= assignment.id %>" data-toggle="modal" href="#SubmitAssignment-<%= assignment.id %>" data-placement="top" data-original-title='Submit assignment'>
+                          <i class="fa fa-check-square-o"></i>
+                        </a>
+                        <% if @admin_user %>
+                          <a class="editassignment" id="EditAssignmentBtn-<%= assignment.id %>" data-toggle="modal" href="#EditAssignment-<%= assignment.id %>" data-placement="top" data-original-title='Edit assignment'>
+                            <i class="fa fa-pencil-square-o"></i>
+                          </a>
+                          <button type="button" id="DeleteAssignment-<%= assignment.id %>" class="btn btn-default btn-xs deleteassignmenticon">
+                            <span class="deleteassignment" data-original-title="Delete this assignment">
+                              <i class="fa fa-trash-o"></i>  
+                            </span>
+                          </button>
+                        <% end %>
+                      </span>
                       <% if assignment.name == 'Assignment #1' %>
                       <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-<%= assignment.id %>" aria-expanded="true" aria-controls="collapse-<%= assignment.id %>">
                       <% else %>
                       <a role="button" class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse-<%= assignment.id %>" aria-expanded="false" aria-controls="collapse-<%= assignment.id %>">
                       <% end %>
                         <%= assignment.name %> <%= "(#{assignment.training_assignment_submissions.find_by(consultant_id: @username).status.downcase})" if assignment.training_assignment_submissions.find_by(consultant_id: @username) %>
-                        <a id="SubmitAssignmentBtn-<%= assignment.id %>" data-toggle="modal" href="#SubmitAssignment-<%= assignment.id %>">
-                          <i class="fa fa-check-square-o pull-right"></i>
-                        </a>
-                        <% if @admin_user %>
-                        <a id="EditAssignmentBtn-<%= assignment.id %>" data-toggle="modal" href="#EditAssignment-<%= assignment.id %>">
-                          <i class="fa fa-pencil-square-o pull-right"></i>
-                        </a>
-                        <% end %>
                       </a>
                     </h4>
                   </div>
                   <div id="collapse-<%= assignment.id %>" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="ass-<%= assignment.id %> %>">
-                    <div class="panel-body">
+                    <div class="panel-body assignment-content">
+                      <div class="assignment-content-owner">
+                        <small>
+                          <% if assignment.last_edited_by.nil? %>
+                            Created <%= time_ago_in_words(Time.now, assignment.created_at) %> ago, by: <%= assignment.created_by  %>.
+                          <% elsif assignment.last_edited_by == assignment.created_by %>
+                            Modified <%= time_ago_in_words(Time.now, assignment.last_edited_at) %> ago, by: <%= assignment.last_edited_by %>.
+                          <% else %>
+                            Modified <%= time_ago_in_words(Time.now, assignment.last_edited_at) %> ago, by: <%= assignment.last_edited_by %>, created by: <%= assignment.created_by %>.
+                          <% end %>
+                        </small>
+                      </div>
                       <h4><%= assignment.heading %></h4>
                       <div id="assignmentcontent-<%= assignment.id %>">
                       </div>
@@ -247,9 +297,11 @@
       <td>
         <h4>References
           <% if @admin_user %>
-          <a id="EditReferencesBtn" data-toggle="modal" href="#EditReferences">
-            <i class="fa fa-pencil-square-o fa-lg pull-right"></i>
-          </a>
+          <span class="pull-right">
+            <a id="EditReferencesBtn" class="addassignment" href="#EditReferences" data-toggle="modal" data-placement="left" data-original-title='Edit references'>
+              <i class="fa fa-pencil-square-o fa-lg"></i>  
+            </a>
+          </span>
           <% end %>
         </h4>
         <hr>
@@ -326,6 +378,15 @@
     width: 100%;
     display: block;
 }
+.assignment-content {
+  position:relative;
+}
+.assignment-content-owner {
+  position:absolute;
+  top:0;
+  right:0;
+  margin-right: 5px;
+}
 </style>
 
 <script src="/js/marked.js"></script>
@@ -333,6 +394,25 @@
 <script type="text/javascript">
 $("a.tooltipLink").tooltip();
 $(".tooltip").tooltip();
+$(".addassignment").tooltip();
+$(".editassignment").tooltip();
+$(".submitassignment").tooltip();
+
+var showassignmentdelete = false;
+$('.deleteassignmenticon').hide();
+$('#ManageAssignments').click(function() {
+  _this = $(this);
+
+  if(showassignmentdelete) {
+    $('.deleteassignmenticon').hide();
+    showassignmentdelete = false;
+    _this.html('Manage Assignments');
+  } else {
+    $('.deleteassignmenticon').show();
+    showassignmentdelete = true;
+    _this.html('Hide Delete');
+  }
+});
 
 $('#twell-<%= sub_topic.id %>').hover(function () {
     $('#spb-<%= sub_topic.id %>').removeClass('hidden'); 
@@ -340,19 +420,21 @@ $('#twell-<%= sub_topic.id %>').hover(function () {
     $('#spb-<%= sub_topic.id %>').addClass('hidden');
 });
 
+<% if @consultant %>
 var circle = new ProgressBar.Circle('#progress-circle', {
   color: '#0160B4',
   strokeWidth: 10,
   text: {
-    value: '<%= assignment_submissions %>/<%= total_assignments %>',
+    value: '<%= assignments_approved %>/<%= total_assignments %>',
   }
 });
 
 // 0.0 to 1.0
-circle.animate(<%= (((assignment_submissions * 1.0) + assignments_approved * 1.0) / (total_assignments * 2.0)).to_f %>);
+circle.animate(<%= (((assignment_submissions * 1.0) + assignments_approved * 2.0) / (total_assignments * 2.0)).to_f %>);
 console.log("Submissions: <%= assignment_submissions %>");
 console.log("Approved: <%= assignments_approved %>");
-console.log("Progress: <%= (((assignment_submissions * 1.0) + assignments_approved * 1.0) / (total_assignments * 2.0)).to_f %>");
+console.log("Progress: <%= (((assignment_submissions * 1.0) + assignments_approved * 2.0) / (total_assignments * 2.0)).to_f %>");
+<% end %>
 
 document.getElementById('referencescontent').innerHTML = marked(<%= sub_topic.references.dump %>);
 
@@ -497,6 +579,24 @@ $('#SubmitAssignmentSubmitBtn-<%= assignment.id %>').click(function() {
       _this.attr('disabled', false); // re-enable submit
       _this.text('Re-submit');
       $('#SubmitAssignmentFormLabel-<%= assignment.id %>').addClass('text-danger').html('Something went wrong submitting assignment!!!');
+    }
+  });
+});
+
+$('#DeleteAssignment-<%= assignment.id %>').click(function() {
+  console.log("Initializing call");
+  _this = $(this);
+  _this.html('<i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  $.ajax({
+    type: "POST",
+    url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/assignment/<%= assignment.id %>/delete",
+    success: function(data){
+      location.reload();
+    },
+    error: function(e){
+      alert("Error occurred!");
     }
   });
 });

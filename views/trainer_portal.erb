@@ -1,73 +1,104 @@
 <!-- Actual Container -->
 <div class="container theme-showcase" role="main">
   <div class="page-header">
-    <h2>Trainers Portal</h2>
+    <h2>Trainers Portal
+      <span class="pull-right">
+        <a href="#notifications" type="button" class="btn btn-primary" type="button">
+          Notifications <span class="badge"><%= notifications.count %></span>
+        </a>
+      </span>
+    </h2>
   </div>
+  
+  <!-- Courses Assigned -->
+  <div class="row-fluid">
+    <h4>Courses Assigned</h4>
+    <hr>
+    The following are the courses assigned to you for teaching by the admin, if you don't see an intended course below please contact admin.
+    <br>
 
-  <!-- Placeholder Table -->
-  <table class="table">
-    <tr>
-      <!-- Courses Assigned -->
-      <td colspan="2">
-        <h4>Courses Assigned</h4>
-        <hr>
-        The following are the courses assigned to you for teaching by the admin, if you don't any intended course please contact admin.
-        <br>
-
-        <% topics_assigned.each do |_t| %>
-          <div class="col-xs-3 spacer">
-            <div id="topic-<%= _t[:topic].id %>" class="circle-multiline">
-              <a href="/training/trainer/track/<%= _t[:track].id %>/topic/<%= _t[:topic].id %>/team/<%= _t[:team] %>">
-                <div class="font-responsive">
-                  <font color="white">
-                    <strong><%= _t[:track].name %></strong>
-                    <br>
-                    <%= _t[:topic].name %>
-                    <br>
-                    Team <%= _t[:team] %>
-                  </font>
-                </div>
-              </a>
+    <% topics_assigned.each do |_t| %>
+      <div class="col-xs-3 spacer">
+        <a class="button hvr-float" href="/training/trainer/track/<%= _t[:track].id %>/topic/<%= _t[:topic].id %>/team/<%= _t[:team] %>">
+          <div id="topic-<%= _t[:topic].id %>" class="circle-multiline">
+            <div class="font-responsive">
+              <font color="white">
+                <strong><%= _t[:track].name %></strong>
+                <br>
+                <%= _t[:topic].name %>
+                <br>
+                Team <%= _t[:team] %>
+              </font>
             </div>
           </div>
-        <% end %>
-      </td>
-    </tr>
-    <tr>
-      <!-- Training Tracks -->
-      <td class="col-xs-8">
-        <h4>Training Tracks</h4>
-        <hr>
-        <div class="row-fluid">
-          <% training_tracks.each do |track| %>
-            <a style="display:block" href="/training/track/<%= track.id %>">
-            <div class="col-xs-3 spacer">
-              <div id="track-<%= track.id %>" class="well" style="height:100px; background-color: black;">
-                <p align="center" class="font-responsive-large"><font color="white"><%= track.name %></font></p>
-                <p align="center" class="font-responsive-small"><font color="white"><%= track.code %></font></p>
-              </div>
+        </a>
+      </div>
+    <% end %>
+  </div>
+
+  <br>
+  
+  <!-- Tracks -->
+  <div class="row-fluid">
+    <h4>Training Tracks</h4>
+    <hr>
+    <div class="row-fluid">
+      <% training_tracks.each do |track| %>
+        <a class="button hvr-float" style="display:block" href="/training/track/<%= track.id %>">
+          <div class="col-xs-3 spacer">
+            <div id="track-<%= track.id %>" class="well" style="height:150px; background-color: black;">
+              <p align="center" class="font-responsive-large"><font color="white"><%= track.name %></font></p>
+              <p align="center" class="font-responsive-small"><font color="white"><%= track.code %></font></p>
             </div>
-            </a>
+          </div>
+        </a>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="row-fluid">
+     <h4><a name="notifications">Notifications</a>
+       <span class="pull-right">
+          <small>occurred in last 30 days</small>
+        </span>
+     </h4>
+    <hr>
+    <div class="notifications">
+      <% if notifications.empty? %>
+        There are currently 0 notifications.
+      <% else %>
+        <ul class="list-group">
+          <% notifications.each do |notification| %>
+            <li class="list-group-item">
+              <span class="pull-right">
+                <% if notification.created_at > DateTime.now-48.hours %>
+                <span class="badge progress-bar-info">New</span>
+                <% end %>
+              </span>
+              <strong><%= notification.name %></strong>
+              <div>
+                <small><%= time_ago_in_words(Time.now, notification.created_at) %> ago</small>
+              </div>
+              <div>
+                <%= notification.message %>
+              </div>
+            </li>
           <% end %>
-        </div>
-      </td>
-      <!-- Notifications -->
-      <td class="col-xs-4">
-        <h4>Notifications</h4>
-        <hr>
-        <div class="notifications">
-          <ul class="list-group">
-            <% notifications.each do |notification| %>
-              <li class="list-group-item"><%= notification.message %></li>
-            <% end %>
-          </ul>
-        </div>        
-      </td>
-    </tr>
-  </table>
+        </ul>
+        <% if notifications.count > 10 %>
+          <span class="pull-right">
+            <a id="loadmore" href="#" class="btn btn-xs btn-info"><span class="glyphicon glyphicon-collapse-down"></span> Load More</a>
+            <a id="showless" href="#" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-collapse-up"></span> Show less</a>
+          </span>
+        <% end %>
+      <% end %>
+    </div>     
+  </div>
+
 </div>
 
-
+<link href="/css/hover-min.css" rel="stylesheet" media="all">
 <style type="text/css">
 .table {
   border-bottom:0px !important;
@@ -111,7 +142,23 @@ $(document).ready(function(){
   $(".font-responsive-small").fitText();
 
   <% training_tracks.each do |track| %>
-    document.querySelector('#track-<%= track.id %>').style.background = randomColor({hue: 'blue'});
+    document.querySelector('#track-<%= track.id %>').style.background = randomColor({hue: 'blue', luminosity: 'dark'});
   <% end %>
+
+  // limit number of notifications shown to 10 and then render based on 'Load more' & 'Show less'
+  notifications_size = $("#notifications-ul li").size();
+  show_size = 10;
+  increment = 10;
+  decrement = 10
+  $('#notifications-ul li:lt('+show_size+')').show();
+  // load 10 more
+  $('#loadmore').click(function () {
+    show_size = (show_size+increment <= notifications_size) ? show_size+increment : notifications_size;
+    $('#notifications-ul li:lt('+show_size+')').show();
+  });
+  $('#showless').click(function () {
+    show_size = (show_size-decrement<5) ? show_size : show_size-decrement;
+    $('#notifications-ul li').not(':lt('+show_size+')').hide();
+  });
 });
 </script>
