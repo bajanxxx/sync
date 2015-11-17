@@ -3266,6 +3266,28 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
+  post '/timesheets/manage/vendor/:vid/update' do |vid|
+    success = true
+    message = "Successfully updated vendor details"
+
+    name = params[:name]
+    address = params[:address]
+    currency = params[:currency]
+
+    if name.empty? || address.empty? || currency.empty?
+      success = false
+      message = "fields cannot be empty"
+    else
+      TimeVendor.find(vid).update_attributes(
+        name: name,
+        address: address,
+        preferred_currency: currency
+      )
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
   post '/timesheets/manage/client' do
     success    = true
     message    = "Successfully created vendor"
@@ -3284,9 +3306,29 @@ Admin</a> </p>
     { success: success, msg: message }.to_json
   end
 
-  post '/timesheets/project/add' do
-    puts params
+  post '/timesheets/manage/client/:cid/update' do |cid|
+    success = true
+    message = "Successfully updated client details"
 
+    name = params[:name]
+    address = params[:address]
+    currency = params[:currency]
+
+    if name.empty? || address.empty? || currency.empty?
+      success = false
+      message = "fields cannot be empty"
+    else
+      TimeClient.find(cid).update_attributes(
+        name: name,
+        address: address,
+        preferred_currency: currency
+      )
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  post '/timesheets/project/add' do
     client_id = params[:ClientName]
     vendor_id = params[:VendorName]
     project_name = params[:ProjectName]
@@ -3355,34 +3397,51 @@ Admin</a> </p>
   end
 
   post '/timesheets/project/update/:id' do |id|
-    # consultant_id   = id
-    # application_id  = params[:pk]
-    # update_key      = params[:name]
-    # update_value    = params[:value]
-    # success         = true
-    # message         = "Sucessfully updated #{update_key} to #{update_value}"
-    # consultant = Consultant.find_by(email: consultant_id)
-    # if consultant.nil?
-    #   success = false
-    #   message = "Cannot find user specified by #{consultant_id}"
-    # end
-    # application = consultant.applications.find_by(id: application_id)
-    # if application.nil?
-    #   success = false
-    #   message = "Cannot find application specified by #{application_id} for user #{consultant_id}"
-    # end
-    # begin
-    #   case update_key
-    #   when 'Comments'
-    #     application.add_to_set(update_key.to_sym, update_value)
-    #   else
-    #     application.update_attribute(update_key.to_sym, update_value)
-    #   end
-    # rescue
-    #   success = false
-    #   message = "Failed to update(#{update_key})"
-    # end
-    # { success: success, msg: message }.to_json
+    success    = true
+    message    = "Successfully added project"
+
+    client_id = params["ClientName-#{id}"]
+    vendor_id = params["VendorName-#{id}"]
+    project_name = params["ProjectName-#{id}"]
+    project_code = params["ProjectCode-#{id}"]
+    start_date = params["StartDate-#{id}"]
+    end_date = params["EndDate-#{id}"]
+    notes = params["Notes-#{id}"]
+    team = params["Team-#{id}"]
+
+    unless team
+      success = false
+      message = "Param 'team' cannot be empty, select atleast one consultant"
+
+      return { success: success, msg: message }.to_json unless success
+    end
+
+    if Date.strptime(start_date, "%m/%d/%Y") > Date.strptime(end_date, "%m/%d/%Y")
+      success = false
+      message = "start date should be less than end date"
+
+      return { success: success, msg: message }.to_json unless success
+    end
+
+    begin
+      if success
+        project = TimeProject.find(id)
+        project.update_attributes(
+          name: project_name,
+          start_date: Date.strptime(start_date, "%m/%d/%Y"),
+          end_date: Date.strptime(end_date, "%m/%d/%Y"),
+          notes: notes,
+          team: team
+        )
+      end
+    rescue ArgumentError
+      success = false
+      message = "Cannot parse date format (expected format: mm/dd/yyyy)"
+    end
+
+    flash[:info] = message
+
+    { success: success, msg: message }.to_json
   end
 
   get '/timesheets/pending' do

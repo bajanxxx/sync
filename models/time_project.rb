@@ -14,6 +14,7 @@ class TimeProject
   field :budget_method, type: String # TOTAL_PROJECT_HOURS, TOTAL_PROJECT_FEES, HOURS_PER_TASK, HOURS_PER_PERSON
   field :budget_project_minutes, type: Integer
   field :budget_project_fees, type: String, default: '0.00'
+  field :team, type: Array, default: []
   field :_id, type: String, default: -> { project_code }
 
   has_one :time_vendor, class_name: 'TimeVendor'

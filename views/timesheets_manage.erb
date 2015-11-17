@@ -34,6 +34,44 @@
     </div>
   </div>
 </div>
+<% vendors.each do |vendor| %>
+<div class="modal fade" id="EditVendorModal-<%= vendor.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Update Vendor</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="EditVendorForm-<%= vendor.id %>">
+          <div class="form-group">
+            <label for="VendorName-<%= vendor.id %>">Name:</label>
+              <input type="text" class="form-control" id="VendorName-<%= vendor.id %>" name="VendorName-<%= vendor.id %>" placeholder="Name of the vendor" value="<%= vendor.name %>" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="Address-<%= vendor.id %>">Address</label>
+            <input type="text" class="form-control" id="Address-<%= vendor.id %>" name="Address-<%= vendor.id %>" placeholder="Address of the vendor" value="<%= vendor.address %>" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="PreferredCurrency-<%= vendor.id %>">Preferred Currency:</label>
+            <select name="PreferredCurrency-<%= vendor.id %>" id="PreferredCurrency-<%= vendor.id %>" class="form-control">
+              <option value="USD">USD</option>
+              <option value="INR">INR</option>
+            </select>
+          </div>
+        </form>
+        <p id="EditVendorFormLabel-<%= vendor.id %>" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <button id="VendorSubmitBtn-<%= vendor.id %>" name="VendorSubmitBtn-<%= vendor.id %>" class="btn btn-large btn-primary center-block">Update Vendor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>
 
 <div class="modal fade" id="CreateClientModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -71,6 +109,44 @@
     </div>
   </div>
 </div>
+<% clients.each do |client| %>
+<div class="modal fade" id="EditClientModal-<%= client.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Update Client</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="EditClientForm-<%= client.id %>">
+          <div class="form-group">
+            <label for="ClientName-<%= client.id %>">Name:</label>
+              <input type="text" class="form-control" id="ClientName-<%= client.id %>" name="ClientName-<%= client.id %>" placeholder="Name of the client" value="<%= client.name %>" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="ClientAddress-<%= client.id %>">Address</label>
+            <input type="text" class="form-control" id="ClientAddress-<%= client.id %>" name="ClientAddress-<%= client.id %>" placeholder="Address of the client" value="<%= client.address %>" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="PreferredClientCurrency-<%= client.id %>">Preferred Currency:</label>
+            <select name="PreferredClientCurrency-<%= client.id %>" id="PreferredClientCurrency-<%= client.id %>" class="form-control">
+              <option value="USD">USD</option>
+              <option value="INR">INR</option>
+            </select>
+          </div>
+        </form>
+        <p id="EditClientFormLabel-<%= client.id %>" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <button id="ClientSubmitBtn-<%= client.id %>" name="ClientSubmitBtn-<%= client.id %>" class="btn btn-large btn-primary center-block">Update Client</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>
 
 
 <div class="container theme-showcase" role="main">
@@ -97,7 +173,11 @@
               <li class="list-group-item"><span>No vendors added yet!</span></li>
             <% else %>
               <% vendors.each do |vendor| %>
-              <li class="list-group-item"><span><%= vendor.name %></span> (<%= vendor.address %>)</li>
+                <li class="list-group-item">
+                  <a href="#EditVendorModal-<%= vendor.id %>" data-toggle="modal" class="tooltipLink" data-placement="top" data-original-title='Update vendor details'>
+                  <%= vendor.name %> (<%= vendor.address %>)
+                  </a>
+                </li>
               <% end %>
             <% end %>
           </ul>
@@ -119,14 +199,18 @@
               <li class="list-group-item"><span>No clients added yet!</span></li>
             <% else %>
               <% clients.each do |client| %>
-              <li class="list-group-item"><span><%= client.name %> (<%= client.address %>)</span></li>
+                <li class="list-group-item">
+                  <a href="#EditClientModal-<%= client.id %>" data-toggle="modal" class="tooltipLink" data-placement="top" data-original-title='Update client details'>
+                  <%= client.name %> (<%= client.address %>)
+                  </a>
+                </li>
               <% end %>
             <% end %>
           </ul>
         </div>
       </div>
       <div id="expensecategories" class="tab-pane">
-
+        WIP
       </div>
     </div>
   </div>
@@ -135,6 +219,7 @@
 <script type="text/javascript">
 $(document).ready(function(){
   $('[data-toggle="tooltip"]').tooltip({'placement': 'bottom'});
+  $(".tooltipLink").tooltip();
 
   $('#CreateVendorForm').bootstrapValidator({
     feedbackIcons: {
@@ -143,24 +228,51 @@ $(document).ready(function(){
         validating: 'glyphicon glyphicon-refresh'
       },
     fields: {
-      ClientName: {
+      VendorName: {
         message: 'name of the client is not valid',
         validators: {
           notEmpty: {
-              message: 'name of the client is required and cannot be empty'
+              message: 'name of the vendor is required and cannot be empty'
           }
         }
       },
-      ClientAddress: {
+      Address: {
         message: 'required',
         validators: {
           notEmpty: {
-            message: 'address of the client is required'
+            message: 'address of the vendor is required'
           }
         }
       }
     }
   });
+  <% vendors.each do |vendor| %>
+  $('#EditVendorForm-<%= vendor.id %>').bootstrapValidator({
+    feedbackIcons: {
+        valid: 'glyphicon glyphicon-ok',
+        invalid: 'glyphicon glyphicon-remove',
+        validating: 'glyphicon glyphicon-refresh'
+      },
+    fields: {
+      'VendorName-<%= vendor.id %>': {
+        message: 'name of the client is not valid',
+        validators: {
+          notEmpty: {
+              message: 'name of the vendor is required and cannot be empty'
+          }
+        }
+      },
+      'Address-<%= vendor.id %>': {
+        message: 'required',
+        validators: {
+          notEmpty: {
+            message: 'address of the vendor is required'
+          }
+        }
+      }
+    }
+  });
+  <% end %>
 
   $('#VendorSubmitBtn').click(function() {
     _this = $(this);
@@ -192,6 +304,43 @@ $(document).ready(function(){
       }
     });
   });
+  <% vendors.each do |vendor| %>
+  $('#VendorSubmitBtn-<%= vendor.id %>').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var name = $("#VendorName-<%= vendor.id %>").val();
+    var address = $("#Address-<%= vendor.id %>").val();
+    var currency = $("#PreferredCurrency-<%= vendor.id %>").val();
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/timesheets/manage/vendor/<%= vendor.id %>/update",
+      data: { 'name': name, 'address': address, 'currency': currency },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#EditVendorFormLabel-<%= vendor.id %>').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg)
+          _this.html("Submitted");
+          $('#EditVendorFormLabel-<%= vendor.id %>').addClass('text-info').html(data.msg);
+          $('#EditVendorModal-<%= vendor.id %>').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#EditVendorFormLabel-<%= vendor.id %>').addClass('text-danger').html('Something went wrong updating vendor details!!!');
+      }
+    });
+  });
+  <% end %>
 
   $('#CreateClientForm').bootstrapValidator({
     feedbackIcons: {
@@ -200,24 +349,51 @@ $(document).ready(function(){
         validating: 'glyphicon glyphicon-refresh'
       },
     fields: {
-      VendorName: {
+      ClientName: {
         message: 'name of the vendor is not valid',
         validators: {
           notEmpty: {
-              message: 'name of the vendor is required and cannot be empty'
+              message: 'name of the client is required and cannot be empty'
           }
         }
       },
-      Address: {
+      ClientAddress: {
         message: 'required',
         validators: {
           notEmpty: {
-            message: 'address of the vendor is required'
+            message: 'address of the client is required'
           }
         }
       }
     }
   });
+  <% clients.each do |client| %>
+  $('#EditClientForm-<%= client.id %>').bootstrapValidator({
+    feedbackIcons: {
+        valid: 'glyphicon glyphicon-ok',
+        invalid: 'glyphicon glyphicon-remove',
+        validating: 'glyphicon glyphicon-refresh'
+      },
+    fields: {
+      'ClientName-<%= client.id %>': {
+        message: 'name of the vendor is not valid',
+        validators: {
+          notEmpty: {
+              message: 'name of the client is required and cannot be empty'
+          }
+        }
+      },
+      'ClientAddress-<%= client.id %>': {
+        message: 'required',
+        validators: {
+          notEmpty: {
+            message: 'address of the client is required'
+          }
+        }
+      }
+    }
+  });
+  <% end %>
 
   $('#ClientSubmitBtn').click(function() {
     _this = $(this);
@@ -235,7 +411,7 @@ $(document).ready(function(){
           _this.html('Re-submit');
           $('#CreateClientFormLabel').addClass('text-danger').html(data.msg);
         } else {
-          console.log("Sucess: " + data.msg)
+          console.log("Success: " + data.msg)
           _this.html("Submitted");
           $('#CreateClientFormLabel').addClass('text-info').html(data.msg);
           $('#CreateClientModal').modal('hide');
@@ -249,5 +425,43 @@ $(document).ready(function(){
       }
     });
   });
+
+  <% clients.each do |client| %>
+  $('#ClientSubmitBtn-<%= client.id %>').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var name = $("#ClientName-<%= client.id %>").val();
+    var address = $("#ClientAddress-<%= client.id %>").val();
+    var currency = $("#PreferredClientCurrency-<%= client.id %>").val();
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/timesheets/manage/client/<%= client.id %>/update",
+      data: { 'name': name, 'address': address, 'currency': currency },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#EditClientFormLabel-<%= client.id %>').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Success: " + data.msg)
+          _this.html("Submitted");
+          $('#EditClientFormLabel-<%= client.id %>').addClass('text-info').html(data.msg);
+          $('#EditClientModal-<%= client.id %>').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#EditClientFormLabel-<%= client.id %>').addClass('text-danger').html('Something went wrong updating client details !!!');
+      }
+    });
+  });
+  <% end %>
 })
 </script>
