@@ -56,6 +56,12 @@
           </td>
         </tr>
         <tr>
+          <td width="35%"><strong>Domain</strong></td>
+          <td width="65%">
+            <a href="#" id="domain"><%= consultant.domain || 'Ask Admin to Update' %></a>
+          </td>
+        </tr>
+        <tr>
           <td width="35%"><strong>Team</strong></td>
           <td width="65%">
             <a href="#" id="team"><%= consultant.team || 'Ask Admin to Update' %></a>
@@ -459,7 +465,7 @@ $(document).ready(function() {
     value: '<%= consultant.first_name %>', // initial value, will be updated and send to server side upon change
     url: '/consultant/update',
     pk: '<%= consultant.email %>', // primary key (mongo _id)
-    name: 'first_name', // mongo doc_key being update
+    name: 'first_name', // mongo key name that is being updated
     validate: function(value) {
        if($.trim(value) == '') return 'This field is required';
     },
@@ -483,12 +489,26 @@ $(document).ready(function() {
 
   //make status editable
   <% if @admin_user %>
+  $("#domain").editable({
+    type: 'checklist',
+    title: 'Update user training tracks',
+    placement: 'right',
+    url: '/consultant/update',
+    separator: ',', // used to separate values as array from data-value
+    emptytext: 'Click here associate user to training track',
+    source: '/details/domains/possible_values',
+    pk: '<%= consultant.email %>',
+    name: 'domain',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
   $('#team').editable({
       type: 'text',
       title: 'Enter user team',
       placement: 'right',
       value: '<%= consultant.team %>',
-      // source: '/consultant/teams', // fetch the teams avaiable from remote url
+      // source: '/consultant/teams', // fetch the teams available from remote url
       pk: '<%= consultant.email %>',
       name: 'team',
       url: '/consultant/update',

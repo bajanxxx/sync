@@ -21,7 +21,7 @@
               <span class="help-block"></span>
           </div>
           <div class="form-group">
-            <label for="Order">Order (don't change this value is automatically generated):</label>
+            <label for="Order">Order (Don't change. This value is automatically generated):</label>
               <input type="text" class="form-control" id="Order" name="Order" placeholder="Please enter the order of this topic" value="<%= assignable_sub_topic_order %>" required="required"/>
               <span class="help-block"></span>
           </div>
@@ -39,6 +39,23 @@
     </div>
   </div>
 </div>
+<!-- <div class="modal fade" id="AddResource" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Upload Training Resource</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="upload" method="post" action="/training/track/<%= track.id %>/topic/<%= topic.id %>/resource" enctype="multipart/form-data">
+            <input type="file" class="form-control" title="Select resources to upload" name="resources[]" data-filename-placement="inside" multiple />
+            <ul id="fileList"></ul>
+            <button type="submit" class="btn btn-primary center-block"><i class="fa fa-cloud-upload fa-lg"></i> Upload Resource</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div> -->
 <% end %>
 <!-- Projects -->
 <div class="modal fade modal-wide" id="AddProject" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -307,6 +324,29 @@
       </div> <!-- pwell -->
     </div>
   </div>
+
+  <!-- Resources - books & pdf's -->
+  <!-- <div class="row-fluid">
+    <div class="col-xs-12 spacer">
+      <h3>Resources
+        <% if @admin_user %>
+          <span class="pull-right">
+            <a class="addresource" role="left" href="#AddResource" data-toggle="modal" data-placement="left" data-original-title='Add a new resource'>
+              <i class="fa fa-plus-square-o fa-lg"></i>
+            </a>
+          </span>
+        <% end %>
+      </h3>
+      <hr>
+      <div class="pwell spacer">
+        <div class="resources">
+        <% if topic.training_resources.empty? %>
+          No resources are attached to this topic yet. This is where you could add books and other related files.
+        <% end %>
+        </div>
+      </div>
+    </div>
+  </div> -->
 </div>
 
 <link href="/css/hover-min.css" rel="stylesheet" media="all">
@@ -351,11 +391,15 @@
 <script src="/js/jquery.fittext.js"></script>
 <script src="/js/randomColor.min.js"></script>
 <script src="/js/marked.js"></script>
+<!-- <script src="/js/bootstrap.file-input.js"></script> -->
 <script type="text/javascript">
 $(document).ready(function(){
+  // $('input[type=file]').bootstrapFileInput();
+  // $('.file-inputs').bootstrapFileInput();
   $(".font-responsive").fitText();
   $('.deletebutton').tooltip();
   $('.addproject').tooltip();
+  $('.addresource').tooltip();
   $('.submitproject').tooltip();
   $('.editproject').tooltip();
   $('.deleteproject').tooltip();
@@ -367,6 +411,29 @@ $(document).ready(function(){
   <% topic.training_projects.each do |project| %>
   document.getElementById('projectcontent-<%= project.id %>').innerHTML = marked(<%= project.description.dump %>);
   <% end %>
+
+  // $('#upload').bootstrapValidator({
+  //   feedbackIcons: {
+  //     valid: 'glyphicon glyphicon-ok',
+  //     invalid: 'glyphicon glyphicon-remove',
+  //     validating: 'glyphicon glyphicon-refresh'
+  //   },
+  //   fields: {
+  //     'resources[]': {
+  //       validators: {
+  //         notEmpty: {
+  //           message: 'The resource is required'
+  //         },
+  //         file: {
+  //           extension: 'pdf,doc,docx',
+  //           type: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  //           maxSize: 5120 * 1024,   // 5 MB
+  //           message: 'Currently only pdf files are accepted, doc, docx files with size limit of 5MB'
+  //         }
+  //       }
+  //     },
+  //   }
+  // });
 
   $('#SubmitCreateTopicBtn').click(function() {
     _this = $(this);

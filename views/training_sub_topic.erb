@@ -163,7 +163,12 @@
     <% end %>
     </h2>
   </div>
-  <h3><%= sub_topic.name %></h3>
+  <h3>
+    <%= sub_topic.name %>
+    <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/<%= @username %>/scratchpad" type="button" class="btn btn-primary pull-right">
+      Scratch Pad
+    </a>
+  </h3>
   <br>
 
   <!-- Placeholder Table -->

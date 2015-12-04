@@ -1,6 +1,6 @@
 require 'slack-ruby-client'
 
-class SlackAssociateUserToTopics < Struct.new(:api_token, :track, :member, :team)
+class SlackAssociateUsersToTopic < Struct.new(:api_token, :track, :topic, :users, :bots, :group_name)
   def perform
     # Configure slack client
     Slack.configure do |config|
@@ -9,11 +9,9 @@ class SlackAssociateUserToTopics < Struct.new(:api_token, :track, :member, :team
 
     client = Slack::Web::Client.new
     if client.auth_test['ok']
-      track.training_topics.each do |topic|
-        group_name = "team#{team}_#{track.code.downcase}_#{topic.code}"
-        group_id = find_or_create_group(client, group_name, "Training updates, discussion for topic: #{topic.name}")
-        add_user_to_group(client, group_id, member)
-      end
+      group_id = find_or_create_group(client, group_name, "Training updates, discussion for topic: #{topic.name}")
+      add_users_to_group(client, group_id, users)
+      add_bots_to_group(client, group_id, bots)
     else
       # failed to authenticate
       raise StandardError.new("Unable to authenticate with Slack")
@@ -21,11 +19,11 @@ class SlackAssociateUserToTopics < Struct.new(:api_token, :track, :member, :team
   end
 
   def success
-    log "Successfully associated user #{member} to track #{track.name}"
+    log "Successfully associated users #{users.join(",")} to track #{track.name}"
   end
 
   def failure
-    log "Failed associating user #{member} to track #{track.name}"
+    log "Failed associating users #{users.join(",")} to track #{track.name}"
   end
 
   def max_attempts
@@ -57,11 +55,40 @@ class SlackAssociateUserToTopics < Struct.new(:api_token, :track, :member, :team
     unless group_members.include?(userid)
       log "Inviting user: #{user} to group: #{groupid}"
       client.groups_invite(channel: groupid, user: userid)
+      topic.slack_groups.find_by(name: group_name).add_to_set(:members, user)
+    else
+      topic.slack_groups.find_by(name: group_name).add_to_set(:members, user)
+    end
+  end
+
+  def add_bot_to_group(client, groupid, botname)
+    group_members = client.groups_info(channel: groupid)['group']['members']
+    botid = get_bot_id(client, botname)
+    unless group_members.include?(botid)
+      log "Inviting bot: #{botname} to group: #{groupid}"
+      client.groups_invite(channel: groupid, user: botid)
+      topic.slack_groups.find_by(name: group_name).add_to_set(:bots, botname)
+    end
+  end
+
+  def add_users_to_group(client, group_id, members)
+    members.each do |member|
+      add_user_to_group(client, group_id, member)
+    end
+  end
+
+  def add_bots_to_group(client, group_id, members)
+    members.each do |member|
+      add_bot_to_group(client, group_id, member)
     end
   end
 
   def get_userid_from_email(client, user_email)
     client.users_list['members'].detect { |u| u['profile']['email'] == user_email }['id']
+  end
+
+  def get_bot_id(client, botname)
+    client.users_list['members'].detect { |u| u['name'] == botname }['id']
   end
 
   def log(text)

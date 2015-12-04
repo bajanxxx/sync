@@ -80,10 +80,26 @@
     "url": "https://www.webassessor.com/wa.do?page=publicHome&branding=AMAZON" 
   },
   {
+    "name": "Amazon Web Services Certified Solutions Architect - Professional",
+    "short": "AWSSAP",
+    "code": "",
+    "price": "300.00",
+    "authority": "Amazon Web Services",
+    "url": "https://www.webassessor.com/wa.do?page=publicHome&branding=AMAZON"
+  },  
+  {
     "name": "Amazon Web Services Certified SysOps Administrator - Associate",
-    "short": "AWSSAA",
+    "short": "AWSSOAA",
     "code": "",
     "price": "150.00",
+    "authority": "Amazon Web Services",
+    "url": "https://www.webassessor.com/wa.do?page=publicHome&branding=AMAZON"
+  },
+  {
+    "name": "Amazon Web Services Certified DevOps Engineer - Professional",
+    "short": "AWSDOEP",
+    "code": "",
+    "price": "300.00",
     "authority": "Amazon Web Services",
     "url": "https://www.webassessor.com/wa.do?page=publicHome&branding=AMAZON"
   },

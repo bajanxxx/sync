@@ -36,6 +36,11 @@
             </select>
             <span class="help-block"></span>
           </div>
+          <div class="form-group">
+            <label for="Order">Order (Used for displaying in order by category):</label>
+            <input type="text" class="form-control" id="Order" name="Order" placeholder="Please enter the order of this topic" value="" required="required"/>
+              <span class="help-block"></span>
+          </div>
         </form>
         <p id="CreateTopicFormLabel" class="text-center"></p>
         <hr />
@@ -289,11 +294,19 @@
       <% else %>
         <td class="col-xs-10">
           <% track.certifications.each_with_index do |certification, _i| %>
-            <div class="col-xs-3 spacer">
-              <div id="cert-<%= _i + 1 %>" class="well" style="height:100px; background-color: black;">
-                <p align="center" class="font-responsive-large"><font color="white"><%= certification.split('|').last %></font></p>
+            <% if access[:certs] %>
+              <div class="col-xs-3 spacer">
+                <div id="cert-<%= _i + 1 %>" class="well" style="height:100px; background-color: black;">
+                  <p align="center" class="font-responsive-large"><font color="white"><%= certification.split('|').last %></font></p>
+                </div>
               </div>
-            </div>
+            <% else %>
+              <div class="col-xs-3 spacer">
+                <div id="cert-<%= _i + 1 %>" class="well" style="height:100px; background:#666666">
+                  <a class="popoverData" class="btn font-responsive" href="#" data-content="You have to complete 70% of overall topics to request for certifications" rel="popover" data-placement="bottom" data-original-title="No Access" data-trigger="hover" style="color:white"><%= certification.split('|').last %></a>
+                </div>
+              </div>
+            <% end %>
           <% end %>
         <% end %>
       </td>
@@ -349,8 +362,10 @@ $(document).ready(function(){
   $('.popoverData').popover();
 
   <% if ! track.certifications.nil? %>
-    <% track.certifications.each_with_index do |cert, _i| %>
-    document.querySelector('#cert-<%= _i + 1 %>').style.background = randomColor({luminosity: 'dark', hue: 'blue'});
+    <% if access[:certs] %>
+      <% track.certifications.each_with_index do |cert, _i| %>
+      document.querySelector('#cert-<%= _i + 1 %>').style.background = randomColor({luminosity: 'dark', hue: 'blue'});
+      <% end %>
     <% end %>
   <% end %>
 
@@ -367,12 +382,13 @@ $(document).ready(function(){
     var tcode = $("#TopicCode").val();
     var email = $("#Email").val();
     var category = $('#Category').val();
+    var order = $('#Order').val();
 
     $.ajax({
       type: "POST",
       dataType: "json",
       url: "/training/track/<%= track.id %>/topic/create",
-      data: { 'tname': tname, 'tcode': tcode, 'email': email, 'category': category },
+      data: { 'tname': tname, 'tcode': tcode, 'email': email, 'category': category, 'order': order },
       success: function(data) {
         if(!data.success) {
           console.log("Error: " + data.msg);

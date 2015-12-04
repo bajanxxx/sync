@@ -1,0 +1,860 @@
+<% preqs.each do |topic| %>
+  <% 
+    group_name = if domain == 'US'
+      "team#{team}_#{track.code.downcase}_#{topic.code.downcase}"
+    else
+      "#{domain.downcase}_team#{team}_#{track.code.downcase}_#{topic.code.downcase}"
+    end
+  %>
+  <div class="modal fade" id="CreateSlackGroupModal-<%= topic.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="myModalLabel">Create a slack group</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form">
+            <div class="form-group">
+              <label for="GroupName-<%= topic.id %>">Group Name: (21 characters limit)</label>
+              <input type="text" maxlength="21" class="form-control message" id="GroupName-<%= topic.id %>" name="GroupName-<%= topic.id %>" placeholder="Name of the group" value="<%= group_name %>" required="required" />
+              <span class="help-block"></span>
+            </div>
+          </form>
+          <p id="CreateSlackGroupFormLabel-<%= topic.id %>" class="text-center"></p>
+          <hr />
+          <div class="row-fluid">
+            <div class="span3"></div>
+            <div class="span6 text-center">
+              <button id="CreateSlackGroupSubmitBtn-<%= topic.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Create Group</button>
+            </div>
+            <div class="span3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+    <% 
+      slack_group = topic.slack_groups.find_by(team: team, domain: domain)
+      slack_group_name = slack_group.name
+      existing_users = slack_group.members
+    %>
+    <div class="modal fade" id="AddSlackUsers-<%= topic.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Add users to slack group <%= slack_group_name %></h4>
+          </div>
+          <div class="modal-body">
+            <form role="form">
+              <div class="form-group">
+                <label for="Users-<%= topic.id %>">Users: </label>
+                <select class="form-control" id="Users-<%= topic.id %>" name="Users-<%= topic.id %>" multiple="multiple">
+                  <% team_users.each do |user| %>
+                    <option value="<%= user.email %>"><%= user.first_name %> <%= user.last_name %></option>
+                  <% end %>
+                </select>
+                <span class="help-block"></span>
+                <br>
+                <div>Existing Users: <%= existing_users.join(",") %></div>
+                <div>Default Users: <%= default_users.join(",") %></div>
+              </div>
+            </form>
+            <p id="AddSlackUsersFormLabel-<%= topic.id %>" class="text-center"></p>
+            <hr />
+            <div class="row-fluid">
+              <div class="span3"></div>
+              <div class="span6 text-center">
+                <button id="AddSlackUsersSubmitBtn-<%= topic.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Associate Users</button>
+              </div>
+              <div class="span3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
+<% core.each do |topic| %>
+  <% 
+    group_name = if domain == 'US'
+      "team#{team}_#{track.code.downcase}_#{topic.code.downcase}"
+    else
+      "#{domain.downcase}_team#{team}_#{track.code.downcase}_#{topic.code.downcase}"
+    end
+  %>
+  <div class="modal fade" id="CreateSlackGroupModal-<%= topic.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="myModalLabel">Create a slack group</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form">
+            <div class="form-group">
+              <label for="GroupName-<%= topic.id %>">Group Name: (21 characters limit)</label>
+              <input type="text" maxlength="21" class="form-control message" id="GroupName-<%= topic.id %>" name="GroupName-<%= topic.id %>" placeholder="Name of the group" value="<%= group_name %>" required="required" />
+              <span class="help-block"></span>
+            </div>
+          </form>
+          <p id="CreateSlackGroupFormLabel-<%= topic.id %>" class="text-center"></p>
+          <hr />
+          <div class="row-fluid">
+            <div class="span3"></div>
+            <div class="span6 text-center">
+              <button id="CreateSlackGroupSubmitBtn-<%= topic.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Create Group</button>
+            </div>
+            <div class="span3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+    <% 
+      slack_group = topic.slack_groups.find_by(team: team, domain: domain)
+      slack_group_name = slack_group.name
+      existing_users = slack_group.members
+    %>
+    <div class="modal fade" id="AddSlackUsers-<%= topic.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Add users to slack group <%= slack_group_name %></h4>
+          </div>
+          <div class="modal-body">
+            <form role="form">
+              <div class="form-group">
+                <label for="Users-<%= topic.id %>">Users: </label>
+                <select class="form-control" id="Users-<%= topic.id %>" name="Users-<%= topic.id %>" multiple="multiple">
+                  <% team_users.each do |user| %>
+                    <option value="<%= user.email %>"><%= user.first_name %> <%= user.last_name %></option>
+                  <% end %>
+                </select>
+                <span class="help-block"></span>
+                <br>
+                <div>Existing Users: <%= existing_users.join(",") %></div>
+                <div>Default Users: <%= default_users.join(",") %></div>
+              </div>
+            </form>
+            <p id="AddSlackUsersFormLabel-<%= topic.id %>" class="text-center"></p>
+            <hr />
+            <div class="row-fluid">
+              <div class="span3"></div>
+              <div class="span6 text-center">
+                <button id="AddSlackUsersSubmitBtn-<%= topic.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Associate Users</button>
+              </div>
+              <div class="span3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
+<% adv.each do |topic| %>
+  <% 
+    group_name = if domain == 'US'
+      "team#{team}_#{track.code.downcase}_#{topic.code.downcase}"
+    else
+      "#{domain.downcase}_team#{team}_#{track.code.downcase}_#{topic.code.downcase}"
+    end
+  %>
+  <div class="modal fade" id="CreateSlackGroupModal-<%= topic.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="myModalLabel">Create a slack group</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form">
+            <div class="form-group">
+              <label for="GroupName-<%= topic.id %>">Group Name: (21 characters limit)</label>
+              <input type="text" maxlength="21" class="form-control message" id="GroupName-<%= topic.id %>" name="GroupName-<%= topic.id %>" placeholder="Name of the group" value="<%= group_name %>" required="required" />
+              <span class="help-block"></span>
+            </div>
+          </form>
+          <p id="CreateSlackGroupFormLabel-<%= topic.id %>" class="text-center"></p>
+          <hr />
+          <div class="row-fluid">
+            <div class="span3"></div>
+            <div class="span6 text-center">
+              <button id="CreateSlackGroupSubmitBtn-<%= topic.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Create Group</button>
+            </div>
+            <div class="span3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+    <% 
+      slack_group = topic.slack_groups.find_by(team: team, domain: domain)
+      slack_group_name = slack_group.name
+      existing_users = slack_group.members
+    %>
+    <div class="modal fade" id="AddSlackUsers-<%= topic.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Add users to slack group <%= slack_group_name %></h4>
+          </div>
+          <div class="modal-body">
+            <form role="form">
+              <div class="form-group">
+                <label for="Users-<%= topic.id %>">Users: </label>
+                <select class="form-control" id="Users-<%= topic.id %>" name="Users-<%= topic.id %>" multiple="multiple">
+                  <% team_users.each do |user| %>
+                    <option value="<%= user.email %>"><%= user.first_name %> <%= user.last_name %></option>
+                  <% end %>
+                </select>
+                <span class="help-block"></span>
+                <br>
+                <div>Existing Users: <%= existing_users.join(",") %></div>
+                <div>Default Users: <%= default_users.join(",") %></div>
+              </div>
+            </form>
+            <p id="AddSlackUsersFormLabel-<%= topic.id %>" class="text-center"></p>
+            <hr />
+            <div class="row-fluid">
+              <div class="span3"></div>
+              <div class="span6 text-center">
+                <button id="AddSlackUsersSubmitBtn-<%= topic.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Associate Users</button>
+              </div>
+              <div class="span3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
+<% opt.each do |topic| %>
+  <% 
+    group_name = if domain == 'US'
+      "team#{team}_#{track.code.downcase}_#{topic.code.downcase}"
+    else
+      "#{domain.downcase}_team#{team}_#{track.code.downcase}_#{topic.code.downcase}"
+    end
+  %>
+  <div class="modal fade" id="CreateSlackGroupModal-<%= topic.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="myModalLabel">Create a slack group</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form">
+            <div class="form-group">
+              <label for="GroupName-<%= topic.id %>">Group Name: (21 characters limit)</label>
+              <input type="text" maxlength="21" class="form-control message" id="GroupName-<%= topic.id %>" name="GroupName-<%= topic.id %>" placeholder="Name of the group" value="<%= group_name %>" required="required" />
+              <span class="help-block"></span>
+            </div>
+          </form>
+          <p id="CreateSlackGroupFormLabel-<%= topic.id %>" class="text-center"></p>
+          <hr />
+          <div class="row-fluid">
+            <div class="span3"></div>
+            <div class="span6 text-center">
+              <button id="CreateSlackGroupSubmitBtn-<%= topic.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Create Group</button>
+            </div>
+            <div class="span3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+    <% 
+      slack_group = topic.slack_groups.find_by(team: team, domain: domain)
+      slack_group_name = slack_group.name
+      existing_users = slack_group.members
+    %>
+    <div class="modal fade" id="AddSlackUsers-<%= topic.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Add users to slack group <%= slack_group_name %></h4>
+          </div>
+          <div class="modal-body">
+            <form role="form">
+              <div class="form-group">
+                <label for="Users-<%= topic.id %>">Users: </label>
+                <select class="form-control" id="Users-<%= topic.id %>" name="Users-<%= topic.id %>" multiple="multiple">
+                  <% team_users.each do |user| %>
+                    <option value="<%= user.email %>"><%= user.first_name %> <%= user.last_name %></option>
+                  <% end %>
+                </select>
+                <span class="help-block"></span>
+                <br>
+                <div>Existing Users: <%= existing_users.join(",") %></div>
+                <div>Default Users: <%= default_users.join(",") %></div>
+              </div>
+            </form>
+            <p id="AddSlackUsersFormLabel-<%= topic.id %>" class="text-center"></p>
+            <hr />
+            <div class="row-fluid">
+              <div class="span3"></div>
+              <div class="span6 text-center">
+                <button id="AddSlackUsersSubmitBtn-<%= topic.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Associate Users</button>
+              </div>
+              <div class="span3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>
+      <a href="/training">Training Portal</a> <small> Integrations > Slack > <%= track.code %> > Team <%= team %></small>
+    </h2>
+  </div>
+  
+  <br>
+
+  <table class="table">
+    <tr>
+      <td class="col-xs-2" style="vertical-align:middle; position:relative;">
+        <h3>Prerequisites</h3>
+      </td>
+      <td class="col-xs-10">
+        <% if preqs.count == 0 %>
+          <h4>There are no prerequisite courses to this track.</h4>
+        <% else %>
+          <% preqs.each do |topic| %>
+            <div class="col-xs-3 spacer">
+              <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#00565A">
+                  <div class="font-responsive">
+                    <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                  </div>
+                </div>
+              </a>
+              <div class="pull-right">
+                <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+                  <!-- slack group link -->
+                  <div class="button-box">
+                    <a target="_blank" href="https://<%= Settings.slack_domain %>.slack.com/messages/<%= topic.slack_groups.find_by(domain: domain, team: team).name %>">
+                      <i class="fa fa-slack fa-2x"></i>
+                    </a>
+                  </div>
+                  <div class="button-box">
+                    <a class="addslackusers" href="#AddSlackUsers-<%= topic.id %>" data-toggle="modal" data-placement="left" data-original-title='Add Slack Users'>
+                      <i class="fa fa-user-plus fa-2x"></i>
+                    </a>
+                  </div>
+                <% else %>
+                  <!-- create slack group -->
+                  <div class="button-box">
+                    <a class="createslackgroup" href="#CreateSlackGroupModal-<%= topic.id %>" data-toggle="modal" data-placement="left" data-original-title='Create Slack Group'>
+                      <i class="fa fa-plus-square-o fa-2x"></i>
+                    </a>
+                  </div>
+                <% end %>
+              </div>
+            </div> <!-- end circle -->
+          <% end %>
+        <% end %>
+      </td>
+    </tr>
+    <tr>
+      <td class="col-xs-2" style="vertical-align:middle; position:relative;">
+        <h3>Core</h3>
+      </td>
+      <td class="col-xs-10">
+        <% if core.count == 0 %>
+          <h4>No core courses have been added yet to this track.</h4>
+        <% else %>
+          <% core.each do |topic| %>
+            <div class="col-xs-3 spacer">
+              <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#006788">
+                  <div class="font-responsive">
+                    <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                  </div>
+                </div>
+              </a>
+              <div class="pull-right">
+                <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+                  <!-- slack group link -->
+                  <div class="button-box">
+                    <a target="_blank" href="https://<%= Settings.slack_domain %>.slack.com/messages/<%= topic.slack_groups.find_by(domain: domain, team: team).name %>">
+                      <i class="fa fa-slack fa-2x"></i>
+                    </a>
+                  </div>
+                  <div class="button-box">
+                    <a class="addslackusers" href="#AddSlackUsers-<%= topic.id %>" data-toggle="modal" data-placement="left" data-original-title='Add Slack Users'>
+                      <i class="fa fa-user-plus fa-2x"></i>
+                    </a>
+                  </div>
+                <% else %>
+                  <!-- create slack group -->
+                  <div class="button-box">
+                    <a class="createslackgroup" href="#CreateSlackGroupModal-<%= topic.id %>" data-toggle="modal" data-placement="left" data-original-title='Create Slack Group'>
+                      <i class="fa fa-plus-square-o fa-2x"></i>
+                    </a>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </td>
+    </tr>
+    <% if adv.count != 0 %>
+      <tr>
+        <td class="col-xs-2" style="vertical-align:middle; position:relative;">
+          <h3>Advanced</h3>
+        </td>
+        <td class="col-xs-10">
+          <% adv.each do |topic| %>
+            <div class="col-xs-3 spacer">
+              <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#005573">
+                  <div class="font-responsive">
+                    <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                  </div>
+                </div>
+              </a>
+              <div class="pull-right">
+                <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+                  <!-- slack group link -->
+                  <div class="button-box">
+                    <a target="_blank" href="https://<%= Settings.slack_domain %>.slack.com/messages/<%= topic.slack_groups.find_by(domain: domain, team: team).name %>">
+                      <i class="fa fa-slack fa-2x"></i>
+                    </a>
+                  </div>
+                  <div class="button-box">
+                    <a class="addslackusers" href="#AddSlackUsers-<%= topic.id %>" data-toggle="modal" data-placement="left" data-original-title='Add Slack Users'>
+                      <i class="fa fa-user-plus fa-2x"></i>
+                    </a>
+                  </div>
+                <% else %>
+                  <!-- create slack group -->
+                  <div class="button-box">
+                    <a class="createslackgroup" href="#CreateSlackGroupModal-<%= topic.id %>" data-toggle="modal" data-placement="left" data-original-title='Create Slack Group'>
+                      <i class="fa fa-plus-square-o fa-2x"></i>
+                    </a>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+    <% if opt.count != 0 %>
+      <tr>
+        <td class="col-xs-2" style="vertical-align:middle; position:relative;">
+          <h3>Others</h3>
+        </td>
+        <td class="col-xs-10">
+          <% opt.each do |topic| %>
+            <div class="col-xs-3 spacer">
+              <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
+                <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#071174">
+                  <div class="font-responsive">
+                    <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
+                  </div>
+                </div>
+              </a>
+              <div class="pull-right">
+                <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+                  <!-- slack group link -->
+                  <div class="button-box">
+                    <a target="_blank" href="https://<%= Settings.slack_domain %>.slack.com/messages/<%= topic.slack_groups.find_by(domain: domain, team: team).name %>">
+                      <i class="fa fa-slack fa-2x"></i>
+                    </a>
+                  </div>
+                  <div class="button-box">
+                    <a class="addslackusers" href="#AddSlackUsers-<%= topic.id %>" data-toggle="modal" data-placement="left" data-original-title='Add Slack Users'>
+                      <i class="fa fa-user-plus fa-2x"></i>
+                    </a>
+                  </div>
+                <% else %>
+                  <!-- create slack group -->
+                  <div class="button-box">
+                    <a class="createslackgroup" href="#CreateSlackGroupModal-<%= topic.id %>" data-toggle="modal" data-placement="left" data-original-title='Create Slack Group'>
+                      <i class="fa fa-plus-square-o fa-2x"></i>
+                    </a>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+  </div>
+</div>
+
+<link href="/css/hover-min.css" rel="stylesheet" media="all">
+<style type="text/css">
+.table {
+  border-bottom:0px !important;
+}
+.table th, .table td {
+  border: 0px !important;
+}
+
+.spacer {
+  margin-top: 20px;
+}
+
+.circle-multiline {
+  display: table-cell;
+  height: 150px;
+  width: 150px;
+  text-align: center;
+  vertical-align: middle;
+  border-radius: 50%;
+  /*background: purple;*/
+  color: white;
+}
+
+.small-box {
+  height: 25px;
+  width: 25px;
+  line-height: 25px; /* vertically center text */
+  border-radius: 5px;
+  text-align: center; /* horizontally center text */
+  background: black;
+  color: white;
+}
+
+.img-box {
+  height: 25px;
+  width: 25px;
+  border-radius: 5px;
+  padding-top: 5px;
+}
+</style>
+
+<script src="/js/jquery.fittext.js"></script>
+<script type="text/javascript">
+function updateCountdown() {
+  // 140 is the max message length
+  var remaining = 21 - jQuery('.message').val().length;
+  jQuery('.countdown').text(remaining + ' characters remaining.');
+}
+
+$(document).ready(function(){
+  $(".font-responsive").fitText();
+  $("[rel='tooltip'], .tooltip").tooltip();
+  $(".createslackgroup").tooltip();
+  $(".addslackusers").tooltip();
+
+  <% preqs.each do |topic| %>
+    $('#CreateSlackGroupSubmitBtn-<%= topic.id %>').click(function() {
+      _this = $(this);
+      _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      var groupname = $("#GroupName-<%= topic.id %>").val();
+     
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/integrations/slack/<%= domain %>/<%= team %>/create",
+        data: { 'groupname': groupname },
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg);
+            _this.attr('disabled', false); // re-enable submit
+            _this.html('Re-submit');
+            $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-danger').html(data.msg);
+          } else {
+            console.log("Success: " + data.msg);
+            _this.html("Submitted");
+            $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-info').html(data.msg);
+            $('#CreateSlackGroupModal-<%= topic.id %>').modal('hide');
+            location.reload();
+          }
+        },
+        error: function(data) {
+          _this.attr('disabled', false); // re-enable submit
+          _this.text('Re-submit');
+          $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-danger').html('Something went wrong updating assignment!!!');
+        }
+      });
+    });
+    $('#AddSlackUsersSubmitBtn-<%= topic.id %>').click(function() {
+      _this = $(this);
+      _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      var users = $("#Users-<%= topic.id %>").val();
+     
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/integrations/slack/<%= domain %>/<%= team %>/users/invite",
+        data: { 'users': users },
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg);
+            _this.attr('disabled', false); // re-enable submit
+            _this.html('Re-submit');
+            $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-danger').html(data.msg);
+          } else {
+            console.log("Success: " + data.msg);
+            _this.html("Submitted");
+            $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-info').html(data.msg);
+            $('#AddSlackUsers-<%= topic.id %>').modal('hide');
+            location.reload();
+          }
+        },
+        error: function(data) {
+          _this.attr('disabled', false); // re-enable submit
+          _this.text('Re-submit');
+          $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-danger').html('Something went wrong scheduling user assignment job!!!');
+        }
+      });
+    });
+    <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+    $("#Users-<%= topic.id %>").select2({
+      placeholder: "Start typing the user name"
+    });
+    <% end %>
+  <% end %>
+
+  <% core.each do |topic| %>
+    $('#CreateSlackGroupSubmitBtn-<%= topic.id %>').click(function() {
+      _this = $(this);
+      _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      var groupname = $("#GroupName-<%= topic.id %>").val();
+     
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/integrations/slack/<%= domain %>/<%= team %>/create",
+        data: { 'groupname': groupname },
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg);
+            _this.attr('disabled', false); // re-enable submit
+            _this.html('Re-submit');
+            $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-danger').html(data.msg);
+          } else {
+            console.log("Success: " + data.msg);
+            _this.html("Submitted");
+            $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-info').html(data.msg);
+            $('#CreateSlackGroupModal-<%= topic.id %>').modal('hide');
+            location.reload();
+          }
+        },
+        error: function(data) {
+          _this.attr('disabled', false); // re-enable submit
+          _this.text('Re-submit');
+          $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-danger').html('Something went wrong updating assignment!!!');
+        }
+      });
+    });
+    $('#AddSlackUsersSubmitBtn-<%= topic.id %>').click(function() {
+      _this = $(this);
+      _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      var users = $("#Users-<%= topic.id %>").val();
+     
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/integrations/slack/<%= domain %>/<%= team %>/users/invite",
+        data: { 'users': users },
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg);
+            _this.attr('disabled', false); // re-enable submit
+            _this.html('Re-submit');
+            $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-danger').html(data.msg);
+          } else {
+            console.log("Success: " + data.msg);
+            _this.html("Submitted");
+            $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-info').html(data.msg);
+            $('#AddSlackUsers-<%= topic.id %>').modal('hide');
+            location.reload();
+          }
+        },
+        error: function(data) {
+          _this.attr('disabled', false); // re-enable submit
+          _this.text('Re-submit');
+          $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-danger').html('Something went wrong scheduling user assignment job!!!');
+        }
+      });
+    });
+    <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+    $("#Users-<%= topic.id %>").select2({
+      placeholder: "Start typing the user name"
+    });
+    <% end %>
+  <% end %>
+
+  <% adv.each do |topic| %>
+    $('#CreateSlackGroupSubmitBtn-<%= topic.id %>').click(function() {
+      _this = $(this);
+      _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      var groupname = $("#GroupName-<%= topic.id %>").val();
+     
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/integrations/slack/<%= domain %>/<%= team %>/create",
+        data: { 'groupname': groupname },
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg);
+            _this.attr('disabled', false); // re-enable submit
+            _this.html('Re-submit');
+            $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-danger').html(data.msg);
+          } else {
+            console.log("Success: " + data.msg);
+            _this.html("Submitted");
+            $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-info').html(data.msg);
+            $('#CreateSlackGroupModal-<%= topic.id %>').modal('hide');
+            location.reload();
+          }
+        },
+        error: function(data) {
+          _this.attr('disabled', false); // re-enable submit
+          _this.text('Re-submit');
+          $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-danger').html('Something went wrong updating assignment!!!');
+        }
+      });
+    });
+    $('#AddSlackUsersSubmitBtn-<%= topic.id %>').click(function() {
+      _this = $(this);
+      _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      var users = $("#Users-<%= topic.id %>").val();
+     
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/integrations/slack/<%= domain %>/<%= team %>/users/invite",
+        data: { 'users': users },
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg);
+            _this.attr('disabled', false); // re-enable submit
+            _this.html('Re-submit');
+            $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-danger').html(data.msg);
+          } else {
+            console.log("Success: " + data.msg);
+            _this.html("Submitted");
+            $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-info').html(data.msg);
+            $('#AddSlackUsers-<%= topic.id %>').modal('hide');
+            location.reload();
+          }
+        },
+        error: function(data) {
+          _this.attr('disabled', false); // re-enable submit
+          _this.text('Re-submit');
+          $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-danger').html('Something went wrong scheduling user assignment job!!!');
+        }
+      });
+    });
+    <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+    $("#Users-<%= topic.id %>").select2({
+      placeholder: "Start typing the user name"
+    });
+    <% end %>
+  <% end %>
+
+  <% opt.each do |topic| %>
+    $('#CreateSlackGroupSubmitBtn-<%= topic.id %>').click(function() {
+      _this = $(this);
+      _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      var groupname = $("#GroupName-<%= topic.id %>").val();
+     
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/integrations/slack/<%= domain %>/<%= team %>/create",
+        data: { 'groupname': groupname },
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg);
+            _this.attr('disabled', false); // re-enable submit
+            _this.html('Re-submit');
+            $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-danger').html(data.msg);
+          } else {
+            console.log("Success: " + data.msg);
+            _this.html("Submitted");
+            $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-info').html(data.msg);
+            $('#CreateSlackGroupModal-<%= topic.id %>').modal('hide');
+            location.reload();
+          }
+        },
+        error: function(data) {
+          _this.attr('disabled', false); // re-enable submit
+          _this.text('Re-submit');
+          $('#CreateSlackGroupFormLabel-<%= topic.id %>').addClass('text-danger').html('Something went wrong updating assignment!!!');
+        }
+      });
+    });
+    $('#AddSlackUsersSubmitBtn-<%= topic.id %>').click(function() {
+      _this = $(this);
+      _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      var users = $("#Users-<%= topic.id %>").val();
+     
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/integrations/slack/<%= domain %>/<%= team %>/users/invite",
+        data: { 'users': users },
+        success: function(data) {
+          if(!data.success) {
+            console.log("Error: " + data.msg);
+            _this.attr('disabled', false); // re-enable submit
+            _this.html('Re-submit');
+            $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-danger').html(data.msg);
+          } else {
+            console.log("Success: " + data.msg);
+            _this.html("Submitted");
+            $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-info').html(data.msg);
+            $('#AddSlackUsers-<%= topic.id %>').modal('hide');
+            location.reload();
+          }
+        },
+        error: function(data) {
+          _this.attr('disabled', false); // re-enable submit
+          _this.text('Re-submit');
+          $('#AddSlackUsersFormLabel-<%= topic.id %>').addClass('text-danger').html('Something went wrong scheduling user assignment job!!!');
+        }
+      });
+    });
+    <% if topic.slack_groups.find_by(domain: domain, team: team) %>
+    $("#Users-<%= topic.id %>").select2({
+      placeholder: "Start typing the user name"
+    });
+    <% end %>
+  <% end %>
+});
+</script>

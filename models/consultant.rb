@@ -3,6 +3,7 @@ class Consultant
 
   field :first_name, type: String
   field :last_name, type: String
+  field :domain, type: String # us, eu, in
   field :team, type: Integer
   field :email, type: String
   field :phone, type: String

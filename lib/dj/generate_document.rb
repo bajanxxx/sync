@@ -126,7 +126,7 @@ EOF
   end
 
   def success
-    log "sucessfully sent out email to #{email} with attachement (#{type})"
+    log "successfully sent out email to #{email} with attachement (#{type})"
   end
 
   def error

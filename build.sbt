@@ -2,13 +2,11 @@ name := "cloudwick-sync"
 
 version := "1.0"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.7"
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
-
-libraryDependencies += "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % "test"
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "1.1.4"
 
@@ -29,3 +27,5 @@ libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.6.0"
 libraryDependencies += "org.ccil.cowan.tagsoup" % "tagsoup" % "1.2.1"
 
 libraryDependencies += "org.jsoup" % "jsoup" % "1.8.2"
+
+libraryDependencies += "com.github.gilbertw1" %% "slack-scala-client" % "0.1.3"

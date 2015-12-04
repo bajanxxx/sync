@@ -1,6 +1,6 @@
 require 'slack-ruby-client'
 
-class SlackGroupNotification < Struct.new(:api_token, :group_name, :message)
+class SlackGroupNotification < Struct.new(:api_token, :group_name, :pretext, :title, :title_link, :body, :color, :fields)
   def perform
     # Configure slack client
     Slack.configure do |config|
@@ -12,9 +12,10 @@ class SlackGroupNotification < Struct.new(:api_token, :group_name, :message)
       # find or create group by its name
       group_id = find_group(client, group_name)
       if group_id
-        client.chat_postMessage(channel: group_id, text: "<!channel> #{message}", as_user: true)
+        slack_formatted_message(client, group_id, pretext, title, title_link, body, color, fields)
+        # client.chat_postMessage(channel: group_id, text: "<!channel> #{message}", as_user: true)
       else
-        log "Cannot send slack notification as the group with name #{group_name} is non-existent."
+        log "Cannot send slack notification as the group with name #{group_name} is non-existent. OR may be you haven't invited sync bot user to the group."
       end
     else
       # failed to authenticate
@@ -46,5 +47,23 @@ class SlackGroupNotification < Struct.new(:api_token, :group_name, :message)
     else
       nil
     end
+  end
+
+  def slack_formatted_message(client, channelid, pretext, title, title_link, body, color, fields = [])
+    client.chat_postMessage(
+      channel: channelid,
+      as_user: true,
+      attachments: [
+        {
+          fallback: "#{title} - #{title_link}",
+          pretext: pretext,
+          title: title,
+          title_link: title_link,
+          text: body,
+          color: color,
+          fields: fields
+        }
+      ]
+    )
   end
 end

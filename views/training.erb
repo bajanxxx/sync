@@ -156,6 +156,28 @@
       </ul>
     <% end %>
   </div>
+  <!-- Slack group overviews -->
+  <div class="row-fluid">
+    <h3>Slack Integration Overview</h3>
+    <hr>
+    <% teams = users.reject { |u| u.team.nil? }.map { |u| [u.domain, u.team] }.uniq %>
+    <% if teams.empty? %>
+      No users have yet been associated to teams.
+    <% else %>
+      <ul class="list-group">
+        <% teams.each do |domain_team| %>
+          <li class="list-group-item">
+            <% training_tracks.each do |track| %>
+              <span class="pull-right">
+                <span class="badge progress-bar-info"><a href="/training/track/<%= track.id %>/integrations/slack/<%= domain_team.first %>/<%= domain_team.last %>" style="color:white;">Track <%= track.code %></a></span>
+              </span>
+            <% end %>
+            <strong>Team <%= domain_team.first %></strong>  (Domain: <%= domain_team.last %>)
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
 </div>
 
 <link href="/css/hover-min.css" rel="stylesheet" media="all">

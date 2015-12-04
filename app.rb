@@ -681,7 +681,12 @@ Admin</a> </p>
     end
     # Update the consultant parameters
     begin
-      consultant.update_attribute(update_key.to_sym, update_value)
+      case update_key
+      when 'domain'
+        consultant.update_attribute(update_key.to_sym, update_value.first)
+      else
+        consultant.update_attribute(update_key.to_sym, update_value)
+      end
     rescue
       success = false
       message = "Failed to update(#{update_key})"
@@ -702,18 +707,6 @@ Admin</a> </p>
       when 'training_tracks'
         update_value = [] if update_value.nil?
         Detail.find_by(consultant_id: consultant_id).update_attribute(update_key.to_sym, update_value)
-        # Trigger adding this user to slack groups
-        # Delayed::Job.enqueue(
-        #   SlackAssociateUserToTopics.new(
-        #     Settings.slack_admin_user_api_token, 
-        #     TrainingTrack.find_by(code: update_value),
-        #     consultant_id, 
-        #     Consultant.find(consultant_id).team
-        #   ),
-        #   queue: 'slack_associate_user',
-        #   priority: 10,
-        #   run_at: 1.seconds.from_now
-        # )
       when 'certifications'
         update_value = [] if update_value.nil?
         Detail.find_by(consultant_id: consultant_id).update_attribute(update_key.to_sym, update_value)
@@ -727,6 +720,14 @@ Admin</a> </p>
     end
     # Return json response to be validated on the client side
     { success: success, msg: message }.to_json
+  end
+
+  get '/details/domains/possible_values' do
+    [ 
+      { text: "US", value: "US" },
+      { text: "EU", value: "EU" },
+      { text: "IN", value: "IN" }
+    ].to_json
   end
 
   get '/details/certifications/possible_values' do
@@ -3854,7 +3855,7 @@ Admin</a> </p>
     if @admin_user
       erb :training, locals: {
         training_tracks: TrainingTrack.all.entries,
-        users: Consultant.all.entries,
+        users: Consultant.all,
         trainers: Trainer.all
       }
     ### TRAINER PORTAL
@@ -3878,9 +3879,9 @@ Admin</a> </p>
           topics_assigned: topics_assigned,
           notifications: TrainingNotification.where(
             destination: @username,
-            :created_at.gt => (Date.today-30) , 
-            :team.in => teams
-          )
+            :created_at.gt => (Date.today-30)
+            # :team.in => teams
+          ).order_by(:created_at => 'desc')
         }
     else
     ### TRAINEE PORTAL
@@ -3905,7 +3906,7 @@ Admin</a> </p>
           notifications: TrainingNotification.where(
             destination: @username,
             :created_at.gt => (Date.today-30)
-          )
+          ).order_by(:created_at => 'desc')
         }
       end
     end
@@ -4001,22 +4002,22 @@ Admin</a> </p>
       c_hash = JSON.parse(file)
       erb :training_track, locals: {
         track: track,
-        preqs: track.training_topics.where(category: 'P'),
-        core: track.training_topics.where(category: 'C'),
-        adv: track.training_topics.where(category: 'A'),
-        opt: track.training_topics.where(category: 'O'),
+        preqs: track.training_topics.where(category: 'P').asc(:order),
+        core: track.training_topics.where(category: 'C').asc(:order),
+        adv: track.training_topics.where(category: 'A').asc(:order),
+        opt: track.training_topics.where(category: 'O').asc(:order),
         c_hash: c_hash,
-        access: { preq: true, core: true, adv: true, opt: true } # just a place holder
+        access: { preq: true, core: true, adv: true, opt: true, certs: true } # just a place holder
       }
     else
       consultant = Consultant.find(@username)
       if consultant.details.training_tracks.include?(track.code)
         erb :training_track, locals: {
           track: track,
-          preqs: track.training_topics.where(category: 'P'),
-          core: track.training_topics.where(category: 'C'),
-          adv: track.training_topics.where(category: 'A'),
-          opt: track.training_topics.where(category: 'O'),
+          preqs: track.training_topics.where(category: 'P').asc(:order),
+          core: track.training_topics.where(category: 'C').asc(:order),
+          adv: track.training_topics.where(category: 'A').asc(:order),
+          opt: track.training_topics.where(category: 'O').asc(:order),
           access: user_track_access_breakdown(consultant, track)
         }
       else
@@ -4043,6 +4044,105 @@ Admin</a> </p>
     end
   end
 
+  # slack integrations main page
+  get '/training/track/:trackid/integrations/slack/:domain/:team' do |trackid, domain, team|
+    track = TrainingTrack.find(trackid)
+    erb :training_track_team_slack, locals: {
+      track: track,
+      domain: domain,
+      team: team,
+      default_users: Settings.default_slack_users,
+      team_users: Consultant.where(team: team, domain: domain),
+      preqs: track.training_topics.where(category: 'P').asc(:order),
+      core: track.training_topics.where(category: 'C').asc(:order),
+      adv: track.training_topics.where(category: 'A').asc(:order),
+      opt: track.training_topics.where(category: 'O').asc(:order)
+    }
+  end
+
+  # creates a slack group for a training topic and for specific team
+  post '/training/track/:trackid/topic/:topicid/integrations/slack/:domain/:team/create' do |trackid, topicid, domain, team|
+    group_name = params[:groupname]
+
+    success = true
+    message = "Successfully created slack group"
+
+    if group_name.length > 21
+      success = false
+      message = "Group name should not exceed 21 characters"
+    end
+
+    if success
+      topic = TrainingTopic.find(topicid)
+
+      Slack.configure do |config|
+        config.token = Settings.slack_admin_user_api_token
+      end
+
+      client = Slack::Web::Client.new
+
+      if client.auth_test['ok']
+        group = client.groups_list['groups'].detect { |g| g['name'] == group_name }
+        if group
+          # group exists
+          success = false
+          message = "Group with name: #{group_name} already exists. And this group will be used for notifications."
+          group_doc = topic.slack_groups.find_or_create_by(group_id: group['id'])
+          group_doc.update_attributes(name: group_name, team: team, domain: domain)
+        else
+          # create group and return its id
+          groupid = client.groups_create(name: group_name)['group']['id']
+          # client.channels_setPurpose(channel: groupid, purpose: "Training updates, discussion for topic: #{topic.name}")
+          topic.slack_groups.create(group_id: groupid, name: group_name, team: team, domain: domain)
+        end
+      else
+        # failed to authenticate
+        success = false
+        message = "Unable to authenticate with Slack"
+      end
+    end
+
+    { success: success, msg: message }.to_json
+  end
+
+  # invites users to a slack group
+  post '/training/track/:trackid/topic/:topicid/integrations/slack/:domain/:team/users/invite' do |trackid, topicid, domain, team|
+
+    if params[:users].nil? || params[:users].empty?
+      success = false
+      message = "Users cannot be empty" 
+      return { success: success, msg: message }.to_json
+    end
+
+    users = (params[:users] + Settings.default_slack_users).uniq
+    bots = Settings.default_slack_bots
+
+    track = TrainingTrack.find(trackid)
+    topic = TrainingTopic.find(topicid)
+    group_name = topic.slack_groups.find_by(team: team, domain: domain).name
+    
+    success = true
+    message = "Scheduled inviting users #{users.join(',')} to group #{group_name}."
+
+    Delayed::Job.enqueue(
+      SlackAssociateUsersToTopic.new(
+        Settings.slack_admin_user_api_token,
+        track,
+        topic,
+        users,
+        bots,
+        group_name
+      ),
+      queue: 'slack_associate_users',
+      priority: 10,
+      run_at: 1.seconds.from_now
+    )
+
+    flash[:info] = message
+
+    { success: success, msg: message }.to_json
+  end
+
   # Associates a specific certification to a track
   post '/training/track/:trackid/associate/certification' do |trackid|
     cert = params[:cert]
@@ -4066,6 +4166,7 @@ Admin</a> </p>
     topic_code = params[:tcode]
     email = params[:email]
     category = params[:category]
+    order = params[:order]
 
     success = true
 
@@ -4152,6 +4253,30 @@ Admin</a> </p>
     end
   end
 
+  post '/training/track/:trackid/topic/:topicid/resource' do |trackid, topicid|
+    s_files = []
+    w_files = []
+    topic = TrainingTopic.find(topicid)
+
+    params[:resources].each do |resource|
+      file_name =  topic.code.downcase + resource[:filename]
+      temp_file = resource[:tempfile]
+      resource_id = upload_file(temp_file,file_name)
+      if resource_id
+        topic.training_resources.find_or_create_by(filename: file_name) do |resource|
+          resource.id = resource_id
+          resource.filename = file_name
+        end
+        s_files << file_name
+      else
+        w_files << file_name
+      end
+    end
+    flash[:info] = "Successfully uploaded files '#{s_files.join(',')}'" unless s_files.empty?
+    flash[:warning] = "Failed uploading resume. Resume(s) with '#{w_files.join(',')}' already exists!." unless w_files.empty?
+    redirect back
+  end
+
   # Create a new project for a specified topic of a track
   post '/training/track/:trackid/topic/:topicid/project' do |trackid, topicid|
     success    = true
@@ -4230,16 +4355,24 @@ Admin</a> </p>
 
     track = TrainingTrack.find(trackid)
     topic = TrainingTopic.find(topicid)
-    
-    submission_link = params[:submissionlink]
+    user = Consultant.find(@username)
 
+    unless TrainerTopic.find_by(
+      track: track.id,
+      topic: topic.id,
+      team: user.team)
+        success = false
+        message = "Sorry there is no trainer yet associated with this topic, hence you cannot submit the project"
+        return { success: success, msg: message }.to_json
+    end
+
+    submission_link = params[:submissionlink]
     if !submission_link.start_with?('https://github.com/cloudwicklabs')
       success = false
       message = "submission link should start with 'https://github.com/cloudwicklabs'"
     end
 
     if success
-      user = Consultant.find(@username)
       project = topic.training_projects.find(projectid)
 
       project_submission = project.training_project_submissions.find_by(
@@ -4269,13 +4402,16 @@ Admin</a> </p>
           project_id: projectid,
           message: message
         )
-      else
+        # trainer notification
+        trainer_email = TrainerTopic.find_by(track: trackid, topic: topicid, team: user.team).trainer_id
+        trainer = Consultant.find(trainer_email)
+        trainer_project_submission_notification(trainer, user, track, topic, submission_link, project, 'RESUBMISSION')
+      else # submission
         project.training_project_submissions.create(
           consultant_id: @username,
           submission_link: submission_link,
           status: 'SUBMITTED'
         )
-
         # create notification for everyone in the team
         Consultant.where(team: user.team).each do |consultant|
           TrainingNotification.create(
@@ -4293,45 +4429,22 @@ Admin</a> </p>
             message: "Submitted project: '#{project.name}' from topic: '#{topic.name}'"  
           )
         end
-        Delayed::Job.enqueue(
-          SlackGroupNotification.new(
-            Settings.slack_sync_bot_api_token, 
-            "team#{user.team}_#{track.code.downcase}_#{topic.code.downcase}",
+        # slack group notification
+        if topic.slack_groups.find_by(team: user.team, domain: user.domain)
+          group_name = topic.slack_groups.find_by(team: user.team, domain: user.domain).name
+          slack_group_notification(
+            group_name, 
             "'#{user.first_name} #{user.last_name}' submitted '#{project.name}' from topic: '#{topic.name}'."
-          ),
-          queue: 'slack_notifications',
-          priority: 10,
-          run_at: 1.seconds.from_now
-        )
-        # create a notification for trainer
+          )
+        else
+          slack_group_not_found(user, track, topic)
+        end
+        # slack trainer notification
         trainer_email = TrainerTopic.find_by(track: trackid, topic: topicid, team: user.team).trainer_id
-        TrainingNotification.create(
-          originator: user.email,
-          name: "#{user.first_name} #{user.last_name}",
-          destination: trainer_email,
-          broadcast: 'T',
-          team: user.team,
-          type: 'PROJECT',
-          sub_type: 'SUBMISSION',
-          track: trackid,
-          topic: topicid,
-          submission_link: submission_link,
-          project_id: projectid,
-          message: "Submitted project: '#{project.name}' from topic: '#{topic.name}'"  
-        )
-        # send a slack notification to the trainer
-        Delayed::Job.enqueue(
-          SlackUserNotification.new(
-            Settings.slack_sync_bot_api_token, 
-            trainer_email, 
-            "'#{user.first_name} #{user.last_name}' submitted '#{project.name}' from topic: '#{topic.name}'. Please review the project submission by logging into http://sync.cloudwick.com/training and approving/rejecting the submission."
-          ),
-          queue: 'slack_notifications',
-          priority: 10,
-          run_at: 1.seconds.from_now
-        )
-      end
-    end
+        trainer = Consultant.find(trainer_email)
+        trainer_project_submission_notification(trainer, user, track, topic, submission_link, project, 'SUBMISSION')
+      end # end submission
+    end # end success
     
     { success: success, msg: message }.to_json
   end
@@ -4365,17 +4478,16 @@ Admin</a> </p>
         message: "Approved #{trainee.first_name} #{trainee.last_name}'s project('#{project.name}') submission from topic: '#{topic.name}'"
       )
     end
-    Delayed::Job.enqueue(
-      SlackGroupNotification.new(
-        Settings.slack_sync_bot_api_token, 
-        "team#{trainee.team}_#{track.code.downcase}_#{topic.code.downcase}",
+    if topic.slack_groups.find_by(team: trainee.team, domain: trainee.domain)
+      group_name = topic.slack_groups.find_by(team: trainee.team, domain: trainee.domain).name
+      slack_group_notification(
+        group_name,
         "'#{trainer.first_name} #{trainer.last_name}' approved '#{trainee.first_name} #{trainee.last_name}'s project submission '#{project.name}' from topic: '#{topic.name}'."
-      ),
-      queue: 'slack_notifications',
-      priority: 10,
-      run_at: 1.seconds.from_now
-    )
-
+      )
+    else
+      slack_group_not_found(trainee, track, topic)
+    end
+      
     flash[:info] = "Successfully registered event, sent notification to trainee"
   end
 
@@ -4411,15 +4523,9 @@ Admin</a> </p>
       project_id: projectid,
       message: "Please review your project('#{project.name}') submission from topic: '#{topic.name}'. Notes from reviewer: #{reason}."
     )
-    Delayed::Job.enqueue(
-      SlackUserNotification.new(
-        Settings.slack_sync_bot_api_token, 
-        trainee.email,
-        "'#{trainer.first_name} #{trainer.last_name}' declined your '#{project.name}' submission from topic: '#{topic.name}'. Notes from trainer: #{reason} .Please review the project submission based on the comments/notes provided by trainer and re-submit it."
-      ),
-      queue: 'slack_notifications',
-      priority: 10,
-      run_at: 1.seconds.from_now
+    slack_user_notification(
+      trainee.email, 
+      "'#{trainer.first_name} #{trainer.last_name}' declined your '#{project.name}' submission from topic: '#{topic.name}'. Notes from trainer: #{reason} .Please review the project submission based on the comments/notes provided by trainer and re-submit it."
     )
 
     flash[:info] = message
@@ -4539,6 +4645,37 @@ Admin</a> </p>
       }
     end
   end
+
+  get '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/:consultant/scratchpad' do |trackid, topicid, subtopicid, consultant|
+    track = TrainingTrack.find(trackid)
+    topic = TrainingTopic.find(topicid)
+    consultant = Consultant.find(@username)
+    sub_topic = topic.training_sub_topics.find(subtopicid)
+    sp = sub_topic.training_scratch_pads.find_or_create_by(consultant_id: consultant.email)
+
+    erb :training_sub_topic_scratchpad,
+      locals: {
+        track: track,
+        topic: topic,
+        sub_topic: sub_topic,
+        consultant: consultant,
+        sp: sp
+      }
+  end
+
+  post '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/:consultant/scratchpad' do |trackid, topicid, subtopicid, consultant|
+    success = true
+    message = "successfully saved scratchpad contents"
+
+    data = params[:content]
+
+    sub_topic = TrainingSubTopic.find(subtopicid)
+    sp = sub_topic.training_scratch_pads.find_by(consultant_id: consultant)
+    sp.update_attributes(contents: data)
+
+    { success: success, msg: message }.to_json
+  end
+
 
   # admin page for uploading & managing slides deck to a subtopic
   get '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/admin' do |trackid, topicid, subtopicid|
@@ -4680,6 +4817,16 @@ Admin</a> </p>
     track = TrainingTrack.find(trackid)
     topic = TrainingTopic.find(topicid)
     sub_topic = TrainingSubTopic.find(subtopicid)
+    user = Consultant.find(@username)
+
+    unless TrainerTopic.find_by(
+      track: track.id,
+      topic: topic.id,
+      team: user.team)
+        success = false
+        message = "Sorry there is no trainer yet associated with this topic, hence you cannot submit the assignment"
+        return { success: success, msg: message }.to_json
+    end
     
     submission_link = params[:submissionlink]
 
@@ -4689,7 +4836,6 @@ Admin</a> </p>
     end
 
     if success
-      user = Consultant.find(@username)
       assignment = sub_topic.training_assignments.find(assignmentid)
 
       assignment_submission = assignment.training_assignment_submissions.find_by(
@@ -4718,6 +4864,9 @@ Admin</a> </p>
           assignment_id: assignmentid,
           message: "Re-submitted assignment: '#{assignment.name}' of sub-topic: '#{sub_topic.name}' from topic: '#{topic.name}'"
         )
+        trainer_email = TrainerTopic.find_by(track: trackid, topic: topicid, team: user.team).trainer_id
+        trainer = Consultant.find(trainer_email)
+        trainer_assignment_submission_notification(trainer, user, track, topic, sub_topic, submission_link, assignment, 'RESUBMISSION')
       else
         assignment.training_assignment_submissions.create(
           consultant_id: @username,
@@ -4741,17 +4890,19 @@ Admin</a> </p>
             assignment_id: assignmentid,
             message: "Submitted assignment: '#{assignment.name}' of sub-topic: '#{sub_topic.name}' from topic: '#{topic.name}'"  
           )
-          Delayed::Job.enqueue(
-            SlackGroupNotification.new(
-              Settings.slack_sync_bot_api_token, 
-              "team#{user.team}_#{track.code.downcase}_#{topic.code.downcase}",
-              "'#{user.first_name} #{user.last_name}' submitted assignment '#{assignment.name}' from sub-topic: '#{sub_topic.name}' of topic: '#{topic.name}'."
-            ),
-            queue: 'slack_notifications',
-            priority: 10,
-            run_at: 1.seconds.from_now
-          )
         end
+        if topic.slack_groups.find_by(team: user.team, domain: user.domain)
+          group_name = topic.slack_groups.find_by(team: user.team, domain: user.domain).name
+          slack_group_notification(
+            group_name, 
+            "'#{user.first_name} #{user.last_name}' submitted assignment '#{assignment.name}' from sub-topic: '#{sub_topic.name}' of topic: '#{topic.name}'."
+          )
+        else
+          slack_group_not_found(user, track, topic)
+        end
+        trainer_email = TrainerTopic.find_by(track: trackid, topic: topicid, team: user.team).trainer_id
+        trainer = Consultant.find(trainer_email)
+        trainer_assignment_submission_notification(trainer, user, track, topic, sub_topic, submission_link, assignment, 'SUBMISSION')
       end
     end
     
@@ -4773,12 +4924,12 @@ Admin</a> </p>
       status: 'APPROVED'
     )
 
-    Consultant.where(team: user.team).each do |consultant|
+    Consultant.where(team: trainee.team).each do |consultant|
       TrainingNotification.create(
         originator: @username,
         name: "#{trainer.first_name} #{trainer.last_name}",
         broadcast: 'T',
-        destination: consultant.id,
+        destination: trainee.id,
         team: trainee.team,
         type: 'ASSIGNMENT',
         sub_type: 'APPROVAL',
@@ -4789,16 +4940,15 @@ Admin</a> </p>
         message: "Approved #{trainee.first_name} #{trainee.last_name}'s assignment('#{assignment.name}') submission from sub_topic: '#{sub_topic.name}'"
       )
     end
-    Delayed::Job.enqueue(
-      SlackGroupNotification.new(
-        Settings.slack_sync_bot_api_token, 
-        "team#{trainee.team}_#{track.code.downcase}_#{topic.code.downcase}",
+    if topic.slack_groups.find_by(team: trainee.team, domain: trainee.domain)
+      group_name = topic.slack_groups.find_by(team: trainee.team, domain: trainee.domain).name
+      slack_group_notification(
+        group_name, 
         "'#{trainer.first_name} #{trainer.last_name}' has approved '#{trainee.first_name} #{trainee.last_name}'s assignment submission of '#{assignment.name}' from sub-topic: '#{sub_topic.name}'."
-      ),
-      queue: 'slack_notifications',
-      priority: 10,
-      run_at: 1.seconds.from_now
-    )
+      )
+    else
+      slack_group_not_found(trainee, track, topic)
+    end
 
     flash[:info] = "Successfully registered event, sent notification to trainee"
   end
@@ -4837,15 +4987,9 @@ Admin</a> </p>
       message: "Please review your your assignment('#{assignment.name}') submission from sub_topic: '#{sub_topic.name}'"
     )
 
-    Delayed::Job.enqueue(
-      SlackUserNotification.new(
-        Settings.slack_sync_bot_api_token, 
-        trainee.email, 
-        "'#{trainer.first_name} #{trainer.last_name}' has disapproved your assignment submission '#{assignment.name}' from topic: '#{topic.name}'. Notes from trainer: #{reason}. Please review the submission based on trainer notes/comments and re-submit it."
-      ),
-      queue: 'slack_notifications',
-      priority: 10,
-      run_at: 1.seconds.from_now
+    slack_user_notification(
+      trainee.email, 
+      "'#{trainer.first_name} #{trainer.last_name}' has disapproved your assignment submission '#{assignment.name}' from topic: '#{topic.name}'. Notes from trainer: #{reason}. Please review the submission based on trainer notes/comments and re-submit it."
     )
 
     flash[:info] = message
@@ -5428,7 +5572,12 @@ Admin</a> </p>
 
     sub_topics_progress = []
     topic.training_sub_topics.each do |subtopic|
-      sub_topics_progress << sub_topic_progress(consultant, subtopic)
+      # skip the subtopic which does not have any assignments towards calculating progress
+      if subtopic.training_assignments.count == 0
+        next
+      else
+        sub_topics_progress << sub_topic_progress(consultant, subtopic)
+      end
     end
     aggregate_sub_topics_progress = if sub_topics_progress.empty?
         0.0
@@ -5494,20 +5643,24 @@ Admin</a> </p>
     topics = track.training_topics.entries
     topics_by_category = topics.group_by { |t| t[:category] }
     
-    
-    if topics_by_category['P'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f } > 80
+    preqs_progress = topics_by_category['P'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f }
+    if preqs_progress > 80
       access[:core] = true
     end
 
-    if topics_by_category['C'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f } > 80
+    cores_progress = topics_by_category['C'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f }
+    if cores_progress > 80
       access[:adv] = true
     end
 
-    if topics_by_category['A'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f } > 80
+    advs_progress = topics_by_category['A'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f }
+    if advs_progress > 80
       access[:opt] = true
     end
 
-    if topics_by_category['O'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f } > 80
+    opts_progress = topics_by_category['O'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f }
+    overall_progress = ( preqs_progress + cores_progress + advs_progress + opts_progress ) / 4.to_f
+    if overall_progress > 70
       access[:certs] = true
     end
 
@@ -5617,5 +5770,89 @@ Admin</a> </p>
       end
     end
     assignment_submissions
+  end
+
+  def slack_user_notification(user_email, message)
+    Delayed::Job.enqueue(
+      SlackUserNotification.new(
+        Settings.slack_sync_bot_api_token, 
+        user_email, 
+        message
+      ),
+      queue: 'slack_notifications',
+      priority: 10,
+      run_at: 1.seconds.from_now
+    )
+  end
+
+  def slack_group_notification(group_name, message)
+    Delayed::Job.enqueue(
+      SlackGroupNotification.new(
+        Settings.slack_sync_bot_api_token,
+        group_name,
+        message
+      ),
+      queue: 'slack_notifications',
+      priority: 10,
+      run_at: 1.seconds.from_now
+    )
+  end
+
+  def slack_group_not_found(user, track, topic)
+    group_name = if user.domain == 'US'
+      "team#{user.team}_#{track.code.downcase}_#{topic.code.downcase}"
+    else
+      "#{user.domain.downcase}_team#{user.team}_#{track.code.downcase}_#{topic.code.downcase}"
+    end
+    Delayed::Job.enqueue(
+      EmailSlackNoGroup.new(@settings, group_name),
+      queue: 'emails',
+      priority: 10,
+      run_at: 10.seconds.from_now
+    )
+  end
+
+  def trainer_project_submission_notification(trainer, trainee, track, topic, submission_link, project, submission_type)
+    TrainingNotification.create(
+      originator: trainee.email,
+      name: "#{trainee.first_name} #{trainee.last_name}",
+      destination: trainer.email,
+      broadcast: 'T',
+      team: trainee.team,
+      type: 'PROJECT',
+      sub_type: submission_type,
+      track: track.id,
+      topic: topic.id,
+      submission_link: submission_link,
+      project_id: project.id,
+      message: "Submitted project: '#{project.name}' from topic: '#{topic.name}'"  
+    )
+    # send a slack notification to the trainer
+    slack_user_notification(
+      trainer.email, 
+      "'#{trainee.first_name} #{trainee.last_name}' submitted '#{project.name}' from topic: '#{topic.name}'. Please review the project submission by logging into http://sync.cloudwick.com/training and approving/rejecting the submission."
+    )
+  end
+
+  def trainer_assignment_submission_notification(trainer, trainee, track, topic, sub_topic, submission_link, assignment, submission_type)
+    TrainingNotification.create(
+      originator: trainee.email,
+      name: "#{trainee.first_name} #{trainee.last_name}",
+      destination: trainer.email,
+      broadcast: 'T',
+      team: trainee.team,
+      type: 'ASSIGNMENT',
+      sub_type: submission_type,
+      track: track.id,
+      topic: topic.id,
+      submission_link: submission_link,
+      assignment_id: assignment.id,
+      message: "Submitted assignment: '#{assignment.name}' of sub-topic: '#{sub_topic.name}' from topic: '#{topic.name}'"
+    )
+    # send a slack notification to the trainer
+    slack_user_notification(
+      trainer.email,
+      "'#{trainee.first_name} #{trainee.last_name}' submitted '#{assignment.name}' of sub-topic: '#{sub_topic.name}' from topic: '#{topic.name}'. Please review the project submission by logging into http://sync.cloudwick.com/training and approving/rejecting the submission."
+    )
   end
 end # END MAIN

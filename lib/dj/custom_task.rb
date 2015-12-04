@@ -5,7 +5,7 @@ class CustomTask < Struct.new(:text)
   end
 
   def success
-    say "sucessfully completed task"
+    say "successfully completed task"
   end
 
   def failure

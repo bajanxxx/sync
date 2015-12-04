@@ -27,4 +27,5 @@ class TrainingSubTopic
   has_many :content_slides
   has_many :content_thumbnails
   has_many :training_assignments
+  has_many :training_scratch_pads
 end
