@@ -4,6 +4,7 @@ random.rb
 random.js
 tmp/*
 data/*
+public/assets/*
 
 # sbt specific
 dist/*

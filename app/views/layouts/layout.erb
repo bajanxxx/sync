@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- Basic Page Needs
+ 		================================================== -->
+		<title>Cloudwick Sync</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="Cloudwick Sync">
+		<meta name="author" content="Ashrith Mekala">
+
+		<link rel="icon" type="image/ico" href="/favicon.ico">
+
+		<!-- CSS
+  	================================================== -->
+  	<!-- Fonts -->
+  	<link href='https://fonts.googleapis.com/css?family=Muli' rel='stylesheet' type='text/css'>
+		<!-- Bootstrap -->
+		<link href="<%= asset_path 'bootstrap.min.css' %>" rel="stylesheet">
+		<link href="<%= asset_path 'bootstrap-responsive.min.css' %>" rel="stylesheet">
+		<!-- x-editable -->
+		<link href="<%= asset_path 'bootstrap-editable.css' %>" rel="stylesheet"/>
+		<!-- select2 -->
+		<link href="<%= asset_path 'select2.css' %>" rel="stylesheet"/>
+		<link href="<%= asset_path 'select2-bootstrap.css' %>" rel="stylesheet"/>
+		<!-- <link href="/css/badge_formatting.css" rel="stylesheet"> -->
+		<!-- Booststrap validator -->
+    <link href="<%= asset_path 'bootstrapValidator.css' %>" rel="stylesheet"/>
+		<link href="<%= asset_path 'summernote.css' %>" rel="stylesheet"/>
+		<link href="<%= asset_path 'summernote-bs3.css' %>" rel="stylesheet"/>
+		<link href="<%= asset_path 'bootstrap-social.css' %>" rel="stylesheet"/>
+		<link href="<%= asset_path 'bootstrap.vertical-tabs.min.css' %>" rel="stylesheet"/>
+    <link href="<%= asset_path 'font-awesome.css' %>" rel="stylesheet">
+    <link href="<%= asset_path 'bootstrap-switch.min.css' %>" rel="stylesheet">
+    <link href="<%= asset_path 'hover-min.css' %>" rel="stylesheet" media="all">
+
+		<style>
+			* {
+				font-family: 'Muli', sans-serif;
+			}
+			html {
+				position: relative;
+				min-height: 100%;
+			}
+	    body {
+	    	padding-top: 60px; /* When using the navbar-top-fixed */
+				padding-left: 0px;
+				padding-right: 0px;
+				padding-bottom: 50px;
+	    }
+			/*nav bar colors - generated using http://work.smarchal.com/twbscolor/css/e74c3cc0392becf0f1ffbbbc0*/
+	    .navbar-default {
+			  background-color: #0778bf;
+			  border-color: #0778bf;
+			}
+			.navbar-default .navbar-brand {
+			  color: #ecf0f1;
+			}
+			.navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {
+			  color: #919b9d;
+			}
+			.navbar-default .navbar-text {
+			  color: #ecf0f1;
+			}
+			.navbar-default .navbar-nav > li > a {
+			  color: #ecf0f1;
+			}
+			.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
+			  color: #919b9d;
+			}
+			.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus {
+			  color: #919b9d;
+			  background-color: #0778bf;
+			}
+			.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus {
+			  color: #919b9d;
+			  background-color: #0778bf;
+			}
+			.navbar-default .navbar-toggle {
+			  border-color: #0778bf;
+			}
+			.navbar-default .navbar-toggle:hover, .navbar-default .navbar-toggle:focus {
+			  background-color: #0778bf;
+			}
+			.navbar-default .navbar-toggle .icon-bar {
+			  background-color: #ecf0f1;
+			}
+			.navbar-default .navbar-collapse,
+			.navbar-default .navbar-form {
+			  border-color: #ecf0f1;
+			}
+			.navbar-default .navbar-link {
+			  color: #ecf0f1;
+			}
+			.navbar-default .navbar-link:hover {
+			  color: #919b9d;
+			}
+			@media (max-width: 767px) {
+			  .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+			    color: #ecf0f1;
+			  }
+			  .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+			    color: #919b9d;
+			  }
+			  .navbar-default .navbar-nav .open .dropdown-menu > .active > a, .navbar-default .navbar-nav .open .dropdown-menu > .active > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > .active > a:focus {
+			    color: #919b9d;
+			    background-color: #0778bf;
+			  }
+			}
+			#footer {
+				position: absolute;
+				bottom: 0px;
+				width: 100%;
+				/* Set the fixed height of the footer here */
+				height: 50px;
+				background-color: #f5f5f5;
+			}
+			.container .text-muted {
+				margin: 20px 0;
+			}
+	    .center {
+		     float: none;
+		     margin-left: auto;
+		     margin-right: auto;
+	    }
+	    .centercontents {
+	    	text-align: center !important;
+	    }
+	    .alignrightcontents {
+	    	text-align: right !important;
+	    }
+			.modal-wide .modal-dialog {
+  			width: 80%; /* or whatever you wish */
+			}
+			/* Bootstrap style callouts */
+			/* Base styles (regardless of theme) */
+			.bs-callout {
+			    margin: 20px 0;
+			    padding: 15px 30px 15px 15px;
+			    border-left: 5px solid #eee;
+			}
+			.bs-callout h4 {
+			    margin-top: 0;
+			}
+			.bs-callout p:last-child {
+			    margin-bottom: 0;
+			}
+			.bs-callout code,
+			.bs-callout .highlight {
+			    background-color: #fff;
+			}
+			/* Themes for different contexts */
+			.bs-callout-danger {
+			    background-color: #fcf2f2;
+			    border-color: #dFb5b4;
+			}
+			.bs-callout-warning {
+			    background-color: #fefbed;
+			    border-color: #f1e7bc;
+			}
+			.bs-callout-info {
+			    background-color: #f0f7fd;
+			    border-color: #d0e3f0;
+			}
+			.bs-callout-danger h4,
+			.bs-callout-danger a.alert-link {
+			    color: #B94A48;
+			}
+			.bs-callout-warning h4,
+			.bs-callout-warning a.alert-link {
+			    color: #C09853;
+			}
+			.bs-callout-info h4,
+			.bs-callout-info a.alert-link {
+			    color: #3A87AD;
+			}
+			.bs-callout a.alert-link {
+			    font-weight: bold;
+			}
+			.the-legend {
+			    border-style: none;
+			    border-width: 0;
+			    font-size: 14px;
+			    line-height: 20px;
+			    margin-bottom: 0;
+			}
+			.the-fieldset {
+			    border: 2px groove threedface #444;
+			    -webkit-box-shadow:  0px 0px 0px 0px #000;
+			            box-shadow:  0px 0px 0px 0px #000;
+			}
+			.well-white {
+				background-color: rgb(255, 255, 255);
+			}
+			.row-fluid {
+    			word-wrap: break-word;
+			}
+			.container-fluid {
+    			word-wrap: break-word;
+			}
+			.dropdown:hover .dropdown-menu {
+				display: block;
+			}
+			.col-8{
+				width: 12.5%;
+			}
+		</style>
+		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+		<!--[if lt IE 9]>
+		  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+		  <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+		<![endif]-->
+		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+		<script src="<%= asset_path 'jquery-2.1.1.js' %>"></script>
+		<script src="<%= asset_path 'bootstrap.min.js' %>"></script>
+		<script src="<%= asset_path 'bootstrap-editable.js' %>"></script>
+		<script src="<%= asset_path 'jquery.validate.min.js' %>"></script>
+		<script src="<%= asset_path 'bootstrapValidator.min.js' %>"></script>
+    <script src="<%= asset_path 'select2.js' %>"></script>
+    <script src="<%= asset_path 'bootstrap-paginator.min.js' %>"></script>
+    <script src="<%= asset_path 'summernote.min.js' %>"></script>
+    <script src="<%= asset_path 'bootstrap-switch.min.js' %>"></script>
+    <script src="<%= asset_path 'bootstrap.file-input.js' %>"></script>
+    <script src="<%= asset_path 'bootstrap-datepicker.js' %>"></script>
+	</head>
+	<body>
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">Cloudwick Sync</a>
+        <div class="collapse navbar-collapse">
+          <% if session_username %>
+            <% if @user.role? %>
+              <% if @user.administrator? %>
+                <ul class="nav navbar-nav">
+                  <li><a href="/jobs">Jobs</a></li>
+                  <li class="dropdown">
+                    <a class="dropdown-toggle disabled">Users <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                      <li><a href="/users">User Management</a></li>
+                      <li><a href="/consultants">Consultants</a></li>
+                    </ul>
+                  </li>
+                  <li class="dropdown">
+                    <a class="dropdown-toggle disabled">Campaign <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                      <li><a href="/campaign">Campaign</a></li>
+                      <li><a href="/vendors">Vendors</a></li>
+                      <li><a href="/customers">Customers</a></li>
+                    </ul>
+                  </li>
+                  <li class="dropdown">
+                    <a class="dropdown-toggle disabled">Requests <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                      <li><a href="/cloudservers/requests"><i class="fa fa-server"></i> Cloud Servers</a></li>
+                      <li><a href="/documents"><i class="fa fa-file-text"></i> Documents</a></li>
+                      <li><a href="/certifications"><i class="fa fa-certificate"></i> Certifications</a></li>
+                      <li><a href="/airtickets"><i class="fa fa-plane"></i> Air Tickets</a></li>
+                    </ul>
+                  </li>
+                  <li class="dropdown">
+                    <a class="dropdown-toggle disabled">Time <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                      <li><a href="/timesheets/pending"><i class="fa fa-pause"></i> Pending</a></li>
+                      <li><a href="/timesheets/approved"><i class="fa fa-thumbs-up"></i> Approved</a></li>
+                      <li><a href="/timesheets/<%= session_username %>/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%U') %>"><i class="fa fa-calendar-o"></i> Timesheets</a></li>
+                      <li><a href="/timesheets/projects"><i class="fa fa-folder"></i> Projects</a></li>
+                      <li><a href="/timesheets/reports/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%m') %>"><i class="fa fa-area-chart"></i> Reports</a></li>
+                      <li><a href="/timesheets/manage"><i class="fa fa-pencil"></i> Manage</a></li>
+                    </ul>
+                  </li>
+                  <li><a href="/training">Training</a></li>
+                </ul>
+              <% else %>
+                <ul class="nav navbar-nav">
+                  <li><a href="/jobs/consultant/<%= session_username %>">Jobs</a></li>
+                  <li><a href="/consultant/<%= session_username %>/projects">Projects</a></li>
+                  <li class="dropdown">
+                    <a href="#" class="dropdown-toggle disabled">Requests <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                      <li><a href="/cloudservers/requests/<%= session_username %>"><i class="fa fa-server"></i> CloudServers</a></li>
+                      <li><a href="/documents/<%= session_username %>"><i class="fa fa-file-text"></i> Documents</a></li>
+                      <li><a href="/airtickets/<%= session_username %>"><i class="fa fa-plane"></i> AirTickets</a></li>
+                      <li><a href="/certifications/<%= session_username %>"><i class="fa fa-certificate"></i> Certifications</a></li>
+                    </ul>
+                  </li>
+                  <li><a href="/timesheets/<%= session_username %>/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%U') %>">Timesheets</a></li>
+                  <li><a href="/training">Training</a></li>
+                </ul>
+              <% end %>
+            <% else %>
+              <!--No role associated yet by the admin-->
+              <ul class="nav navbar-nav">
+                <li><a href="#">Jobs</a></li>
+                <li><a href="#">Projects</a></li>
+                <li><a href="#">Requests</a></li>
+                <li><a href="#">Timesheets</a></li>
+                <li><a href="#">Training</a></li>
+              </ul>
+            <% end %>
+          <% else %>
+            <!--User is not logged in-->
+            <ul class="nav navbar-nav">
+              <li><a href="#">Jobs</a></li>
+              <li><a href="#">Projects</a></li>
+              <li><a href="#">Requests</a></li>
+              <li><a href="#">Timesheets</a></li>
+              <li><a href="#">Training</a></li>
+            </ul>
+          <% end %>
+          <ul class="nav navbar-nav pull-right">
+            <% if session_username %>
+              <li><p class="navbar-text"><%= session_username %> | <a href='/logout' class="navbar-link">logout</a></li>
+            <% else %>
+              <li><a href="/login" class="navbar-link">signin</a></li>
+            <% end %>
+          </ul>
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar -->
+
+		<% if flash %>
+		<%= styled_flash %>
+		<% end %>
+
+		<%= yield %>
+
+		<div id="footer">
+      <div class="container">
+        <p class="text-muted text-center">Sync | © 2014-2016 <a target="_blank" href='http://www
+        .cloudwick.com'>Cloudwick</a>, Inc. All rights reserved | Ashrith Mekala</p>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+  // browser detection by ducktyping
+  var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+  // Opera 8.0+ (UA detection to detect Blink/v8-powered Opera)
+	var isFirefox = typeof InstallTrigger !== 'undefined';   // Firefox 1.0+
+	var isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+  // At least Safari 3+: "[object HTMLElementConstructor]"
+	var isChrome = !!window.chrome && !isOpera;              // Chrome 1+
+	var isIE = /*@cc_on!@*/false || !!document.documentMode; // At least IE6
+
+	if (isChrome || isSafari) {
+		console.log('Browser - OK');
+	} else {
+		alert('Site will not work as intended, please use Chrome or Safari.');
+	}
+  </script>
+</html>

@@ -1,0 +1,321 @@
+<!-- Constultant Selection Modal -->
+<div class="modal fade" id="SendToConsultant" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Select consultant to send the posting to:</h4>
+      </div>
+      <div class="modal-body">
+        <!-- Populate Consultants to select -->
+        <form id="SendToConsultantForm" class="form-horizontal">
+          <fieldset>
+            <select name="ConsultantEmail" class="form-control">
+              <% consultants.each do |email| %>
+                  <option><%= email %></option>
+              <% end %>
+            </select>
+            <p></p>
+            <textarea name="ConsultantEmailNotes" class="form-control" rows="3"></textarea>
+            <p id="SendToConsultantFormLabel" class="text-center"></p>
+          </fieldset>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="SendToConsultantButton" type="button" class="btn btn-large btn-primary center-block">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Apply Now Modal -->
+<div class="modal fade" id="ApplyNow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Apply now:</h4>
+      </div>
+      <div class="modal-body">
+        <!-- Populate Consultants to select -->
+        <form id="ApplyNowForm" class="form-horizontal" role="form">
+          <div class="form-group">
+            <label>Consultant: </label>
+            <select id="ApplyNowConsultantEmail" name="ApplyNowConsultantEmail" class="form-control">
+              <% consultants.each do |email| %>
+                  <option value="<%= email %>"><%= email %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Select Resume: </label>
+            <select id="ApplyNowConsultantResume" name="ApplyNowConsultantResume" class="form-control">
+              <option value="" selected="selected">None</option>
+              <% consultants.each do |email| %>
+                  <% !resumes[email].empty? && resumes[email].each do |resume| %>
+                      <option id="<%= email %>" value="<%= resume.resume_name %>"><%= resume.resume_name %></option>
+                  <% end %>
+              <% end %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ApplyNowNotes">Vendor Email: </label>
+            <input type="email" id="ApplyNowVendorEmail" class="form-control" placeholder="Email">
+          </div>
+          <div class="form-group">
+            <label for="ApplyNowBody">Email Body: </label>
+            <textarea name="ApplyNowBody" class="form-control" rows="3"></textarea>
+          </div>
+          <p id="ApplyNowFormLabel" class="text-center"></p>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="ApplyNowButton" type="button" class="btn btn-primary">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Job Posting <small><%= job.title %></small></h2>
+  </div>
+  <div class="row-fluid">
+    <div class="span8">
+      <div class="jumbotron">
+        <div class="row-fluid">
+          <a class="btn btn-primary btn-md" role="button" id="gobackinternal">Go Back</a>
+          <a class="btn btn-primary btn-md pull-right" role="button" href="<%= job.url %>">GoTo Source</a>
+        </div>
+        <hr>
+        <table class="table table-hover">
+          <tr>
+            <th>Job Headers</th>
+            <th>Content</th>
+          </tr>
+          <% %w(date_posted title company location skills emails phone_nums).each do |method_name| %>
+              <tr>
+                <td><%= method_name %></td>
+                <% method_data = job.send(method_name) %>
+                <td><%= method_data.is_a?(Array) ? method_data.join(',') : method_data %></td>
+              </tr>
+          <% end %>
+        </table>
+        <div class="btn-group btn-group-justified">
+          <a role="button" class="btn btn-primary" id="SEND_CONSULTANT" data-toggle="modal" href="#SendToConsultant">Foward Consultant</a>
+          <a role="button" class="btn btn-primary" id="FORGET_POST">Forget</a>
+          <a role="button" class="btn btn-primary" id="APPLY_NOW" data-toggle="modal" href="#ApplyNow">Apply</a>
+        </div>
+      </div> <!-- jumbotron -->
+    </div>
+    <% if !tracking.empty? %>
+        <div class="span4">
+          <div class="panel panel-primary">
+            <div class="panel-heading">Who are tracking:</div>
+            <div class="panel-body">
+              <ul class="list-group">
+                <% tracking.each do |application| %>
+                    <li class="list-group-item">
+                      <!-- Send a reminder email to consultant -->
+                      <button id="SendNotification<%= application.id %>" type="button" class="btn btn-default btn-xs pull-right">
+                        <span class="glyphicon glyphicon-send"></span>
+                      </button>
+                      <% if application.status.include?('APPLIED') %>
+                          <span class="badge alert-danger">APPLIED</span>
+                      <% end %>
+                      <% if application.status.include?('INTERVIEW_SCHEDULED') %>
+                          <span class="badge alert-danger">IS</span>
+                      <% end %>
+                      <a href="/consultant/jobs/<%= application.consultant_id %>"><%= application.consultant_id.split('@').first %></a>
+                    </li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading">Notes from consultants:</div>
+            <div class="panel-body">
+              <ul class="list-group">
+                <% tracking.each do |application| %>
+                    <li class="list-group-item">
+                      <a href="/consultant/jobs/<%= application.consultant_id %>"><strong><%= application.consultant_id.split('@').first %></strong></a>
+                      <% if application.notes %>
+                          <strong>notes</strong>: <%= application.notes %>.
+                      <% end %>
+                      <% if application.status %>
+                          <strong>status</strong>: <%= application.status.join(', ').downcase %>.
+                      <% end %>
+                      <% if application.closing_status %>
+                          <strong>closing_status</strong>: <%= application.closing_status.join(', ').downcase %>.
+                      <% end %>
+                    </li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div>
+    <% end %>
+  </div>
+</div>
+
+<script type="text/javascript">
+  // sessionStorage.setItem('JobPostingVisited', 'True');
+  var url = document.URL;
+  var job_id = url.substring(url.lastIndexOf('/') + 1);
+  // Load resumes based on consultant selected
+  $("#ApplyNowConsultantEmail").change(function() {
+    if($(this).data('options') == undefined){
+      /*Taking an array of all options-2 and kind of embedding it on the select1*/
+      $(this).data('options',$('#ApplyNowConsultantResume option').clone());
+    }
+    var id = $(this).val();
+    var options = $(this).data('options').filter('[id="' + id + '"]');
+    $('#ApplyNowConsultantResume').html(options);
+  });
+
+  $('#gobackinternal').click(function() {
+    _this = $(this);
+    _this.html('<em>Read ...</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/job/" + job_id + "/read",
+      success: function(data){
+        // on sucess go back to the previous page
+        history.go(-1);
+      },
+      error: function(e){
+        alert("Error occurred");
+      }
+    });
+  });
+  $('#FOLLOW_UP').click(function() {
+    $.ajax({
+      type: "POST",
+      url: "/job/" + job_id + "/follow_up",
+      success: function(data){
+        history.go(-1);
+      },
+      error: function(e){
+        alert("Error occurred");
+      }
+    });
+  });
+  $('#SEND_VENDOR').click(function() {
+    $.ajax({
+      type: "POST",
+      url: "/job/" + job_id + "/send_vendor",
+      success: function(data){
+        history.go(-1);
+      },
+      error: function(e){
+        alert("Error occurred");
+      }
+    });
+  });
+  $('#SendToConsultantButton').click(function(){
+    _this = $(this);
+    _this.html('<em>Sending ...</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var email = $('select[name="ConsultantEmail"]').val();
+    var notes = $('textarea[name="ConsultantEmailNotes"]').val();
+    $.ajax({
+      type: "POST",
+      url: "/jobs/forward/" + email + "/" + job_id,
+      data: { 'notes': notes },
+      success: function(data) {
+        $('#SendToConsultantFormLabel').addClass('text-info').html('Sucessfully sent email');
+        $('#SendToConsultant').modal('hide');
+        history.go(-1);
+      },
+      error: function(e) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Try Again !');
+        $('#SendToConsultantFormLabel').addClass('text-danger').html('Something went wrong sending email!!!');
+      }
+    });
+  });
+  $('#ApplyNowButton').click(function(){
+    _this = $(this);
+    _this.html('<em>Applying ...</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var email  = $('select[name="ApplyNowConsultantEmail"]').val();
+    var resume_name = $('select[name="ApplyNowConsultantResume"]').val();
+    var vendor_email = $('#ApplyNowVendorEmail').val();
+    var email_body = $('textarea[name="ApplyNowBody"]').val();
+    $('#ApplyNowFormLabel').html('Sending email ...');
+    $.ajax({
+      type: 'POST',
+      url: "/jobs/apply_now/" + job_id,
+      data: { 'email_body': email_body, 'resume_name': resume_name, 'vendor_email': vendor_email, 'consultant_email': email },
+      success: function(data) {
+        $('#ApplyNowFormLabel').addClass('text-info').html('Sucessfully sent email');
+        $('#ApplyNow').modal('hide');
+        history.go(-1);
+      },
+      error: function(e) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Apply Now');
+        $('#ApplyNowFormLabel').addClass('text-danger').html('Something went wrong sending email!!!');
+      }
+    });
+  });
+  $('#CHECK_LATER').click(function() {
+    $.ajax({
+      type: "POST",
+      url: "/job/" + job_id + "/check_later",
+      success: function(data){
+        history.go(-1);
+      },
+      error: function(e){
+        alert("Error occurred");
+      }
+    });
+  });
+  $('#FORGET_POST').click(function() {
+    _this = $(this);
+    _this.html('<em>Forgetting ...</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/job/" + job_id + "/forget",
+      success: function(data){
+        history.go(-1);
+      },
+      error: function(e){
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Forget');
+        alert("Error occurred");
+      }
+    });
+  });
+
+  <% if !tracking.empty? %>
+  <% tracking.each do |application| %>
+  $('#SendNotification<%= application.id %>').click(function() {
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/jobs/remind/<%= application.consultant_id %>",
+      data: { 'job_url': '<%= application.job_url %>' },
+      success: function(data) {
+        location.reload();
+      },
+      error: function(e) {
+        _this.attr('disabled', false); // no double submit
+        _this.html('<span class="glyphicon glyphicon-send"></span>');
+      }
+    });
+  });
+  <% end %>
+  <% end %>
+</script>

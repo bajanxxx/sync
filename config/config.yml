@@ -5,6 +5,12 @@
 google_key: '22486611835-fmoqk1vpoavkdug2iniepeaqpm5tfaqj.apps.googleusercontent.com'
 google_secret: 'EBNBSUqdSW2gUyH1Zb1g6o8v'
 #
+# Mongo
+#
+mongo_db: job_portal
+mongo_host: localhost
+mongo_port: 27017
+#
 # GMail Configuration
 #
 email: admin@cloudwick.com
@@ -34,7 +40,7 @@ mailgun_domain: 'mg.cloudwick.com'
 # Mail gun vendors
 #
 mailgun_vendor_email: 'vinay@mg.cloudwick.com'
-# forwards replies to specied emails and then also stores them in local mongo
+# forwards replies to specified emails and then also stores them in local mongo
 mailgun_vendor_routes_forward:
   - 'jobs@cloudwick.com'
 mailgun_vendor_routes_name: 'Email Vendor Campaigning'
@@ -52,10 +58,22 @@ twilio_account_sid: 'AC23cc89e655af3650bc5f8d25021e9106'
 twilio_auth_token: 'c70384f4cc30004651d13eb82e0e967a'
 twilio_phone: '+16506145955'
 #
-# Slack
+# Slack - Cloudwick
 #
-slack_sync_bot_api_token: 'xoxb-13810016625-jExwE2bZe6HGRUAEZPsdRaSt'
-slack_admin_user_api_token: 'xoxp-2187446245-14616018610-14614028692-42bf699309'
+#slack_domain: 'cloudwick'
+#slack_sync_bot_api_token: 'xoxb-13810016625-jExwE2bZe6HGRUAEZPsdRaSt'
+#slack_admin_user_api_token: 'xoxp-2187446245-14616018610-14614028692-42bf699309'
+#
+# Slack - CloudwickLabs
+#
+slack_domain: 'cloudwicklabs'
+slack_sync_bot_api_token: 'xoxb-15105086321-efkUq2h19outpjGpR5N2qcaD'
+slack_admin_user_api_token: 'xoxp-15105482151-15105478470-15105606471-948c4c469a'
+default_slack_users:
+  - ashrith@cloudwick.com
+  - admin@cloudwick.com
+default_slack_bots:
+  - sync
 #
 # OpenStack Credentials (For CloudServers)
 #

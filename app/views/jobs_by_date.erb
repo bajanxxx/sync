@@ -1,0 +1,154 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Job Postings: for <%= date %></h2>
+  </div>
+
+  <ul class="nav nav-tabs nav-justified">
+    <% categorized_jobs.each do |source, _| %>
+      <% if source.to_s == 'dice' %>
+        <li class="active"><a data-toggle="tab" href="#<%= source.to_s %>"><%= source.to_s.upcase %></a></li>
+      <% else %>
+        <li><a data-toggle="tab" href="#<%= source.to_s %>"><%= source.to_s.upcase %></a></li>
+      <% end %>
+    <% end %>
+  </ul>
+
+  <br/>
+
+  <div class="tab-content">
+    <% categorized_jobs.each do |source, categorized| %>
+        <% if source.to_s == 'dice' %>
+            <div id="<%= source.to_s.downcase %>" class="tab-pane active">
+        <% else %>
+            <div id="<%= source.to_s.downcase %>" class="tab-pane">
+        <% end %>
+        <% categorized.each do |search_term, category| %>
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                <strong><%= search_term.to_s.capitalize %></strong>
+              </div>
+
+              <div class="panel-body">
+                <p class="lead text-left">New Job listings found: <b><%= category[:unread_jobs].keys.count %></b></p>
+                <ul class="list-group">
+                  <% category[:unread_jobs].each do |job_id, job_h| %>
+                      <li class="list-group-item">
+                        <div class="pull-right button-group">
+                          <!-- Initials of users who are tracking it -->
+                          <% if job_h[:tracking].length > 0 %>
+                              <% job_h[:tracking].uniq.each do |user| %>
+                                  <span class="badge alert-default"><%= user %></span>
+                              <% end %>
+                          <% end %>
+                          <% if job_h[:o].repeated %>
+                              <span class="badge alert-warning">repeated</span>
+                          <% end %>
+                          <span class="badge alert-info"><%= job_h[:o].location %></span>
+                          <span class="badge alert-success"><%= job_h[:o].company %></span>
+                          <button id="deletebtn<%= job_id.to_s %>" class="btn btn-xs btn-default"><i class="fa fa-times"></i></button>
+                        </div>
+                        <a href="/job/<%= job_id.to_s %>">
+                          <%= job_h[:o].title %>
+                        </a>
+                      </li>
+                  <% end %>
+                </ul> <!-- list-group (unread) -->
+                <p class="text-left lead">Read Job listings found: <b><%= category[:read_jobs].keys.count %></b></p>
+                <ul class="list-group">
+                  <% category[:read_jobs].each do |job_id, job_h| %>
+                      <li class="list-group-item" href="/job/<%= job_id.to_s %>">
+                        <div class="pull-right button-group">
+                          <!-- Initials of users who are tracking it -->
+                          <% if job_h[:tracking].length > 0 %>
+                              <% job_h[:tracking].uniq.each do |user| %>
+                                  <span class="badge alert-default"><%= user %></span>
+                              <% end %>
+                          <% end %>
+                          <% if job_h[:o].repeated %>
+                              <span class="badge alert-warning">repeated</span>
+                          <% end %>
+                          <span class="badge"><%= job_h[:o].location %></span>
+                          <span class="badge"><%= job_h[:o].company %></span>
+                          <button id="deletebtn<%= job_id.to_s %>" class="btn btn-xs btn-default"><i class="fa fa-times"></i></button>
+                        </div>
+                        <a  href="/job/<%= job_id.to_s %>">
+                          <%= job_h[:o].title %>
+                        </a>
+                      </li>
+                  <% end %>
+                </ul> <!-- list-group (read) -->
+              </div> <!-- panel-body -->
+            </div> <!-- panel-info -->
+        <% end %>
+        </div> <!-- <%= source.downcase %> -->
+    <% end %>
+  </div> <!-- tab-content -->
+</div> <!-- container -->
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    <% categorized_jobs.each do |source, categorized| %>
+    <% categorized.each do |search_term, jobs_info| %>
+    <% jobs_info[:read_jobs].each do |job_id, job_h| %>
+    $('#deletebtn<%= job_id.to_s %>').hover(
+        function(){ // mouseenter
+          $("#deletebtn<%= job_id.to_s %>").removeClass('btn-default').addClass('btn-danger');
+        },
+        function(){ // mouseleave
+          $('#deletebtn<%= job_id.to_s %>').removeClass('btn-danger').addClass('btn-default');
+        }
+    );
+
+    $('#deletebtn<%= job_id.to_s %>').click(function(){
+      _this = $(this);
+      _this.html('<i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      $.ajax({
+        type: "POST",
+        url: "/job/<%= job_id.to_s %>/forget",
+        success: function(data){
+          location.reload();
+        },
+        error: function(e){
+          _this.attr('disabled', false);
+          _this.html('<i class="fa fa-times"></i>');
+          alert("Error occurred");
+        }
+      });
+    });
+    <% end %>
+
+    <% jobs_info[:unread_jobs].each do |job_id, job_h| %>
+    $('#deletebtn<%= job_id.to_s %>').hover(
+        function(){ // mouseenter
+          $("#deletebtn<%= job_id.to_s %>").removeClass('btn-default').addClass('btn-danger');
+        },
+        function(){ // mouseleave
+          $('#deletebtn<%= job_id.to_s %>').removeClass('btn-danger').addClass('btn-default');
+        }
+    );
+
+    $('#deletebtn<%= job_id.to_s %>').click(function(){
+      _this = $(this);
+      _this.html('<i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      $.ajax({
+        type: "POST",
+        url: "/job/<%= job_id.to_s %>/forget",
+        success: function(data){
+          location.reload();
+        },
+        error: function(e){
+          _this.attr('disabled', false);
+          _this.html('<i class="fa fa-times"></i>');
+          alert("Error occurred");
+        }
+      });
+    });
+    <% end %>
+    <% end %>
+    <% end %>
+  });
+</script>

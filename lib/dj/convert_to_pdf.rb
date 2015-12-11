@@ -1,23 +1,19 @@
-require 'mongo'
-require 'mongoid'
 require 'tempfile'
-require 'RMagick'
 require 'fileutils'
 
-require_relative '../../models/content_slide'
-require_relative '../../models/content_thumbnail'
+class ConvertPdfToImages < Struct.new(:sub_topic, :file_id, :settings)
 
-class ConvertPdfToImages < Struct.new(:sub_topic, :file_id)
   def perform
     local_file = "/tmp/#{file_id}.pdf"
     begin
       sub_topic.update_attributes!(lock?: true, state: 'PROCESSING')
-      log "Fetching the file from Mongo to convert"
+      log 'Fetching the file from Mongo to convert'
       # fetch the pdf from mongo and write it to local fs
       file_contents = download_file(file_id).read
-      File.open(local_file, 'w') { |_f| _f.write(file_contents) }
       log "Writing pdf file to temp location #{local_file}"
+      File.open(local_file, 'w') { |_f| _f.write(file_contents) }
       # convert pdf to images
+      log 'Converting PDF file to images with a density setting of 600.'
       pdf_images = Magick::ImageList.new(local_file) { self.density = 600 }
 
       # iterate over each image in the pdf and write that out to mongo
@@ -81,43 +77,42 @@ class ConvertPdfToImages < Struct.new(:sub_topic, :file_id)
     Delayed::Worker.logger.info("#{Time.now.strftime('%FT%T%z')}: [#{self.class.name} (pid: #{Process.pid})] #{text}")
   end
 
-  # download a file, returns a grid fs object
-  def download_file(file_id)
-    db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
-    grid = Mongo::Grid.new(db)
-
-    # Get the file out the db
-    return grid.get(BSON::ObjectId(file_id))
-    # return grid.get(resume_id)
-  rescue Exception => ex
-    log ex
-    return nil
-  ensure
-    db.connection.close if !db.nil?
-  end
-
-  # Upload a file to mongo
+  # Upload's a new file using GridFS and returns id of the document
   def upload_file(file_path, file_name)
     db = nil
     begin
-      db = Mongo::MongoClient.new('localhost', 27017).db('job_portal')
+      db = Mongo::MongoClient.new(settings[:mongo_host], settings[:mongo_port]).db(settings[:mongo_db])
       grid = Mongo::Grid.new(db)
 
-      # Check if a file exists with the name specified
+      # Check if a file already exists with the name specified
       files_db = db['fs.files']
-      unless files_db.find_one({filename: file_name})
-        return grid.put(
-          File.open(file_path),
-          filename: file_name
-        ).to_s
+      if files_db.find_one({:filename => file_name})
+        return nil # File already exists
       else
-        # file already exists
-        return nil
+        return grid.put(
+            File.open(file_path),
+            filename: file_name
+        )
       end
     rescue
       return nil
     ensure
-      db.connection.close if !db.nil?
+      db.connection.close unless db.nil?
     end
+  end
+
+  # returns a grid fs object
+  def download_file(resume_id)
+    db = Mongo::MongoClient.new(settings[:mongo_host], settings[:mongo_port]).db(settings[:mongo_db])
+    grid = Mongo::Grid.new(db)
+
+    # Get the file out the db
+    return grid.get(BSON::ObjectId(resume_id))
+      # return grid.get(resume_id)
+  rescue Exception => ex
+    p ex
+    return nil
+  ensure
+    db.connection.close unless db.nil?
   end
 end

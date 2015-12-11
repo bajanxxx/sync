@@ -1,7 +1,15 @@
-require 'rake'
+#!/usr/bin/env rake
 
 task :environment do
   require_relative 'app'
+end
+
+task :app do
+  require './app'
+end
+
+Dir[File.dirname(__FILE__) + "/lib/tasks/*.rb"].sort.each do |path|
+  require path
 end
 
 namespace :mongoid_search do

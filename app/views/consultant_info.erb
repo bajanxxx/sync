@@ -1,0 +1,204 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Consultant Details <small>(<%= consultant.email %> )</small></h2>
+  </div>
+  <div class="container-fluid">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <strong>Details</strong>
+      </div>
+      <table id="consultantDetails" class="table table-striped" style="table-layout: fixed; word-wrap: break-word">
+        <tr>
+          <td width="35%"><strong>First Name</strong></td>
+          <td width="65%">
+            <a href="#" id="firstname"></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Last Name</strong></td>
+          <td width="65%">
+            <a href="#" id="lastname"></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Domain</strong></td>
+          <td width="65%">
+            <a href="#" id="domain"><%= consultant.domain || 'Please Update' %></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Team</strong></td>
+          <td width="65%">
+            <a href="#" id="team"><%= consultant.team || 'Please Update' %></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Phone</strong></td>
+          <td width="65%">
+            <a href="#" id="phone"><%= consultant.phone %></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Current Location</strong></td>
+          <td width="65%">
+            <a href="#" id="location"><%= consultant.location %></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Current Company</strong></td>
+          <td width="65%">
+            <a href="#" id="company"><%= details.current_company %></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Certifications</strong></td>
+          <td width="65%">
+            <a href="#" id="certifications"><%= details.certifications.join(', ') %></a>
+          </td>
+        </tr>
+        <tr>
+          <td width="35%"><strong>Training Tracks</strong></td>
+          <td width="65%">
+            <a href="#" id="training_tracks"></a>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  // inline editing
+  $.fn.editable.defaults.mode = 'popup';
+  $.fn.editable.defaults.ajaxOptions = {type: "POST"};
+
+  $('#firstname').editable({
+    type: 'text',
+    title: 'Enter firstname',
+    placement: 'right',
+    value: '<%= consultant.first_name %>', // initial value, will be updated and send to server side upon change
+    url: '/consultant/info/update',
+    pk: '<%= consultant.email %>', // primary key (mongo _id)
+    name: 'first_name', // mongo doc_key being update
+    validate: function(value) {
+      if($.trim(value) == '') return 'This field is required';
+    },
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
+
+  $('#lastname').editable({
+    type: 'text',
+    title: 'Enter lastname',
+    placement: 'right',
+    value: '<%= consultant.last_name %>',
+    url: '/consultant/info/update',
+    pk: '<%= consultant.email %>',
+    name: 'last_name',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
+
+  $("#domain").editable({
+    type: 'checklist',
+    title: 'Update user domain',
+    placement: 'right',
+    url: '/consultant/info/update',
+    separator: ',', // used to separate values as array from data-value
+    emptytext: 'Click here associate user to training track',
+    source: '/consultant/details/domains/possible_values',
+    pk: '<%= consultant.email %>',
+    name: 'domain',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
+
+  $('#team').editable({
+    type: 'text',
+    title: 'Enter user team',
+    placement: 'right',
+    value: '<%= consultant.team %>',
+    pk: '<%= consultant.email %>',
+    name: 'team',
+    url: '/consultant/info/update',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
+
+  $('#phone').editable({
+    type: 'text',
+    title: 'Enter your phone',
+    placement: 'right',
+    emptytext: 'Please enter the best number to contact you',
+    value: '<%= consultant.phone %>',
+    url: '/consultant/info/update',
+    pk: '<%= consultant.email %>',
+    name: 'phone',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  });
+
+  $('#location').editable({
+    type: 'text',
+    title: 'Enter your location',
+    placement: 'right',
+    emptytext: 'Please enter your current location (City, State)',
+    value: '<%= consultant.location %>',
+    url: '/consultant/info/update',
+    pk: '<%= consultant.email %>',
+    name: 'location',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  });
+
+  $("#training_tracks").editable({
+    type: 'checklist',
+    title: 'Update user training tracks',
+    placement: 'right',
+    url: '/consultant/info/details/update',
+    separator: ',', // used to separate values as array from data-value
+    emptytext: 'Click here associate user to training track',
+    source: '/consultant/details/training_tracks/possible_values',
+    pk: '<%= details.consultant_id %>',
+    value: '<%= details.training_tracks.join(',') %>',
+    name: 'training_tracks',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  });
+
+  $('#company').editable({
+    type: 'text',
+    title: 'Select your current company',
+    placement: 'right',
+    emptytext: 'Click here to add your current work place (client)',
+    value: '<%= details.current_company %>',
+    url: '/consultant/info/details/update',
+    pk: '<%= details.consultant_id %>',
+    name: 'current_company',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  });
+
+  $("#certifications").editable({
+    type: 'checklist',
+    title: 'Update your certifications',
+    placement: 'right',
+    url: '/consultant/info/details/update',
+    separator: ',', // used to separate values as array from data-value
+    emptytext: 'Click here to add a certification',
+    source: '/consultant/details/certifications/possible_values',
+    pk: '<%= details.consultant_id %>',
+    name: 'certifications',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    },
+  });
+</script>
