@@ -2,8 +2,9 @@ require 'net/http'
 require 'open-uri'
 require 'json'
 require 'parallel'
-require_relative '../models/job'
-require_relative '../models/fetcher'
+
+require_relative '../app/models/job'
+require_relative '../app/models/fetcher'
 
 class ProcessDicePostings
   attr_accessor :id, :processed, :processed_data

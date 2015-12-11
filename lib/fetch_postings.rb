@@ -8,9 +8,9 @@ require 'mongoid'
 require 'mongoid_search'
 require 'parallel'
 
-require_relative '../models/job'
-require_relative '../models/application'
-require_relative '../models/fetcher'
+require_relative '../app/models/job'
+require_relative '../app/models/application'
+require_relative '../app/models/fetcher'
 
 class FetchPostings
   def initialize(base_url, search_string, age, pages_to_traverse, page_search)

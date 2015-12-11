@@ -1,0 +1,46 @@
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Consultants</h2>
+  </div>
+  <% if !consultants.empty? %>
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <strong>Consultants</strong>
+      </div>
+      <table class="table table-hover">
+        <thead>
+        <th>Email</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Team</th>
+        <th>Jobs Tracking</th>
+        <th>Projects</th>
+        </thead>
+        <tbody>
+        <% consultants.each_with_index do |consultant, count| %>
+          <tr id="consultant<%= count+1 %>">
+            <td><a href="/consultant/<%= consultant.email %>/info"><%= consultant.email %></a></td>
+            <td><%= consultant.first_name %></td>
+            <td><%= consultant.last_name %></td>
+            <td><%= consultant.team %></td>
+            <td><a href="/jobs/consultant/<%= consultant.email %>"><%= consultant.applications.count %></a></td>
+            <td>
+              <a href="/consultant/<%= consultant.email %>/projects">
+                <%= consultant.has_details? &&
+                        ( consultant.details.has_projects? && consultant.details.projects.count || 0 ) ||
+                        0 # if consultant does not have any details entry in the details collection
+                %>
+              </a>
+            </td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No consultants are added yet. Add using <code>'Add New'</code></p>
+    </div>
+  <% end %>
+</div>

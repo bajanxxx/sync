@@ -1,0 +1,603 @@
+<% if @user.administrator? %>
+<!-- Modal Definitions -->
+<!-- Create a topic -->
+<div class="modal fade" id="CreateSubTopic" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create a new Training Sub Topic</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="LLCreateForm">
+          <div class="form-group">
+            <label for="SubTopicName">Sub Topic Name:</label>
+              <input type="text" class="form-control" id="SubTopicName" name="SubTopicName" placeholder="Training sub topic to create (ex: hdfs, mapreduce, ...)" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="SubTopicEstimatedTime">Estimated Time to Complete (in mins):</label>
+              <input type="text" class="form-control" id="SubTopicEstimatedTime" name="SubTopicEstimatedTime" placeholder="Please enter estimated time to complete this training (in minutes)" value="" required="required" />
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="Order">Order (don't change this value is automatically generated):</label>
+              <input type="text" class="form-control" id="Order" name="Order" placeholder="Please enter the order of this topic" value="<%= assignable_sub_topic_order %>" required="required"/>
+              <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="CreateSubTopicFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="SubmitCreateTopicBtn" name="SubmitBtn" class="btn btn-large btn-primary">Create Sub Topic</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>
+<!-- Projects -->
+<div class="modal fade modal-wide" id="AddProject" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Add Project</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form" id="LLCreateForm">
+          <div class="form-group">
+            <label for="Heading">Project:</label>
+            <input type="text" class="form-control" id="Heading" name="Heading" placeholder="Heading for the project" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="Description">Description: (rendered in markdown)</label>
+            <textarea rows="5" class="form-control" id="Description" name="Description"></textarea>
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="AthenaeumLink">Athenaeum Link:</label>
+            <input type="text" class="form-control" id="AthenaeumLink" name="AthenaeumLink" placeholder="detailed description link (optional)" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="AddProjectFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="ProjectSubmitBtn" name="SubmitBtn" class="btn btn-large btn-primary">Add Project</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% topic.training_projects.each do |project| %>
+<div class="modal fade modal-wide" id="EditProject-<%= project.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Edit <%= project.name %></h4>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <div class="form-group">
+            <label for="Heading-<%= project.id %>">Heading:</label>
+            <input type="text" class="form-control" id="Heading-<%= project.id %>" name="Heading-<%= project.id %>" placeholder="Heading for the project" value="<%= project.heading %>" required="required" />
+            <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="Description-<%= project.id %>">Description: (rendered in markdown)</label>
+            <textarea rows="5" class="form-control" id="Description-<%= project.id %>" name="Description-<%= project.id %>"><%= project.description %></textarea>
+              <span class="help-block"></span>
+          </div>
+          <div class="form-group">
+            <label for="AthenaeumLink-<%= project.id %>">Athenaeum Link:</label>
+            <input type="text" class="form-control" id="AthenaeumLink-<%= project.id %>" name="AthenaeumLink-<%= project.id %>" placeholder="detailed description link (optional)" value="<%= project.description_link %>" required="required" />
+            <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="EditProjectFormLabel-<%= project.id %>" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="EditProjectSubmitBtn-<%= project.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Update Project</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade modal-wide" id="SubmitProject-<%= project.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Submit <%= project.name %></h4>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <div class="form-group">
+            <label for="ProjectSubmissionLink-<%= project.id %>">Project Submission Link:</label>
+            <input type="text" class="form-control" id="ProjectSubmissionLink-<%= project.id %>" name="ProjectSubmissionLink-<%= project.id %>" placeholder="Please enter cloudwicklabs github url" value="" required="required" />
+            <span class="help-block"></span>
+          </div>
+        </form>
+        <p id="SubmitProjectFormLabel-<%= project.id %>" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="SubmitProjectSubmitBtn-<%= project.id %>" name="SubmitBtn" class="btn btn-large btn-primary">Submit Project</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2><a href="/training">Training Portal</a> <small> <a href="/training/track/<%= track.id %>"><%= track.code %></a> > <%= topic.code %> > Sub Topics</small>
+      <% if @user.administrator? %>
+        <!-- buttons -->
+        <div class="btn-group pull-right">
+          <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+            Manage <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" role="menu">
+            <li>
+              <a id="CreateTopicBtn" data-toggle="modal" href="#CreateSubTopic">
+                Create New Sub Topic
+              </a>
+            </li>
+            <li>
+              <a id="ManageSubTopics">
+                Manage Sub Topics
+              </a>
+            </li>
+            <li>
+              <a id="ManageProjects">
+                Manage Projects
+              </a>
+            </li>
+          </ul>
+        </div>
+      <% end %>
+    </h2>
+  </div>
+  
+  <br>
+  
+  <!-- Sub topics in circles -->
+  <div class="row-fluid">
+    <% if topic.training_sub_topics.count == 0 %>
+      <h3>No sub topics have been added yet</h3>
+    <% else %>
+      <% topic.training_sub_topics.asc(:order).all.entries.each do |sub_topic| %>
+        <div class="col-xs-2 spacer">
+          <% if @user.administrator? %>
+            <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>">
+              <div id="sub_topic-<%= sub_topic.id %>" class="circle-multiline">
+                <div class="font-responsive">
+                  <font color="white"><%= sub_topic.name %></font>
+                </div>
+                <button type="button" id="DeleteTopic-<%= sub_topic.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
+              </div>
+            </a>
+          <% else %>
+            <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>">
+              <div id="sub_topic-<%= sub_topic.id %>" class="circle-multiline">
+                <div class="font-responsive">
+                  <font color="white"><%= sub_topic.name %></font>
+                </div>
+              </div>
+            </a>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Projects -->
+  <div class="row-fluid">
+    <div class="col-xs-12 spacer">
+      <h3>Projects
+        <% if @user.administrator? %>
+          <span class="pull-right">
+            <a class="addproject" role="left" href="#AddProject" data-toggle="modal" data-placement="left" data-original-title='Add a new project'>
+              <i class="fa fa-plus-square-o fa-lg"></i>
+            </a>
+          </span>
+        <% end %>
+      </h3>
+      <hr>
+      <div class="pwell spacer">
+        <!-- accordion -->
+        <div class="panel-group" id="projectsaccordion">
+          <% if topic.training_projects.empty? %>
+            <h4>No projects have yet been added to this topic.</h4>
+          <% else %>
+            <% topic.training_projects.each do |project| %>
+              <!-- change the panel color based on the status of the submission -->
+              <%
+                 if @user.trainee?
+                   project_submission = project.training_project_submissions.find_by(consultant_id: @session_username)
+                   project_submission_status = if project_submission
+                                                 project_submission.status
+                                               else
+                                                 nil
+                                               end
+                 end
+              %>
+              <% if @user.trainee? %>
+                <% if project_submission_status %>
+                  <% if project_submission_status == 'APPROVED' %>
+                  <div class="panel panel-success">
+                  <% elsif project_submission_status == 'REDO' %>
+                  <div class="panel panel-warning">  
+                  <% else %>
+                  <div class="panel panel-default">
+                  <% end %>
+                <% else %>
+                <div class="panel panel-default">
+                <% end %>
+              <% else %>
+              <div class="panel panel-default">
+              <% end %>
+                <div class="panel-heading">
+                  <h4 class="panel-title">
+                    <!-- buttons -->
+                    <span class="pull-right">
+                      <% if @user.trainee? %>
+                        <% unless project_submission_status == 'APPROVED' %>
+                        <a class="submitproject" href="#SubmitProject-<%= project.id %>" data-toggle="modal" data-placement="top" data-original-title='Submit project'>
+                          <i class="fa fa-check-square-o"></i>
+                        </a>
+                        <% end %>
+                      <% end %>
+                      <% if @user.administrator? %>
+                      <a class="editproject" href="#EditProject-<%= project.id %>" data-toggle="modal" data-placement="top" data-original-title='Edit project'>
+                        <i class="fa fa-pencil-square-o"></i>  
+                      </a>
+                      <button type="button" id="DeleteProject-<%= project.id %>" class="btn btn-default btn-xs deleteprojecticon">
+                        <span class="deleteproject" data-original-title="Delete this project">
+                          <i class="fa fa-trash-o"></i>  
+                        </span>
+                      </button>
+                      <% end %>
+                    </span>
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#projectsaccordion" href="#collapse-<%= project.id %>">
+                      <%= project.name %> <%= "(#{project.training_project_submissions.find_by(consultant_id: @session_username).status.downcase})" if project.training_project_submissions.find_by(consultant_id: @session_username) %>
+                    </a>
+                  </h4>
+                </div>
+                <% if project.name == 'Project #1' %>
+                <div id="collapse-<%= project.id %>" class="panel-collapse collapse in">
+                <% else %>
+                <div id="collapse-<%= project.id %>" class="panel-collapse collapse">
+                <% end %>
+                  <div class="panel-body project-content">
+                    <div class="project-content-owner">
+                      <small>
+                        <% if project.last_edited_by.nil? %>
+                          Created <%= time_ago_in_words(Time.now, project.created_at) %> ago, by: <%= project.created_by  %>.
+                        <% elsif project.last_edited_by == project.created_by %>
+                          Modified <%= time_ago_in_words(Time.now, project.last_edited_at) %> ago, by: <%= project.last_edited_by %>.
+                        <% else %>
+                          Modified <%= time_ago_in_words(Time.now, project.last_edited_at) %> ago, by: <%= project.last_edited_by %>, created by: <%= project.created_by %>.
+                        <% end %>
+                      </small>
+                    </div>
+                    <h4>
+                      <%= project.heading %>
+                    </h4>
+                    <div id="projectcontent-<%= project.id %>">
+                    </div>
+                    <% if !project.description_link.empty? %>
+                    <br>
+                    <a href="<%= project.description_link %>">More info</a>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div> <!-- end accordion -->
+      </div> <!-- pwell -->
+    </div>
+  </div>
+</div>
+
+<style type="text/css">
+.spacer {
+  margin-top: 20px;
+}
+.deleteicon:hover {
+  background-color: #FF7F00;
+}
+.circle-multiline {
+  display: table-cell;
+  height: 150px;
+  width: 150px;
+  text-align: center;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: purple;
+  color: white;
+}
+.pwell {
+  min-height: 20px;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #0160B4;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+  overflow:scroll;
+  overflow-x:hidden;
+}
+.project-content {
+  position:relative;
+}
+.project-content-owner {
+  position:absolute;
+  top:0;
+  right:0;
+  margin-right: 5px;
+}
+</style>
+
+<script src="<%= asset_path 'jquery.fittext.js' %>"></script>
+<script src="<%= asset_path 'randomColor.min.js' %>"></script>
+<script src="<%= asset_path 'marked.js' %>"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+  $(".font-responsive").fitText();
+  $('.deletebutton').tooltip();
+  $('.addproject').tooltip();
+  $('.submitproject').tooltip();
+  $('.editproject').tooltip();
+  $('.deleteproject').tooltip();
+
+  <% topic.training_sub_topics.each do |sub_topic| %>
+  document.querySelector('#sub_topic-<%= sub_topic.id %>').style.background = randomColor({luminosity: 'dark', hue: 'blue'});
+  <% end %>
+
+  <% topic.training_projects.each do |project| %>
+  document.getElementById('projectcontent-<%= project.id %>').innerHTML = marked(<%= project.description.dump %>);
+  <% end %>
+
+  $('#SubmitCreateTopicBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var tname = $("#SubTopicName").val();
+    var et = $("#SubTopicEstimatedTime").val();
+    var order = $("#Order").val();
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/create",
+      data: { 'tname': tname, 'et': et, 'order': order },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#CreateSubTopicFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg);
+          _this.html("Submitted");
+          $('#CreateSubTopicFormLabel').addClass('text-info').html(data.msg);
+          $('#CreateSubTopic').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#CreateSubTopicFormLabel').addClass('text-danger').html('Something went wrong adding creating new sub topic!!!');
+      }
+    });
+  });
+  
+  // delete buttons
+  var show = false;
+  var showproject = false;
+
+  $('.deleteicon').hide();
+  $('.deleteprojecticon').hide();
+
+  $('#ManageSubTopics').click(function() {
+    _this = $(this);
+
+    if(show) {
+      $('.deleteicon').hide();
+      show = false;
+      _this.html('Manage Templates');
+    } else {
+      $('.deleteicon').show();
+      show = true;
+      _this.html('Hide Delete');
+    }
+  });
+
+  $('#ManageProjects').click(function() {
+    _this = $(this);
+
+    if(showproject) {
+      $('.deleteprojecticon').hide();
+      showproject = false;
+      _this.html('Manage Projects');
+    } else {
+      $('.deleteprojecticon').show();
+      showproject = true;
+      _this.html('Hide Delete');
+    }
+  });
+
+  <% topic.training_sub_topics.each do |sub_topic| %>
+  $('#DeleteTopic-<%= sub_topic.id %>').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/delete/<%= sub_topic.id %>",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  <% end %>
+
+  $('#ProjectSubmitBtn').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var heading = $("#Heading").val();
+    var description = $("#Description").val();
+    var athenaeumlink = $("#AthenaeumLink").val();
+   
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/project",
+      data: { 'heading': heading, 'description': description, 'athenaeumlink': athenaeumlink },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#AddProjectFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg);
+          _this.html("Submitted");
+          $('#AddProjectFormLabel').addClass('text-info').html(data.msg);
+          $('#AddProject').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#AddProjectFormLabel').addClass('text-danger').html('Something went wrong adding project!!!');
+      }
+    });
+  });
+
+  <% topic.training_projects.each do |project| %>
+  $('#EditProjectSubmitBtn-<%= project.id %>').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var heading = $("#Heading-<%= project.id %>").val();
+    var description = $("#Description-<%= project.id %>").val();
+    var athenaeumlink = $("#AthenaeumLink-<%= project.id %>").val();
+   
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/project/<%= project.id %>/update",
+      data: { 'heading': heading, 'description': description, 'athenaeumlink': athenaeumlink },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#EditProjectFormLabel-<%= project.id %>').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Success: " + data.msg);
+          _this.html("Submitted");
+          $('#EditProjectFormLabel-<%= project.id %>').addClass('text-info').html(data.msg);
+          $('#EditProject-<%= project.id %>').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#EditProjectFormLabel-<%= project.id %>').addClass('text-danger').html('Something went wrong updating project!!!');
+      }
+    });
+  });
+
+  $('#SubmitProjectSubmitBtn-<%= project.id %>').click(function() {
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    var submissionlink = $("#ProjectSubmissionLink-<%= project.id %>").val();
+   
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/project/<%= project.id %>/submit",
+      data: { 'submissionlink': submissionlink },
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#SubmitProjectFormLabel-<%= project.id %>').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Success: " + data.msg);
+          _this.html("Submitted");
+          $('#SubmitProjectFormLabel-<%= project.id %>').addClass('text-info').html(data.msg);
+          $('#SubmitProject-<%= project.id %>').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.text('Re-submit');
+        $('#SubmitProjectFormLabel-<%= project.id %>').addClass('text-danger').html('Something went wrong submitting project!!!');
+      }
+    });
+  });
+  <% end %>
+
+  <% topic.training_projects.each do |project| %>
+  $('#DeleteProject-<%= project.id %>').click(function() {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/training/track/<%= track.id %>/topic/<%= topic.id %>/project/<%= project.id %>/delete",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  <% end %>
+});
+</script>
