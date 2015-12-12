@@ -136,11 +136,13 @@ EOF
 
 # Run it:
 
-**Rake task to build SpRockets**
+The following script will start unicorn, nginx, memcached, and delayed_job processes.
 
 ```
 bin/sync_init.sh start all
 ```
+
+**Rake task to build SpRockets**
 
 ```
 RACK_ENV=production rake assets:precompile
@@ -157,58 +159,29 @@ rake mongoid_search:index
 rake jobs:create_indexes
 ```
 
-Initialize the fetcher to get a decent amount of posts to work with, its not
-required to run the fetcher unless you want the data right away:
-
-```
-ruby /opt/sync/fetch_job_postings.rb \
-  --search hadoop \
-  --age-of-postings 5 \
-  --traverse-depth 30 \
-  --page-search CON_CORP
-ruby /opt/sync/fetch_job_postings.rb \
-  --search cassandra \
-  --age-of-postings 5 \
-  --traverse-depth 30 \
-  --page-search CON_CORP
-ruby /opt/sync/fetch_indeed_postings.rb \
-  --search hadoop \
-  --age-of-postings 5 \
-  --limit 1000
-ruby /opt/sync/fetch_indeed_postings.rb \
-  --search cassandra \
-  --age-of-postings 5 \
-  --limit 1000
-```
-
 Create the following cron job's for the fetcher to run continuously & also to backup mongo:
 
 ```
 # dice
 # every midnight 12 am deep fetch
-25 0 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice deep hadoop >> /var/log/dice_deep_hadoop_fetcher.log 2>&1
-35 0 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice deep cassandra >> /var/log/dice_deep_cassandra_fetcher.log 2>&1
-45 0 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice deep spark >> /var/log/dice_deep_spark_fetcher.log 2>&1
+25 0 * * * /bin/bash /opt/sync/bin/start_fetcher.sh dice deep hadoop >> /var/log/dice_deep_hadoop_fetcher.log 2>&1
+35 0 * * * /bin/bash /opt/sync/bin/start_fetcher.sh dice deep cassandra >> /var/log/dice_deep_cassandra_fetcher.log 2>&1
+45 0 * * * /bin/bash /opt/sync/bin/start_fetcher.sh dice deep spark >> /var/log/dice_deep_spark_fetcher.log 2>&1
 # every morning 9 am daily fetch
-0 9 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice daily hadoop >> /var/log/dice_daily_hadoop_fetcher.log 2>&1
-10 9 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice daily cassandra >> /var/log/dice_daily_cassandra_fetcher.log 2>&1
-20 9 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice daily spark >> /var/log/dice_daily_spark_fetcher.log 2>&1
+0 9 * * * /bin/bash /opt/sync/bin/start_fetcher.sh dice daily hadoop >> /var/log/dice_daily_hadoop_fetcher.log 2>&1
+10 9 * * * /bin/bash /opt/sync/bin/start_fetcher.sh dice daily cassandra >> /var/log/dice_daily_cassandra_fetcher.log 2>&1
+20 9 * * * /bin/bash /opt/sync/bin/start_fetcher.sh dice daily spark >> /var/log/dice_daily_spark_fetcher.log 2>&1
 # ever even hours hourly fetch
-0 */2 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice hourly hadoop >> /var/log/dice_hourly_hadoop_fetcher.log 2>&1
-10 */2 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice hourly cassandra >> /var/log/dice_hourly_hadoop_fetcher.log 2>&1
-20 */2 * * * /bin/bash /opt/sync/bin/start_start_fetcher.sh dice hourly spark >> /var/log/dice_hourly_hadoop_fetcher.log 2>&1
-# old
-0 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search hadoop --age-of-postings 1 --traverse-depth 25 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
-0 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search hadoop --age-of-postings 1 --traverse-depth 1 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
-0 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search cassandra --age-of-postings 1 --traverse-depth 25 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
-0 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_job_postings.rb --search cassandra --age-of-postings 1 --traverse-depth 1 --page-search CON_CORP >> /var/log/sync_fetcher.log 2>&1
+0 */2 * * * /bin/bash /opt/sync/bin/start_fetcher.sh dice hourly hadoop >> /var/log/dice_hourly_hadoop_fetcher.log 2>&1
+10 */2 * * * /bin/bash /opt/sync/bin/start_fetcher.sh dice hourly cassandra >> /var/log/dice_hourly_hadoop_fetcher.log 2>&1
+20 */2 * * * /bin/bash /opt/sync/bin/start_fetcher.sh dice hourly spark >> /var/log/dice_hourly_hadoop_fetcher.log 2>&1
 # indeed
 10 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_indeed_postings.rb --search hadoop --age-of-postings 1 --limit 1000 >> /var/log/sync_fetcher.log 2>&1
 10 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_indeed_postings.rb --search hadoop --age-of-postings 1 --limit 100 >> /var/log/sync_fetcher.log 2>&1
 10 9 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_indeed_postings.rb --search cassandra --age-of-postings 1 --limit 1000 >> /var/log/sync_fetcher.log 2>&1
 10 0-23/2 * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/fetch_indeed_postings.rb --search cassandra --age-of-postings 1 --limit 100 >> /var/log/sync_fetcher.log 2>&1
 # mongo backup
-0 0 * * * /bin/bash /opt/sync/backup_mongo.sh -p "/mongo-backup-100 /mongo-backup-217" -d sync >> /var/log/sync_backup.log 2>&1
+0 0 * * * /bin/bash /opt/sync/backup_mongo.sh -p /tmp -d job_portal -b s3://cloudwicklabs.sync/mongo_backup/ -r us-west-1 >> /var/log/sync_backup.log 2>&1
 # cloud server bootstrapper
 */5 * * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/cloud_instances.rb >> /var/log/sync_cloud_bootstrapper.log 2>&1
 ```
