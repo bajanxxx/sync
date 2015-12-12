@@ -14,6 +14,7 @@ UNICORN_PROCESS="unicorn"
 DELAYEDJOB_PROCESS="delayed_job"
 DELAYEDJOB_PROCESS_COUNT=8
 NGINX_PROCESS="nginx"
+MEMCACHED_PROCESS="memcached"
 ENVIRONMENT="production"
 
 
@@ -22,7 +23,7 @@ function start_unicorn () {
     echo "Service ${UNICORN_PROCESS} is already running... skipping."
   else
     echo "Starting ${UNICORN_PROCESS} in ${ENVIRONMENT} environment..."
-    cd $DIR && RAILS_ENV=${ENVIRONMENT} ${UNICORN_PROCESS} --config-file config/unicorn.rb --host ${BIND_IP} --port ${BIND_PORT} --env development --daemonize config.ru >> $LOG 2>&1
+    cd $DIR && RACK_ENV=${ENVIRONMENT} ${UNICORN_PROCESS} --config-file config/unicorn.rb --host ${BIND_IP} --port ${BIND_PORT} --env ${ENVIRONMENT} --daemonize config.ru >> $LOG 2>&1
     echo "Starting ${UNICORN_PROCESS} ... [DONE]"
   fi
 }
@@ -56,7 +57,7 @@ function start_delayedjob () {
     echo "Service ${DELAYEDJOB_PROCESS} is already running... skipping."
   else
     echo "Starting ${DELAYEDJOB_PROCESS} in ${ENVIRONMENT} environment..."
-    cd $DIR && RAILS_ENV=${ENVIRONMENT} bin/delayed_job.rb -n ${DELAYEDJOB_PROCESS_COUNT} start >> $LOG 2>&1
+    cd $DIR && RAKE_ENV=${ENVIRONMENT} bin/delayed_job.rb -n ${DELAYEDJOB_PROCESS_COUNT} start >> $LOG 2>&1
     echo "Starting ${DELAYEDJOB_PROCESS} ... [DONE]"
   fi
 }
@@ -64,7 +65,7 @@ function start_delayedjob () {
 function stop_delayedjob () {
   if ps aux | grep -v grep | grep -v $0 | grep ${DELAYEDJOB_PROCESS} > /dev/null; then
     echo "Stopping ${DELAYEDJOB_PROCESS} ..."
-    cd $DIR && RAILS_ENV=${ENVIRONMENT} bin/delayed_job.rb stop >> $LOG 2>&1
+    cd $DIR && RAKE_ENV=${ENVIRONMENT} bin/delayed_job.rb stop >> $LOG 2>&1
     echo "Stopping ${DELAYEDJOB_PROCESS} ... [DONE]"
   else
     echo "Service ${DELAYEDJOB_PROCESS} is not running"
@@ -119,6 +120,40 @@ function restart_nginx () {
   start_nginx
 }
 
+function start_memcached () {
+  if ps aux | grep -v grep | grep -v $0 | grep ${MEMCACHED_PROCESS} > /dev/null; then
+    echo "Service ${MEMCACHED_PROCESS} is already running... skipping."
+  else
+    echo "Starting ${MEMCACHED_PROCESS} in ${ENVIRONMENT} environment..."
+    service memcached start >> $LOG 2>&1
+    echo "Starting ${MEMCACHED_PROCESS} ... [DONE]"
+  fi
+}
+
+function stop_memcached () {
+  if ps aux | grep -v grep | grep -v $0 | grep ${MEMCACHED_PROCESS} > /dev/null; then
+    echo "Stopping ${MEMCACHED_PROCESS} ..."
+    service memcached stop >> $LOG 2>&1
+    echo "Stopping ${MEMCACHED_PROCESS} ... [DONE]"
+  else
+    echo "Service ${MEMCACHED_PROCESS} is not running"
+  fi
+}
+
+function status_memcached () {
+  if ps aux | grep -v grep | grep -v $0 | grep ${MEMCACHED_PROCESS} > /dev/null; then
+    echo "Service ${MEMCACHED_PROCESS} is running..."
+  else
+    echo "Service ${MEMCACHED_PROCESS} is not running!!!"
+  fi
+}
+
+function restart_memcached () {
+  stop_memcached
+  sleep 5
+  start_memcached
+}
+
 if [[ $# -ne 2 ]]; then
   echo "Argument required."
   echo "Usage: `basename $0` start|stop|restart all"
@@ -137,10 +172,12 @@ case $1 in
         start_unicorn
         start_delayedjob
         start_nginx
+        start_memcached
         ;;
       'web')
         start_unicorn
         start_nginx
+        start_memcached
         ;;
       'dj')
         start_delayedjob
@@ -153,10 +190,12 @@ case $1 in
         stop_unicorn
         stop_delayedjob
         stop_nginx
+        stop_memcached
         ;;
       'web')
         stop_unicorn
         stop_nginx
+        stop_memcached
         ;;
       'dj')
         stop_delayedjob
@@ -169,10 +208,12 @@ case $1 in
         status_unicorn
         status_delayedjob
         status_nginx
+        status_memcached
         ;;
       'web')
         status_unicorn
         status_nginx
+        status_memcached
         ;;
       'dj')
         status_delayedjob
@@ -185,10 +226,12 @@ case $1 in
         restart_unicorn
         restart_delayedjob
         restart_nginx
+        restart_memcached
         ;;
       'web')
         restart_unicorn
         restart_nginx
+        restart_memcached
         ;;
       'dj')
         restart_dj

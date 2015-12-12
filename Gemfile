@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby "2.1.6"
+ruby '2.1.6'
 
 gem 'sinatra', require: 'sinatra/base'
 gem 'sinatra-contrib'
@@ -16,7 +16,7 @@ gem 'dotenv'
 gem 'builder'
 
 # DB
-gem 'mongo'
+gem 'mongo', '3.1.6'
 gem 'mongoid'
 gem 'mongoid_search'
 gem 'bson_ext'

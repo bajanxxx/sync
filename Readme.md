@@ -1,5 +1,4 @@
-Cloudwick Sync
---------------
+# Cloudwick Sync
 
 Central portal featuring:
 
@@ -16,8 +15,7 @@ Central portal featuring:
 * Training Portal
   * Trainer/Trainee Portal for accessing and tracking trainee progress
 
-Get it
-------
+# Get it
 
 > NOTE: Replace **[username]** in the following command with your github
 > username as this is a private repository you should have access to read it.
@@ -27,13 +25,13 @@ cd /opt
 git clone https://[username]@github.com/cloudwicklabs/sync.git
 ```
 
-Install Dependencies:
---------------------
+# Install Dependencies:
 
-**Install Ruby 2.0.0:**
+### Install Ruby 2.0.0 using rbenv
 
 ```
-yum install -y git-core zlib zlib-devel gcc-c++ patch readline readline-devel libyaml-devel libffi-devel openssl-devel make bzip2 autoconf automake libtool bison curl sqlite-devel
+yum install -y git-core zlib zlib-devel gcc-c++ patch readline readline-devel libyaml-devel \
+    libffi-devel openssl-devel make bzip2 autoconf automake libtool bison curl sqlite-devel
 cd
 git clone git://github.com/sstephenson/rbenv.git .rbenv
 echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
@@ -44,19 +42,20 @@ git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-buil
 echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> ~/.bash_profile
 exec $SHELL
 
-rbenv install -v 2.0.0-p647
-rbenv global 2.0.0-p647
+rbenv install -v 2.1.6
+rbenv global 2.1.6
+gem install bundle
 echo "gem: --no-document" > ~/.gemrc
 ```
 
-**Install External Dependencies:**
+### Install External Dependencies
 
 * [ImageMagick](http://www.imagemagick.org/script/binary-releases.php#unix)
 
 > Redhat: `yum -y install ImageMagick ImageMagick-devel`
 > Ubuntu: `apt-get install libmagickwand-dev imagemagick`
 
-**Install Gem Dependencies:**
+### Install Gem Dependencies
 
 ```
 cd /opt/sync
@@ -64,9 +63,10 @@ bundle install
 rbenv rehash
 ```
 
-Install MongoDB:
-----------------
-The following commands will install a single MongoDB instance on the local system (this will by default install mongo v2.4.9):
+## Install MongoDB:
+
+The following commands will install a single MongoDB instance on the local system 
+(this will by default install mongo v2.4.9):
 
 ```
 cd
@@ -75,8 +75,7 @@ chmod +x mongo_install.sh
 ./mongo_install.sh
 ```
 
-Install Nginx:
--------------
+## Install Nginx:
 
 ```
 cat > /etc/yum.repos.d/nginx.repo <<EOF
@@ -87,12 +86,17 @@ gpgcheck=0
 enabled=1
 EOF
 
-yum install nginx
+yum install -y nginx
 ```
 
+## Install memcached:
 
-Configure it:
--------------
+```
+yum install -y memcached.x86_64
+```
+
+# Configure it:
+
 **Configuring Mongo**
 
 You may have to configure `config/mongoid.yml` to specify where you are running the
@@ -106,11 +110,27 @@ Configure `config/config.yml` to specify Mail gun API keys and email addresses t
 
 Copy `config/nginx.conf` to `/etc/nginx` and replace the path variables to reflect your environment.
 
-Run it:
-------
+**Configure memcached**
 
 ```
-bin/sync_init.sh start all
+cat > /etc/sysconfig/memcached <<EOF
+PORT="11211"
+USER="memcached"
+MAXCONN="1024"
+CACHESIZE="1024"
+OPTIONS="-l IP_ADDRESS"
+EOF
+```
+
+> configure CACHESIZE according to your system configuration in this case its 1GB.
+> configure OPTIONS replace `IP_ADDRESS` with your system public IP address.
+
+# Run it:
+
+**Rake task to build SpRockets**
+
+```
+RACK_ENV=production rake assets:precompile
 ```
 
 **Creating indexes for collections** (Onetime)
@@ -123,6 +143,13 @@ rake mongoid:create_tracking_indexes
 rake mongoid_search:index
 rake jobs:create_indexes
 ```
+
+**One script to start it all:**
+
+```
+bin/sync_init.sh start all
+```
+
 
 Initialize the fetcher to get a decent amount of posts to work with, its not
 required to run the fetcher unless you want the data right away:
@@ -180,8 +207,7 @@ Create the following cron job's for the fetcher to run continuously & also to ba
 */5 * * * * /usr/local/rvm/wrappers/ruby-2.0.0-*@global/ruby /opt/sync/cloud_instances.rb >> /var/log/sync_cloud_bootstrapper.log 2>&1
 ```
 
-License and Authors
--------------------
+# License and Authors
 
 Authors: [Ashrith](http://github.com/ashrithr)
 
