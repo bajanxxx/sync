@@ -1,0 +1,272 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <% if admin_user %>
+    <h2>Jobs Following <small>(<%= consultant.email %>)</small>
+      <p class="pull-right">
+        <a id="ManagePostings" class="btn btn-primary btn-md" role="button">
+          Manage Postings &raquo;
+        </a>
+      </p>
+    </h2>
+    <% else %>
+    <h2>Jobs Following <small>(assigned to you)</small></h2>
+    <% end %>
+  </div>
+  <% if job_applications.empty? %>
+  <div class="container theme-showcase" role="main">
+    <div class="bs-callout bs-callout-info">
+      <p class="lead">No job postings have been assigned to you yet. Keep an eye out admin may assign some.</code></p>
+    </div>
+  </div>
+  <% end %>
+  <!-- Two job postings in a row -->
+  <% job_applications.each_slice(2) do |job_applications_in_twos| %>
+    <div class="row-fluid">
+      <% job_applications_in_twos.each do |job_application| %>
+      <div class="col-md-6">
+        <!-- If the applied job is to follow up then make if bold -->
+        <% if job_application[:status].include?('APPLIED') %>
+        <div class="panel panel-danger">
+        <% elsif job_application[:status].include?('FOLLOW_UP') %>
+        <div class="panel panel-warning">
+        <% else %>
+        <div class="panel panel-info">
+        <% end %>
+          <div class="panel-heading clearfix">
+            <% if admin_user %>
+            <a href="/job/<%= job_application[:job_id] %>"><strong><%= job_application[:title] %></strong></a>
+            <div class="btn-group pull-right">
+              <a class="btn btn-xs btn-info"><%= job_application[:vendor] %></a>
+              <a id="deletebtn<%= job_application[:application_id] %>" class="btn btn-xs btn-default deleteicon"><i class="fa fa-times"></i></a>
+            </div>
+            <% else %>
+            <a href="<%= job_application[:job_url] %>"><strong><%= job_application[:title] %></strong></a>
+            <button class="btn btn-xs btn-info pull-right"><%= job_application[:vendor] %></button>
+            <% end %>
+          </div>
+          <table class="table table-striped" style="table-layout: fixed; word-wrap: break-word">
+            <tr>
+              <td width="25%">Posted Date</td>
+              <% if admin_user %>
+              <td width="75%"><a href="/jobs/<%= job_application[:posted_date] %>"><%= job_application[:posted_date] %></a></td>
+              <% else %>
+              <td width="75%"><%= job_application[:posted_date] %></td>
+              <% end %>
+            </tr>
+            <tr>
+              <td width="25%">Status</td>
+              <td width="75%">
+                <a href="#" id="<%= job_application[:application_id] %>-status" data-value="<%= job_application[:status].join(',') %>">
+                  <%= job_application[:status].join(',') %>
+                </a>
+              </td>
+            </tr>
+            <% if admin_user %>
+            <tr>
+              <td width="25%">Closing Status</td>
+              <td width="75%">
+                <a href="#" id="<%= job_application[:application_id] %>-closing_status" data-value="<%= job_application[:closing_status].join(',') %>">
+                  <%= job_application[:closing_status].join(', ') %>
+                </a>
+              </td>
+            </tr>
+            <% end %>
+            <tr>
+              <td width="25%">Comments</td>
+              <td width="75%"><%= job_application[:comments].join(', ') %></td>
+            </tr>
+            <tr>
+              <td width="25%">Notes</td>
+              <td width="75%"><a href="#" id="<%= job_application[:application_id] %>-notes"><%= job_application[:notes] %></a></td>
+            </tr>
+            <tr>
+              <td width="25%">Associate Resume</td>
+              <td width="75%">
+                <a href="#" id="<%= job_application[:application_id] %>-resume" data-type="select" data-value="<%= job_application[:resume_name] %>" data-title="Select Resume"><%= job_application[:resume_name] %></a>
+              </td>
+          </table>
+        </div>
+      </div> <!-- col-md-4 -->
+      <% end %>
+    </div> <!-- row -->
+  <% end %>
+</div>
+
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h3>Resumes</h3>
+  </div>
+  <!-- list available resumes -->
+  <div class="row-fluid">
+    <div class="col-md-8">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <a><strong>Resumes</strong></a>
+        </div>
+        <% if !consultant.resumes.empty? %>
+        <ul class="list-group">
+          <% consultant.resumes.each do |resume| %>
+          <li class="list-group-item">
+            <span class="badge"><%= resume.uploaded_date %></span>
+            <a href="/jobs/resume/<%= resume.id %>"><%= resume.resume_name %></a>
+          </li>
+          <% end %>
+        </ul>
+        <% end %>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <a><strong>Upload Resume</strong></a>
+        </div>
+        <div class="panel-body">
+          <!-- upload new resumes -->
+          <form role="form" id="upload" method="post" action="/jobs/resume/upload/<%= consultant.email %>" enctype="multipart/form-data">
+            <input type="file" class="form-control" title="Select resumes to upload" name="resumes[]" data-filename-placement="inside" multiple />
+            <ul id="fileList"></ul>
+            <button type="submit" class="btn btn-primary center-block" id="SubmitBtn"><i class="fa fa-cloud-upload fa-lg"></i> Upload Resumé</button>
+            <!-- <input type="submit" class="btn btn-primary btn-md" value="Upload Resumé"/> -->
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+  $('input[type=file]').bootstrapFileInput();
+  $('.file-inputs').bootstrapFileInput();
+
+  var show = false;
+
+  // hide all delete buttons
+  $('.deleteicon').hide();
+
+  $('#ManagePostings').click(function() {
+    _this = $(this);
+
+    if(show) {
+      $('.deleteicon').hide();
+      show = false;
+      _this.html('Manage Postings');
+    } else {
+      $('.deleteicon').show();
+      show = true;
+      _this.html('Hide Delete');
+    }
+  })
+
+
+  // validate resume upload
+  $('#upload').bootstrapValidator({
+    feedbackIcons: {
+      valid: 'glyphicon glyphicon-ok',
+      invalid: 'glyphicon glyphicon-remove',
+      validating: 'glyphicon glyphicon-refresh'
+    },
+    fields: {
+      'resumes[]': {
+        validators: {
+          notEmpty: {
+            message: 'The resume is required'
+          },
+          file: {
+            extension: 'pdf,doc,docx',
+            type: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            maxSize: 5120 * 1024,   // 5 MB
+            message: 'Currently we only accept pdf, doc, docx files with size limit of 5MB'
+          }
+        }
+      },
+    }
+  });
+
+  <% job_applications.each_slice(2) do |job_applications_in_twos| %>
+    <% job_applications_in_twos.each do |job_application| %>
+      $("#<%= job_application[:application_id] %>-status").editable({
+        type: 'checklist',
+        title: 'Update status of the application',
+        placement: 'right',
+        url: '/jobs/consultant/<%= consultant.email %>/application/update',
+        separator: ',', // used to seperate values as arary from data-value
+        source: '/jobs/application/status/possible_values',
+        pk: '<%= job_application[:application_id] %>',
+        name: 'status',
+        success: function(response, newValue) {
+          if(!response.status) return response.msg;
+        },
+      });
+
+      <% if admin_user %>
+      $("#<%= job_application[:application_id] %>-closing_status").editable({
+        type: 'checklist',
+        title: 'Reason for closing the application',
+        placement: 'right',
+        url: '/jobs/consultant/<%= consultant.email %>/application/update',
+        separator: ',', // used to seperate values as arary from data-value
+        source: '/jobs/application/closing_status/possible_values',
+        pk: '<%= job_application[:application_id] %>',
+        name: 'closing_status',
+        success: function(response, newValue) {
+          if(!response.status) return response.msg;
+        },
+      });
+      <% end %>
+
+      $("#<%= job_application[:application_id] %>-notes").editable({
+        type: 'textarea',
+        title: 'Update notes',
+        placement: 'right',
+        url: '/jobs/consultant/<%= consultant.email %>/application/update',
+        name: 'notes',
+        pk: '<%= job_application[:application_id] %>',
+        success: function(response, newValue) {
+          if(!response.status) return response.msg;
+        },
+      });
+
+      $("#<%= job_application[:application_id] %>-resume").editable({
+        source: '/jobs/resume/all/<%= consultant.email %>',
+        pk: '<%= job_application[:application_id] %>',
+        url: '/jobs/consultant/<%= consultant.email %>/application/update',
+        name: 'resume_id',
+//        select2: {
+//          width: 300,
+//          placeholder: 'Select resume to associate',
+//          minimumInputLength: 2
+//        }
+      });
+
+      $('#deletebtn<%= job_application[:application_id] %>').hover(
+        function(){ // mouseenter
+          $("#deletebtn<%= job_application[:application_id] %>").removeClass('btn-default').addClass('btn-danger');
+        },
+        function(){ // mouseleave
+          $('#deletebtn<%= job_application[:application_id] %>').removeClass('btn-danger').addClass('btn-default');
+        }
+      );
+
+      $('#deletebtn<%= job_application[:application_id] %>').click(function(){
+        if ($('#<%= job_application[:application_id] %>-closing_status').text() == 'Empty') {
+          console.log($('#<%= job_application[:application_id] %>-closing_status').text());
+          alert("Closing status should be updated.");
+        } else {
+          console.log($('#<%= job_application[:application_id] %>-closing_status').text());
+          $.ajax({
+            type: "DELETE",
+            url: "/jobs/application/<%= job_application[:application_id] %>",
+            success: function(data){
+              location.reload();
+            },
+            error: function(e){
+              alert("Error occurred");
+            }
+          });
+        }
+      });
+    <% end %>
+  <% end %>
+});
+</script>

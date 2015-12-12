@@ -14,7 +14,7 @@ class SlackAssociateUsersToTopic < Struct.new(:api_token, :track, :topic, :users
       add_bots_to_group(client, group_id, bots)
     else
       # failed to authenticate
-      raise StandardError.new("Unable to authenticate with Slack")
+      raise StandardError.new('Unable to authenticate with Slack')
     end
   end
 

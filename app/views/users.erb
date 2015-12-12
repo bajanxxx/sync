@@ -1,0 +1,58 @@
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>User Role Management</h2>
+  </div>
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <strong>Users</strong>
+    </div>
+    <table class="table table-hover">
+      <thead>
+        <th>Email</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Role</th>
+      </thead>
+      <tbody>
+        <% users.each_with_index do |user, i| %>
+          <tr id="user<%= i %>">
+            <td><%= user.email %></a></td>
+            <td><%= user.first_name %></td>
+            <td><%= user.last_name %></td>
+            <td>
+              <a href="#" id="role<%= i %>">
+                <%= user.role && user.role.name || 'N/A' %>
+              </a>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    // inline editing
+    $.fn.editable.defaults.mode = 'popup';
+    $.fn.editable.defaults.ajaxOptions = {type: "POST"};
+
+    <% users.each_with_index do |user, i| %>
+      $("#role<%= i %>").editable({
+        type: 'select',
+        inputclass: 'input-large',
+        title: 'Select user role',
+        placement: 'left',
+        pk: '<%= user.id %>',
+        value: '<%= user.role && user.role.name %>',
+        url: '/users/<%= user.id %>/role',
+        name: 'name',
+        source: '/users/roles',
+        success: function(response, newValue) {
+          if (!response.status) return response.msg;
+        }
+      });
+    <% end %>
+  })
+</script>
