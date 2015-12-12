@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
 require 'mongoid'
-require_relative '../app/models/reference/role'
-require_relative '../app/models/user'
-require_relative '../app/models/role'
+require_relative 'app/models/reference/role'
+require_relative 'app/models/user'
+require_relative 'app/models/role'
 
 username = ARGV[0]
 

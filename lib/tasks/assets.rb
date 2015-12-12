@@ -1,5 +1,5 @@
 # Builds a single application.css and application.js from all the assets to run:
-# `bundle exec rake assets:precompile`
+# `RACK_ENV=ENVIRONMENT bundle exec rake assets:precompile`
 namespace :assets do
   desc 'Precompile assets'
   task :precompile => :app do

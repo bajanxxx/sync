@@ -1,12 +1,12 @@
-rails_env = ENV['RAILS_ENV'] || 'development'
+rake_env = ENV['RACK_ENV'] || 'development'
 
 app_root = `pwd`.chomp
 working_directory app_root
-worker_processes (rails_env == 'production' ? 10 : 2)
+worker_processes (rake_env == 'production' ? 10 : 2)
 preload_app true
 timeout 30
 
-if rails_env == 'production'
+if rake_env == 'production'
   listen "#{app_root}/tmp/sockets/unicorn.sock", :backlog => 2048
   pid "#{app_root}/tmp/pids/unicorn.pid"
   stderr_path "#{app_root}/log/unicorn.log"

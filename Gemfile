@@ -16,8 +16,8 @@ gem 'dotenv'
 gem 'builder'
 
 # DB
-gem 'mongo', '3.1.6'
-gem 'mongoid'
+gem 'mongo'
+gem 'mongoid', '3.1.6'
 gem 'mongoid_search'
 gem 'bson_ext'
 

@@ -95,6 +95,15 @@ yum install -y nginx
 yum install -y memcached.x86_64
 ```
 
+## Install Node.js
+
+Required for compiling javascript sources by sprocket
+
+```
+curl --silent --location https://rpm.nodesource.com/setup | bash -
+yum install -y nodejs
+```
+
 # Configure it:
 
 **Configuring Mongo**
@@ -130,6 +139,10 @@ EOF
 **Rake task to build SpRockets**
 
 ```
+bin/sync_init.sh start all
+```
+
+```
 RACK_ENV=production rake assets:precompile
 ```
 
@@ -143,13 +156,6 @@ rake mongoid:create_tracking_indexes
 rake mongoid_search:index
 rake jobs:create_indexes
 ```
-
-**One script to start it all:**
-
-```
-bin/sync_init.sh start all
-```
-
 
 Initialize the fetcher to get a decent amount of posts to work with, its not
 required to run the fetcher unless you want the data right away:
