@@ -134,9 +134,11 @@
       <strong>Current Requests</strong>
     </div>
     <% if pending_requests.empty? %>
-      <div class="bs-callout bs-callout-info">
-        <p class="lead">You don't have any current requests. To create one use the button 'Create New Request'</p>
-      </div>
+      <ul class="list-group">
+        <li class="list-group-item">
+          There are no pending requests to show. To create a new request use the button 'Create New Request'.
+        </li>
+      </ul>
     <% else %>
       <ul class="list-group">
         <% pending_requests.each do |request| %>
@@ -154,9 +156,11 @@
       <strong>Previous Requests</strong>
     </div>
     <% if previous_requests.empty? %>
-    <div class="bs-callout bs-callout-info">
-      <p class="lead">You don't have any previous requests.</p>
-    </div>
+      <ul class="list-group">
+        <li class="list-group-item">
+          There are no previous requests to show.
+        </li>
+      </ul>
     <% else %>
     <ul class="list-group">
       <% previous_requests.each do |request| %>

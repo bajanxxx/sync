@@ -268,9 +268,11 @@
       <strong>Pending Requests</strong>
     </div>
     <% if pending_requests.empty? %>
-    <div class="bs-callout bs-callout-info">
-      <p class="lead">No new requests have been made. So, right now <code>chill!</code></p>
-    </div>
+    <ul class="list-group">
+      <li class="list-group-item">
+        There are no pending requests to show.
+      </li>
+    </ul>
     <% else %>
     <ul class="list-group">
       <% pending_requests.each do |request| %>
@@ -289,9 +291,11 @@
       <strong>Previously Approved Requests</strong>
     </div>
     <% if approved_requests.empty? %>
-    <div class="bs-callout bs-callout-info">
-      <p class="lead">No requests have been so far marked as approved!</p>
-    </div>
+    <ul class="list-group">
+      <li class="list-group-item">
+        There are no approved requests to show.
+      </li>
+    </ul>
     <% else %>
     <ul class="list-group">
       <% approved_requests.each do |request| %>
@@ -310,9 +314,11 @@
       <strong>Previously DisApproved Requests</strong>
     </div>
     <% if disapproved_requests.empty? %>
-    <div class="bs-callout bs-callout-info">
-      <p class="lead">No new requests have been so far marked as disapproved!</p>
-    </div>
+    <ul class="list-group">
+      <li class="list-group-item">
+        There are no denied requests to show.
+      </li>
+    </ul>
     <% else %>
     <ul class="list-group">
       <% disapproved_requests.each do |request| %>

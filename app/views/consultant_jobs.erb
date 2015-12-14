@@ -103,7 +103,13 @@
         <div class="panel-heading">
           <a><strong>Resumes</strong></a>
         </div>
-        <% if !consultant.resumes.empty? %>
+        <% if consultant.resumes.empty? %>
+        <ul class="list-group">
+          <li class="list-group-item">
+            There are no resumes uploaded yet. Use 'Upload Resume' dialog to upload some.
+          </li>
+        </ul>
+        <% else %>
         <ul class="list-group">
           <% consultant.resumes.each do |resume| %>
           <li class="list-group-item">

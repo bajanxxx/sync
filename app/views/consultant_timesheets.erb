@@ -31,9 +31,9 @@
             <div class="panel-body">
               <div class="text-center">
                 <h4>You have no project's assigned for this week. Contact admin, if this is a mistake.</h4>
-                <p>Your project's and their start and end dates: </p>
+                <p>Your project's and their respective start and end dates are as follows: </p>
                 <% projects.each do |project| %>
-                <p><%= project.id %> | <%= project.start_date %> | <%= project.end_date %></p>
+                <p><%= project.id %> (<%= project.name %>) | <%= project.start_date %> | <%= project.end_date %></p>
                 <% end %>
               </div>
             </div>
@@ -249,17 +249,6 @@ function sum<%= project.id %>() {
 }
 <% end %>
 
-// function totalsum() {
-//   var totals = $('td[id^="total"]');
-//   var result = 0;
-//   totals.each(function(index) {
-//     result += parseFloat($(this).text());
-//   })
-//   if (!isNaN(result)) {
-//     $('#totcol').text(result.toFixed(2));
-//   }
-// }
-
 $(document).ready(function() {
   var now = moment();
   // this week
@@ -275,46 +264,46 @@ $(document).ready(function() {
 });
 
 $('#nextweek').click(function(){
-  var urlSegment = window.location.pathname
-  var urlSegmentArray = urlSegment.split('/')
+  var urlSegment = window.location.pathname;
+  var urlSegmentArray = urlSegment.split('/');
 
-  console.log(urlSegmentArray)
+  console.log(urlSegmentArray);
 
-  var currentUrlWeek = parseInt(urlSegmentArray[urlSegmentArray.length - 1])
-  var currentUrlYear = parseInt(urlSegmentArray[urlSegmentArray.length - 2])
+  var currentUrlWeek = parseInt(urlSegmentArray[urlSegmentArray.length - 1]);
+  var currentUrlYear = parseInt(urlSegmentArray[urlSegmentArray.length - 2]);
 
-  console.log(currentUrlWeek)
-  console.log(currentUrlYear)
+  console.log(currentUrlWeek);
+  console.log(currentUrlYear);
 
-  var nextUrlWeek = currentUrlWeek
-  var nextUrlYear = currentUrlYear
+  var nextUrlWeek = currentUrlWeek;
+  var nextUrlYear = currentUrlYear;
 
   if (currentUrlWeek == 53) {
-    nextUrlYear = nextUrlYear + 1
+    nextUrlYear = nextUrlYear + 1;
     nextUrlWeek = 1
   } else {
     nextUrlWeek = nextUrlWeek + 1
   }
 
   window.location.href='/timesheets/<%= userid %>/' + nextUrlYear + '/' + nextUrlWeek;
-})
+});
 $('#prevweek').click(function(){
-  var urlSegment = window.location.pathname
-  var urlSegmentArray = urlSegment.split('/')
-  var currentUrlWeek = parseInt(urlSegmentArray[urlSegmentArray.length - 1])
-  var currentUrlYear = parseInt(urlSegmentArray[urlSegmentArray.length - 2])
+  var urlSegment = window.location.pathname;
+  var urlSegmentArray = urlSegment.split('/');
+  var currentUrlWeek = parseInt(urlSegmentArray[urlSegmentArray.length - 1]);
+  var currentUrlYear = parseInt(urlSegmentArray[urlSegmentArray.length - 2]);
 
-  var nextUrlWeek = currentUrlWeek
-  var nextUrlYear = currentUrlYear
+  var nextUrlWeek = currentUrlWeek;
+  var nextUrlYear = currentUrlYear;
 
   if (currentUrlWeek == 1) {
-    nextUrlYear = nextUrlYear - 1
+    nextUrlYear = nextUrlYear - 1;
     nextUrlWeek = 53
   } else {
     nextUrlWeek = nextUrlWeek - 1
   }
   window.location.href='/timesheets/<%= userid %>/' + nextUrlYear + '/' + nextUrlWeek;
-})
+});
 
 <% projects.each do |project| %>
 $('#SaveBtn-<%= project.id %>').click(function() {
@@ -332,7 +321,7 @@ $('#SaveBtn-<%= project.id %>').click(function() {
         _this.attr('disabled', false); // re-enable submit
         _this.html('Re-submit');
       } else {
-        console.log("Sucess: " + data.msg)
+        console.log("Success: " + data.msg);
         _this.html("Submitted");
         location.reload();
       }
@@ -358,7 +347,7 @@ $('#SubmitBtn-<%= project.id %>').click(function() {
         _this.attr('disabled', false); // re-enable submit
         _this.html('Re-submit');
       } else {
-        console.log("Sucess: " + data.msg)
+        console.log("Success: " + data.msg);
         _this.html("Submitted");
         location.reload();
       }
