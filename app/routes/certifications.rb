@@ -64,9 +64,9 @@ module Sync
         success    = true
         message    = 'Certification Request Approved.'
 
-        cname = params[:cname]
+        fname = params[:fname]
+        lname = params[:lname]
         date = params[:date]
-        # time = params[:time]
         price = params[:price]
         notes = params[:notes]
 
@@ -77,7 +77,15 @@ module Sync
 
         if success
           cr = CertificationRequest.find(rid)
-          cr.update_attributes(status: 'approved', approved_by: @user.name, approved_at: DateTime.now, notes: notes)
+          cr.update_attributes(
+            consultant_first_name: fname,
+            consultant_last_name: lname,
+            booking_date: date,
+            status: 'approved',
+            approved_by: @user.name,
+            approved_at: DateTime.now,
+            notes: notes
+          )
           # immediate notification for the user
           Delayed::Job.enqueue(
               EmailRequestStatus.new(@settings, @user.name, cr, "Certification (#{cr.short})"),
@@ -90,16 +98,16 @@ module Sync
               EmailCertificationNotificationPriorDay.new(@settings, @user.name, cr),
               queue: 'consultant_certification_notifications',
               priority: 10,
-              run_at: DateTime.strptime(cr.booking_date, "%m/%d/%Y") - 1
+              run_at: DateTime.strptime(cr.booking_date, '%m/%d/%Y') - 1
           )
           # post day notification to user about status of the certification
           Delayed::Job.enqueue(
               EmailCertificationNotificationPostDay.new(@settings, @user.name, cr),
               queue: 'consultant_certification_notifications',
               priority: 10,
-              run_at: DateTime.strptime(cr.booking_date, "%m/%d/%Y") + 1
+              run_at: DateTime.strptime(cr.booking_date, '%m/%d/%Y') + 1
           )
-          flash[:info] = 'Sucessfully approved and updated the user status of the request'
+          flash[:info] = 'Successfully approved and updated the user status of the request'
         end
 
         { success: success, msg: message }.to_json
@@ -115,7 +123,7 @@ module Sync
             priority: 10,
             run_at: 1.seconds.from_now
         )
-        flash[:info] = 'Sucessfully disapproved and updated the user status of the request'
+        flash[:info] = 'Successfully disapproved and updated the user status of the request'
         redirect '/documents'
       end
 

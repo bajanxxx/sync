@@ -207,9 +207,9 @@ module Sync
         resume_id = Resume.find_by(resume_name: resume_name).id
         resume = download_resume(resume_id)
         Pony.mail(
-            :from => Settings.email.split('@').first + "<" + Settings.email + ">",
+            :from => @settings[:email].split('@').first + "<" + @settings[:email] + ">",
             :to => vendor_email,
-            :cc => Settings.cc,
+            :cc => @settings[:cc],
             :subject => "Applying Job Post: (#{job.title})",
             :body => email_body,
             :attachments => {
@@ -217,11 +217,11 @@ module Sync
             },
             :via => :smtp,
             :via_options => {
-                :address              => Settings.smtp_address,
-                :port                 => Settings.smtp_port,
+                :address              => @settings[:smtp_address],
+                :port                 => @settings[:smtp_port],
                 :enable_starttls_auto => true,
-                :user_name            => Settings.email,
-                :password             => Settings.password,
+                :user_name            => @settings[:email],
+                :password             => @settings[:password],
                 :authentication       => :plain,
                 :domain               => 'localhost.localdomain'
             }

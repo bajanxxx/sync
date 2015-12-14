@@ -131,7 +131,7 @@ module Sync
             # Trainer should be notified about the re-submission
             Delayed::Job.enqueue(
                 SlackUserNotification.new(
-                    Settings.slack_sync_bot_api_token,
+                    @settings[:slack_sync_bot_api_token],
                     trainer_email,
                     {
                         pretext: 'Notification from Cloudwick Sync',
@@ -177,7 +177,7 @@ module Sync
             Delayed::Job.enqueue(
                 SlackGroupNotification.new(
                     @settings,
-                    Settings.slack_sync_bot_api_token,
+                    @settings[:slack_sync_bot_api_token],
                     "team#{user.team}_#{track.code.downcase}_#{topic.code.downcase}",
                     # "'#{user.first_name} #{user.last_name}' submitted '#{project.name}' from topic: '#{topic.name}'."
                     {
@@ -215,7 +215,7 @@ module Sync
             # send a slack notification to the trainer
             Delayed::Job.enqueue(
                 SlackUserNotification.new(
-                    Settings.slack_sync_bot_api_token,
+                    @settings[:slack_sync_bot_api_token],
                     trainer_email,
                     {
                         pretext: 'Notification from Cloudwick Sync',
@@ -271,7 +271,7 @@ module Sync
         # Notify the user about the approval
         Delayed::Job.enqueue(
             SlackUserNotification.new(
-                Settings.slack_sync_bot_api_token,
+                @settings[:slack_sync_bot_api_token],
                 trainee.email,
                 {
                     pretext: 'Notification from Cloudwick Sync',
@@ -327,7 +327,7 @@ module Sync
         )
         Delayed::Job.enqueue(
             SlackUserNotification.new(
-                Settings.slack_sync_bot_api_token,
+                @settings[:slack_sync_bot_api_token],
                 trainee.email,
                 {
                     pretext: 'Notification from Cloudwick Sync',

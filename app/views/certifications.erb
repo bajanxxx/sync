@@ -78,13 +78,13 @@
         <div class="modal-body">
           <form role="form" id="CreateForm-<%= request.id %>">
             <div class="form-group">
-              <label for="FirstName">First Name:</label>
-                <input type="text" class="form-control" id="FirstName" name="FirstName" placeholder="First Name that should appear on certificate" value="<%= request.consultant_first_name %>" required="required" />
+              <label for="FirstName-<%= request.id %>">First Name:</label>
+                <input type="text" class="form-control" id="FirstName-<%= request.id %>" name="FirstName-<%= request.id %>" placeholder="First Name that should appear on certificate" value="<%= request.consultant_first_name %>" required="required" />
                 <span class="help-block"></span>
             </div>
             <div class="form-group">
-              <label for="LastName">Last Name:</label>
-                <input type="text" class="form-control" id="LastName" name="LastName" placeholder="Last Name that should appear on certificate" value="<%= request.consultant_last_name %>" required="required" />
+              <label for="LastName-<%= request.id %>">Last Name:</label>
+                <input type="text" class="form-control" id="LastName-<%= request.id %>" name="LastName-<%= request.id %>" placeholder="Last Name that should appear on certificate" value="<%= request.consultant_last_name %>" required="required" />
                 <span class="help-block"></span>
             </div>
             <div class="form-group">
@@ -99,13 +99,8 @@
             </div>
             <div class="form-group">
                <label class="control-label" for="Date">Date: </label>
-               <input type="text" class="form-control" name="Date-<%= request.id %>" id="Date-<%= request.id %>" value="<%= request.booking_date %>">
+               <input type="text" class="form-control" name="Date-<%= request.id %>" id="Date-<%= request.id %>">
             </div>
-            <!-- <div class="form-group">
-              <label for="TimeSelected">Time Selected:</label>
-              <input type="text" class="form-control" name="TimeSelected-<%= request.id %>" id="TimeSelected-<%= request.id %>" placeholder="Actual time selected while booking">
-              <span class="help-block"></span>
-            </div> -->
             <div class="form-group">
               <label class="control-label" for="Flexible">Flexible? </label>
               <input type="text" class="form-control" id="Flexible-<%= request.id %>" name="Flexible-<%= request.id %>" value="<%= request.flexibility %>" disabled/>
@@ -441,9 +436,11 @@
       <strong>Pending Requests - <%= pending_requests.count %></strong>
     </div>
     <% if pending_requests.empty? %>
-    <div class="bs-callout bs-callout-info">
-      <p class="lead">No new requests have been made. So, right now <code>chill!</code></p>
-    </div>
+      <ul class="list-group">
+        <li class="list-group-item">
+          There are no pending requests to show.
+        </li>
+      </ul>
     <% else %>
     <ul class="list-group">
       <% pending_requests.each do |request| %>
@@ -463,9 +460,11 @@
       <strong>Approved Requests - <%= approved_requests.count %></strong>
     </div>
     <% if approved_requests.empty? %>
-    <div class="bs-callout bs-callout-info">
-      <p class="lead">No requests have been so far marked as approved!</p>
-    </div>
+      <ul class="list-group">
+        <li class="list-group-item">
+          There are no approved requests to show.
+        </li>
+      </ul>
     <% else %>
     <ul class="list-group">
       <% approved_requests.each do |request| %>
@@ -489,9 +488,11 @@
       <strong>DisApproved Requests - <%= disapproved_requests.count %></strong>
     </div>
     <% if disapproved_requests.empty? %>
-    <div class="bs-callout bs-callout-info">
-      <p class="lead">No new requests have been so far marked as disapproved!</p>
-    </div>
+      <ul class="list-group">
+        <li class="list-group-item">
+          There are no dis-approved requests to show.
+        </li>
+      </ul>
     <% else %>
     <ul class="list-group">
       <% disapproved_requests.each do |request| %>
@@ -514,9 +515,11 @@
           <strong>Passed Requests - <%= passed_requests.count %></strong>
         </div>
         <% if passed_requests.empty? %>
-        <div class="bs-callout bs-callout-info">
-          <p class="lead">No requests have been so far marked as passed!</p>
-        </div>
+          <ul class="list-group">
+            <li class="list-group-item">
+              There are no requests marked as passed to show.
+            </li>
+          </ul>
         <% else %>
         <ul class="list-group">
           <% passed_requests.each do |request| %>
@@ -536,9 +539,11 @@
           <strong>Failed Requests - <%= failed_requests.count %></strong>
         </div>
         <% if failed_requests.empty? %>
-        <div class="bs-callout bs-callout-info">
-          <p class="lead">No requests have been so far marked as failed!</p>
-        </div>
+          <ul class="list-group">
+            <li class="list-group-item">
+              There are no requests marked as failed to show.
+            </li>
+          </ul>
         <% else %>
         <ul class="list-group">
           <% failed_requests.each do |request| %>
@@ -563,7 +568,9 @@ $(document).ready(function(){
   $('.failbutton').tooltip();
   $('#Certification').select2();
   $("#Flexible").bootstrapSwitch();
-  $('#Date').datepicker({});
+  $('#Date').datepicker({
+    startDate: new Date()
+  });
   $('#ReportStartDate').datepicker({
     format: 'dd-mm-yyyy'
   });
@@ -604,15 +611,17 @@ $(document).ready(function(){
   });
 
   <% pending_requests.each do |request| %>
-  $('#Date-<%= request.id %>').datepicker({});
+  $('#Date-<%= request.id %>').datepicker(
+      "update","<%= Date.strptime(request.booking_date, '%m/%d/%Y').strftime('%m/%d/%Y') %>"
+  );
   $('#ApproveBtn-<%= request.id %>').click(function() {
     _this = $(this);
     _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
     _this.attr('disabled', true); // no double submit
 
-    var consultantName = $("#ConsultantName-<%= request.id %>").val();
+    var fName = $("#FirstName-<%= request.id %>").val();
+    var lName = $("#LastName-<%= request.id %>").val();
     var date = $("#Date-<%= request.id %>").val();
-    // var time = $("#TimeSelected-<%= request.id %>").val();
     var price = $("#Price-<%= request.id %>").val();
     var notes = $("#Notes-<%= request.id %>").val();
 
@@ -620,7 +629,7 @@ $(document).ready(function(){
       type: "POST",
       dataType: "json",
       url: "/certifications/approve/<%= request.id %>",
-      data: {'cname': consultantName, 'date': date, 'price': price, 'notes': notes },
+      data: {'fname': fName, 'lname': lName, 'date': date, 'price': price, 'notes': notes },
       success: function(data) {
         if(!data.success) {
           console.log("Error: " + data.msg);

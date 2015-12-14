@@ -94,7 +94,7 @@ module Sync
         unless route_exists?(route_name)
           # RestClient.post("https://api:key-62-8e5xuuc0b1ojaxobl2n13mkuw4qg2@api.mailgun.net/v2/routes", priority: 0, description: 'New Route', expression: "match_recipient('jobs@mg.cloudwick.com')", action: ["forward('http://198.0.218.179/routes')"] + [ "stop()" ])
           RestClient.post(
-              "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/routes",
+              "https://api:#{@settings[:mailgun_api_key]}@api.mailgun.net/v2/routes",
               priority: 0,
               description: route_name,
               expression: "match_recipient('#{match_recipient}')",

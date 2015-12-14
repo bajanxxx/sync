@@ -1,5 +1,10 @@
 #!/usr/bin/env ruby
 
+#
+# Assigns an admin role for the specified user
+#
+# Usage: ./assign_admin.rb 'admin@cloudwick.com'
+
 require 'mongoid'
 require_relative 'app/models/reference/role'
 require_relative 'app/models/user'

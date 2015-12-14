@@ -128,7 +128,7 @@ module Sync
             # Resubmission should be notified to trainer as well
             Delayed::Job.enqueue(
                 SlackUserNotification.new(
-                    Settings.slack_sync_bot_api_token,
+                    @settings[:slack_sync_bot_api_token],
                     trainer_email,
                     {
                         pretext: 'Notification from Cloudwick Sync',
@@ -175,7 +175,7 @@ module Sync
             Delayed::Job.enqueue(
                 SlackGroupNotification.new(
                     @settings,
-                    Settings.slack_sync_bot_api_token,
+                    @settings[:slack_sync_bot_api_token],
                     "team#{user.team}_#{track.code.downcase}_#{topic.code.downcase}",
                     # "'#{user.first_name} #{user.last_name}' submitted assignment '#{assignment.name}' from sub-topic: '#{sub_topic.name}' of topic: '#{topic.name}'."
                     {
@@ -214,7 +214,7 @@ module Sync
             # send a slack notification to the trainer
             Delayed::Job.enqueue(
                 SlackUserNotification.new(
-                    Settings.slack_sync_bot_api_token,
+                    @settings[:slack_sync_bot_api_token],
                     trainer_email,
                     {
                         pretext: 'Notification from Cloudwick Sync',
@@ -271,7 +271,7 @@ module Sync
         end
         Delayed::Job.enqueue(
             SlackUserNotification.new(
-                Settings.slack_sync_bot_api_token,
+                @settings[:slack_sync_bot_api_token],
                 trainee.email,
                 {
                     pretext: 'Notification from Cloudwick Sync',
@@ -329,7 +329,7 @@ module Sync
 
         Delayed::Job.enqueue(
             SlackUserNotification.new(
-                Settings.slack_sync_bot_api_token,
+                @settings[:slack_sync_bot_api_token],
                 trainee.email,
                 #"'#{trainer.first_name} #{trainer.last_name}' has disapproved your assignment submission '#{assignment.name}' from topic: '#{topic.name}'. Notes from trainer: #{reason}. Please review the submission based on trainer notes/comments and re-submit it."
                 {

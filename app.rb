@@ -47,7 +47,9 @@ module Sync
 
       # Load OmniAuth - for google single sign on
       use OmniAuth::Builder do
-        provider :google_oauth2, Settings.google_key, Settings.google_secret, {
+        provider :google_oauth2,
+                 Settings.public_send(Sinatra::Base.settings.environment)[:google_key],
+                 Settings.public_send(Sinatra::Base.settings.environment)[:google_secret], {
             prompt: 'select_account',
             image_aspect_ratio: 'square',
             image_size: 200,

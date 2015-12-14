@@ -28,12 +28,12 @@ module Sync
       helpers Sync::Helpers::Training
       helpers Sync::Helpers::Openstack
       helpers Sync::Helpers::DateTime
-      helpers Sync::Helpers::Twilio
+      helpers Sync::Helpers::Sms
 
       before do
         @session_username = session_username
         @user = User.find(session_username) if session_username
-        @settings = Settings._settings
+        @settings = Settings._settings[Sinatra::Base.settings.environment]
         @email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
       end
 

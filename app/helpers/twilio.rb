@@ -1,6 +1,6 @@
 module Sync
   module Helpers
-    module Twilio
+    module Sms
       def twilio
         Twilio::REST::Client.new(
             @settings[:twilio_account_sid],
