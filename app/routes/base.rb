@@ -35,6 +35,11 @@ module Sync
         @user = User.find(session_username) if session_username
         @settings = Settings._settings[Sinatra::Base.settings.environment]
         @email_regex = Regexp.new('\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b')
+        @pending_requests = {
+          document_requests: DocumentRequest.where(status: 'pending').count,
+          airticket_requests: AirTicketRequest.where(status: 'pending').count,
+          certification_requests: CertificationRequest.where(status: 'pending').count
+        }
       end
 
       # The error handlers will only be invoked, however, if both the Sinatra

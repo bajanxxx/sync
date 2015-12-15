@@ -249,13 +249,30 @@
                       <li><a href="/customers">Customers</a></li>
                     </ul>
                   </li>
+									<% requests_count = @pending_requests[:document_requests] + @pending_requests[:airticket_requests] + @pending_requests[:certification_requests] %>
                   <li class="dropdown">
-                    <a class="dropdown-toggle disabled">Requests <span class="caret"></span></a>
+										<% if requests_count != 0 %>
+										<a href="#" class="dropdown-toggle disabled">Requests <span class="badge"><%= requests_count %></span><span class="caret"></span></a>
+										<% else %>
+										<a class="dropdown-toggle disabled">Requests <span class="caret"></span></a>
+										<% end %>
                     <ul class="dropdown-menu" role="menu">
                       <li><a href="/cloudservers/requests"><i class="fa fa-server"></i> Cloud Servers</a></li>
-                      <li><a href="/documents"><i class="fa fa-file-text"></i> Documents</a></li>
-                      <li><a href="/certifications"><i class="fa fa-certificate"></i> Certifications</a></li>
-                      <li><a href="/airtickets"><i class="fa fa-plane"></i> Air Tickets</a></li>
+											<% if @pending_requests[:document_requests] != 0 %>
+											<li><a href="/documents"><i class="fa fa-file-text"></i> Documents <span class="badge"><%= @pending_requests[:document_requests] %></span></a></li>
+											<% else %>
+											<li><a href="/documents"><i class="fa fa-file-text"></i> Documents</a></li>
+											<% end %>
+											<% if @pending_requests[:certification_requests] != 0 %>
+											<li><a href="/certifications"><i class="fa fa-certificate"></i> Certifications <span class="badge"><%= @pending_requests[:certification_requests] %></span></a></li>
+											<% else %>
+											<li><a href="/certifications"><i class="fa fa-certificate"></i> Certifications</a></li>
+											<% end %>
+											<% if @pending_requests[:airticket_requests] != 0 %>
+											<li><a href="/airtickets"><i class="fa fa-plane"></i> Air Tickets <span class="badge"><%= @pending_requests[:airticket_requests] %></span></a></li>
+											<% else %>
+											<li><a href="/airtickets"><i class="fa fa-plane"></i> Air Tickets</a></li>
+											<% end %>
                     </ul>
                   </li>
                   <li class="dropdown">

@@ -118,6 +118,18 @@ Configure `config/config.yml` to specify Mail gun API keys and email addresses t
 **Configuring nginx web server:**
 
 Copy `config/nginx.conf` to `/etc/nginx` and replace the path variables to reflect your environment.
+Copy `config/sync-http.conf` to `/etc/nginx/sites-enabled/` and replace the path variables to reflect your environment.
+
+Make sure you have ip addresses in `/etc/hosts` file:
+
+```
+192.168.1.205 gateway.cw.com
+198.168.1.205 sync.cloudwick.com
+198.168.1.205 git.cloudwick.com
+198.0.218.179 gateway.cw.com
+198.0.218.179 sync.cloudwick.com
+198.0.218.179 git.cloudwick.com
+```
 
 **Configure memcached**
 
