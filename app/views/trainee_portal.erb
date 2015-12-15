@@ -147,6 +147,20 @@
                   <% if notification.created_at > DateTime.now-48.hours %>
                   <span class="badge progress-bar-info">New</span>
                   <% end %>
+                  <%
+                     notification_subtype = notification.sub_type.downcase
+                     notification_color = case notification_subtype
+                       when 'redo'
+                        'progress-bar-danger'
+                       when 'approval'
+                        'progress-bar-success'
+                       when 'resubmission'
+                        'progress-bar-warning'
+                       else
+                        'progress-bar-info'
+                     end
+                  %>
+                  <span class="badge <%= notification_color %>"><%= notification_subtype %></span>
                 </span>
                 <strong><%= notification.name %></strong>
                 <div>

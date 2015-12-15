@@ -16,35 +16,53 @@
 
   <br>
 
-  <h3>Other tools:</h3>
+  <h3>Tools we use @ Cloudwick:</h3>
 
   <div class="col-xs-3 spacer">
-    <div class="well" style="height:250px; background-color: #337ab7;">
-      <p align="center" class="font-responsive-large"><a target="_blank" href="https://cloudwick.atlassian.net/wiki"><font color="white">Cloudwick Athenaeum</font></a></p>
-      <br>
-      <p align="center"><font color="white">Centralized knowledge management. You will be able to sign in using your cloudwick email address.</font></p>
-    </div>
+    <a class="button hvr-float" style="display:block" target="_blank" href="https://cloudwick.atlassian.net/wiki">
+      <div class="well" style="height:250px; background-color: #337ab7;">
+        <p align="center" class="font-responsive-large"><font color="white">Cloudwick Athenaeum</font></p>
+        <br>
+        <p align="center"><font color="white">Centralized knowledge management. You will be able to sign in using your cloudwick email address.</font></p>
+      </div>
+    </a>
   </div>
   <div class="col-xs-3 spacer">
-    <div class="well" style="height:250px; background-color: #5bc0de;">
-      <p align="center" class="font-responsive-large"><a target="_blank" href="https://cloudwick.atlassian.net/wiki/questions"><font color="white">Cloudwick Questions</font></a></p>
-      <br>
-      <p align="center"><font color="white">If you have any technical questions this is the place to ask. You will be able to sign in using your cloudwick email address.</font></p>
-    </div>
+    <a class="button hvr-float" style="display:block" target="_blank" href="https://cloudwick.atlassian.net/wiki/questions">
+      <div class="well" style="height:250px; background-color: #5bc0de;">
+        <p align="center" class="font-responsive-large"><font color="white">Cloudwick Questions</font></p>
+        <br>
+        <p align="center"><font color="white">If you have any technical questions this is the place to ask. You will be able to sign in using your cloudwick email address.</font></p>
+      </div>
+    </a>
   </div>
   <div class="col-xs-3 spacer">
-    <div class="well" style="height:250px; background-color: #5cb85c;">
-      <p align="center" class="font-responsive-large"><a target="_blank" href="https://cloudwick.slack.com"><font color="white">Slack</font></a></p>
-      <br>
-      <p align="center"><font color="white">Team collaboration and chat. To sign up to Slack use this <a href="https://cloudwick.slack.com/signup">link</a> and use your cloudwick email address when signing up. This is crucial as we send all notifications to Slack.</font></p>
-    </div>
+    <a class="button hvr-float" style="display:block" target="_blank" href="https://cloudwick.slack.com">
+      <div class="well" style="height:250px; background-color: #5cb85c;">
+        <p align="center" class="font-responsive-large"><font color="white">Slack</font></p>
+        <br>
+        <p align="center"><font color="white">Team collaboration and chat. This is crucial as we send all notifications to Slack. To start using slack signup using your cloudwick email.</font></p>
+      </div>
+    </a>
   </div>
   <div class="col-xs-3 spacer">
-    <div class="well" style="height:250px; background-color: #f0ad4e;">
-      <p align="center" class="font-responsive-large"><a target="_blank" href="https://github.com/cloudwicklabs"><font color="white">Cloudwick Github</font></a></p>
-      <br>
-      <p align="center"><font color="white">Code sharing.</font></p>
-    </div>
+    <% if @user.trainee? %>
+      <a class="button hvr-float" style="display:block" target="_blank" href="http://git.cloudwick.com">
+        <div class="well" style="height:250px; background-color: #f0ad4e;">
+          <p align="center" class="font-responsive-large"><font color="white">Cloudwick Git</font></p>
+          <br>
+          <p align="center"><font color="white">Code sharing. This is where you'll manage your codebase required for assignments and projects.</font></p>
+        </div>
+      </a>
+    <% else %>
+      <a class="button hvr-float" style="display:block" target="_blank" href="https://github.com/cloudwicklabs">
+        <div class="well" style="height:250px; background-color: #f0ad4e;">
+          <p align="center" class="font-responsive-large"><font color="white">Cloudwick Github</font></p>
+          <br>
+          <p align="center"><font color="white">Code sharing. If you would like to contribute to existing projects or have new ideas for projects please let us know.</font></p>
+        </div>
+      </a>
+    <% end %>
   </div>
 
   <br>
