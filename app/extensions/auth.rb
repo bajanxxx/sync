@@ -51,7 +51,7 @@ module Sync
         # use this method in the route whenever admin access is required
         def protected!
           user = User.find(session_username) if session_username
-          halt 401, 'You are not authorized to see this page!. This action will be reported.' unless user.administrator?
+          halt 401, 'You are not authorized to see this page!. This action will be reported.' unless user.owner? || user.administrator?
         end
 
         # use this method in the route whenever only admin and loggedin user can access

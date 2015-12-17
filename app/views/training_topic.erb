@@ -1,4 +1,4 @@
-<% if @user.administrator? %>
+<% if @user.owner? || @user.administrator? %>
 <!-- Modal Definitions -->
 <!-- Create a topic -->
 <div class="modal fade" id="CreateSubTopic" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -153,7 +153,7 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2><a href="/training">Training Portal</a> <small> <a href="/training/track/<%= track.id %>"><%= track.code %></a> > <%= topic.code %> > Sub Topics</small>
-      <% if @user.administrator? %>
+      <% if @user.owner? || @user.administrator? %>
         <!-- buttons -->
         <div class="btn-group pull-right">
           <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
@@ -190,7 +190,7 @@
     <% else %>
       <% topic.training_sub_topics.asc(:order).all.entries.each do |sub_topic| %>
         <div class="col-xs-2 spacer">
-          <% if @user.administrator? %>
+          <% if @user.owner? || @user.administrator? %>
             <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>">
               <div id="sub_topic-<%= sub_topic.id %>" class="circle-multiline">
                 <div class="font-responsive">
@@ -217,7 +217,7 @@
   <div class="row-fluid">
     <div class="col-xs-12 spacer">
       <h3>Projects
-        <% if @user.administrator? %>
+        <% if @user.owner? || @user.administrator? %>
           <span class="pull-right">
             <a class="addproject" role="left" href="#AddProject" data-toggle="modal" data-placement="left" data-original-title='Add a new project'>
               <i class="fa fa-plus-square-o fa-lg"></i>
@@ -270,7 +270,7 @@
                         </a>
                         <% end %>
                       <% end %>
-                      <% if @user.administrator? %>
+                      <% if @user.owner? || @user.administrator? %>
                       <a class="editproject" href="#EditProject-<%= project.id %>" data-toggle="modal" data-placement="top" data-original-title='Edit project'>
                         <i class="fa fa-pencil-square-o"></i>  
                       </a>

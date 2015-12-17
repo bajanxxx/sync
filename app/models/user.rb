@@ -27,17 +27,18 @@ class User
   # @example Is the user an admin?
   #   user.administrator?
   #
-  # @example Is the user an artist?
+  # @example Is the user an consultant?
   #   user.consultant?
   #
-  # @example Is the user a producer?
+  # @example Is the user a trainer?
   #   user.trainer?
   #
-  # @example Is the user a subscriber?
+  # @example Is the user a trainee?
   #   user.trainee?
   #
   # @return [ true, false ] If the user is of the expected type.
   delegate \
+    :owner?,
     :administrator?,
     :consultant?,
     :trainer?,

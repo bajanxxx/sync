@@ -140,7 +140,7 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2><a href="/training">Training Portal</a> <small> <a href="/training/track/<%= track.id %>"><%= track.code %></a> > <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>"><%= topic.code %></a> > Sub Topic</small>
-    <% if @user.administrator? %>
+    <% if @user.owner? || @user.administrator? %>
       <div class="btn-group pull-right">
         <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
           Manage <span class="caret"></span>
@@ -197,7 +197,7 @@
         </div>
         <div class="bwell" style="height:100px; width:500px">
           <p align="left">
-            <% if @user.administrator? %>
+            <% if @user.owner? || @user.administrator? %>
               <a class="truncate" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/admin"><font size="+1"><%= sub_topic.name %></font></a>
             <% else %>
               <div class="truncate"><font size="+1"><%= sub_topic.name %></font></div>
@@ -212,7 +212,7 @@
       <!--Assignments-->
       <td rowspan="2" class="col-xs-6">
         <h4>Assignments
-          <% if @user.administrator? %>
+          <% if @user.owner? || @user.administrator? %>
             <span class="pull-right">
               <a id="AddAssignmentBtn" class="addassignment" href="#AddAssignment" data-toggle="modal" data-placement="left" data-original-title='Add assignment'>
                 <i class="fa fa-plus-square-o fa-lg"></i>
@@ -262,7 +262,7 @@
                           </a>
                           <% end %>
                         <% end %>
-                        <% if @user.administrator? %>
+                        <% if @user.owner? || @user.administrator? %>
                           <a class="editassignment" id="EditAssignmentBtn-<%= assignment.id %>" data-toggle="modal" href="#EditAssignment-<%= assignment.id %>" data-placement="top" data-original-title='Edit assignment'>
                             <i class="fa fa-pencil-square-o"></i>
                           </a>
@@ -315,7 +315,7 @@
     <tr>
       <td>
         <h4>References
-          <% if @user.administrator? %>
+          <% if @user.owner? || @user.administrator? %>
           <span class="pull-right">
             <a id="EditReferencesBtn" class="addassignment" href="#EditReferences" data-toggle="modal" data-placement="left" data-original-title='Edit references'>
               <i class="fa fa-pencil-square-o fa-lg"></i>  

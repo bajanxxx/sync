@@ -28,16 +28,16 @@ class Role
   Reference::Role::TYPES.each do |role|
     # Check if the role is one of the predefined types.
     #
-    # @example Is the role an admin?
+    # @example Is the role an administrator?
     #   role.administrator?
     #
-    # @example Is the role an artist?
+    # @example Is the role an consultant?
     #   role.consultant?
     #
-    # @example Is the role a producer?
+    # @example Is the role a trainer?
     #   role.trainer?
     #
-    # @example Is the role a subscriber?
+    # @example Is the role a trainee?
     #   role.trainee?
     #
     # @return [ true, false ] If the role is of the expected type.

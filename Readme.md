@@ -27,7 +27,7 @@ git clone https://[username]@github.com/cloudwicklabs/sync.git
 
 # Install Dependencies:
 
-### Install Ruby 2.0.0 using rbenv
+### Install Ruby 2.1.6 using rbenv
 
 ```
 yum install -y git-core zlib zlib-devel gcc-c++ patch readline readline-devel libyaml-devel \

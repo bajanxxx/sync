@@ -10,7 +10,7 @@ module Sync
       # Render training home page for admin, trainer and trainee
       get '/training' do
         ### ADMIN PORTAL
-        if @user.administrator?
+        if @user.owner? || @user.administrator?
           erb :training_admin_portal, locals: {
               training_tracks: TrainingTrack.all.entries,
               users: Consultant.all.entries,

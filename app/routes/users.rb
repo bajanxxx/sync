@@ -71,7 +71,11 @@ module Sync
       get '/users/roles' do
         status_values = []
         Reference::Role::TYPES.each do |name|
+          next if name == :owner || name == :administrator
           status_values << { text: "#{name}", value: "#{name}" }
+        end
+        if @user.owner?
+          status_values << {text: 'administrator', value: 'administrator'}
         end
         if request.xhr?
           halt 200, status_values.to_json

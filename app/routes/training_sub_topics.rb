@@ -8,7 +8,7 @@ module Sync
         consultant = Consultant.find(@session_username)
         sub_topic = topic.training_sub_topics.find(subtopicid)
 
-        if !@user.administrator? && !user_access_to_subtopic(consultant, track, topic, sub_topic)
+        if !(@user.administrator? || @user.owner?) && !user_access_to_subtopic(consultant, track, topic, sub_topic)
           erb :training_sub_topic_noaccess, locals: {
               track: track,
               topic: topic,

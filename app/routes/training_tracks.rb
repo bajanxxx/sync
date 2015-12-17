@@ -4,7 +4,7 @@ module Sync
       # Render specific training track page
       get '/training/track/:tid' do |tid|
         track = TrainingTrack.find(tid)
-        if @user.administrator?
+        if @user.owner? || @user.administrator?
           file = File.read(File.expand_path("../../assets/data/certifications.json", __FILE__))
           c_hash = JSON.parse(file)
           erb :training_track, locals: {

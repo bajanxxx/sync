@@ -4,7 +4,7 @@ module Sync
       get '/' do
         if session_username # if the user has a login session associated
           if @user.role? # does the user has role associated?
-            if @user.administrator?
+            if @user.owner? || @user.administrator?
               # get fetcher stats
               fetcher_stats = Fetcher.where(:init_time.gt => (Date.today-30))
               fetcher_data = []

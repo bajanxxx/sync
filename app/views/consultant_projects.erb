@@ -36,7 +36,7 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2>Your Projects <small>(we appreciate if you could let us know what is that you are working on)</small>
-      <% if @user.administrator? && details.has_projects? %>
+      <% if @user.owner? || @user.administrator? && details.has_projects? %>
         <!-- <button id="GeneratorPDF" class="btn btn-primary btn-md pull-right" type="button">Generate Document &raquo;</button> -->
         <p class="pull-right">
           <a id="GeneratePDF" class="btn btn-primary btn-md" href="/consultant/<%= consultant.email %>/projects/generate" target="_blank" role="button">Generate PDF &raquo;</a>

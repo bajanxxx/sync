@@ -84,7 +84,7 @@
                       <div class="row">
                         <% current_timesheet.timesheet_details.each_with_index do |detail, index| %>
                           <td class="col-8 text-center">
-                            <% if @user.administrator? %>
+                            <% if @user.owner? || @user.administrator? %>
                               <% if (project.start_date <= weekdates[index] && project.end_date >= weekdates[index]) %>
                                 <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
                               <% else %>

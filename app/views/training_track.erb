@@ -1,4 +1,4 @@
-<% if @user.administrator? %>
+<% if @user.owner? || @user.administrator? %>
 <!-- Modal Definitions -->
 <!-- Create a topic -->
 <div class="modal fade" id="CreateTopic" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -97,7 +97,7 @@
 <div class="container theme-showcase" role="main">
   <div class="page-header">
     <h2><a href="/training">Training Portal</a> <small> <%= track.code %> > Topics</small>
-      <% if @user.administrator? %>
+      <% if @user.owner? || @user.administrator? %>
         <div class="btn-group pull-right">
           <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
             Start Here <span class="caret"></span>
@@ -137,7 +137,7 @@
         <% else %>
           <% preqs.each do |topic| %>
             <div class="col-xs-3 spacer">
-              <% if @user.administrator? %>
+              <% if @user.owner? || @user.administrator? %>
                 <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                   <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#00565A">
                     <div class="font-responsive">
@@ -170,7 +170,7 @@
         <% else %>
           <% core.each do |topic| %>
             <div class="col-xs-3 spacer">
-              <% if @user.administrator? %>
+              <% if @user.owner? || @user.administrator? %>
                 <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                   <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#006788">
                     <div class="font-responsive">
@@ -209,7 +209,7 @@
         <td class="col-xs-10">
           <% adv.each do |topic| %>
             <div class="col-xs-3 spacer">
-              <% if @user.administrator? %>
+              <% if @user.owner? || @user.administrator? %>
                 <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                   <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#005573">
                     <div class="font-responsive">
@@ -248,7 +248,7 @@
         <td class="col-xs-10">
           <% opt.each do |topic| %>
             <div class="col-xs-3 spacer">
-              <% if @user.administrator? %>
+              <% if @user.owner? || @user.administrator? %>
                 <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                   <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#071174">
                     <div class="font-responsive">
@@ -294,7 +294,7 @@
       <% else %>
         <td class="col-xs-10">
           <% track.certifications.each_with_index do |certification, _i| %>
-              <% if @user.administrator? %>
+              <% if @user.owner? || @user.administrator? %>
                   <div class="col-xs-3 spacer">
                     <div id="cert-<%= _i + 1 %>" class="well" style="height:100px; background-color: black;">
                       <p align="center" class="font-responsive-large"><font color="white"><%= certification.split('|').last %></font></p>
@@ -371,7 +371,7 @@ $(document).ready(function(){
   $('.popoverData').popover();
 
   <% if ! track.certifications.nil? %>
-    <% if @user.administrator? %>
+    <% if @user.owner? || @user.administrator? %>
       <% track.certifications.each_with_index do |cert, _i| %>
       document.querySelector('#cert-<%= _i + 1 %>').style.background = randomColor({luminosity: 'dark', hue: 'blue'});
       <% end %>
@@ -388,7 +388,7 @@ $(document).ready(function(){
     <% end %>
   <% end %>
 
-  <% if @user.administrator? %>
+  <% if @user.owner? || @user.administrator? %>
   $('.deletebutton').tooltip();
 
 

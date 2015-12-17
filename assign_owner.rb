@@ -26,7 +26,7 @@ if user.nil?
   exit 1
 end
 
-user.create_role(name: 'administrator')
+user.create_role(name: 'owner')
 user.save!
 
 puts "Successfully assigned administrative roles to #{username}."

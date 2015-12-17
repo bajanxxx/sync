@@ -7,7 +7,7 @@ module Sync
         topic = TrainingTopic.find(topicid)
         consultant = Consultant.find(@session_username)
 
-        if @user.administrator?
+        if @user.owner? || @user.administrator?
           order = if topic.training_sub_topics.count == 0
                     1
                   else

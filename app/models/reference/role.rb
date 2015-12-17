@@ -2,7 +2,7 @@ module Reference
   class Role
     include Mongoid::Document
 
-    TYPES = [ :administrator, :consultant, :trainer, :trainee ]
+    TYPES = [ :owner, :administrator, :consultant, :trainer, :trainee ]
 
     field :name, type: String
     field :actions, type: Hash, default: {}

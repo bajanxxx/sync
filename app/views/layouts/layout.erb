@@ -231,7 +231,7 @@
         <div class="collapse navbar-collapse">
           <% if session_username %>
             <% if @user.role? %>
-              <% if @user.administrator? %>
+              <% if @user.owner? || @user.administrator? %>
                 <ul class="nav navbar-nav">
                   <li><a href="/jobs">Jobs</a></li>
                   <li class="dropdown">
