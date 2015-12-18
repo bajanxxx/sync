@@ -159,9 +159,11 @@ function restart_memcached () {
 if [[ $# -ne 2 ]]; then
   echo "Argument required."
   echo "Usage: `basename $0` start|stop|restart all"
-  echo "  all -> start|stop|restart unicorn, nginx, dj"
+  echo "  all -> start|stop|restart unicorn, nginx, dj, memcached"
   echo "Usage: `basename $0` start|stop|restart web"
-  echo "  web -> start|stop|restart unicorn, nginx"
+  echo "  web -> start|stop|restart unicorn, nginx, memcached"
+  echo "Usage: `basename $0` start|stop|restart unicorn"
+  echo "  web -> start|stop|restart unicorn"
   echo "Usage: `basename $0` start|stop|restart dj"
   echo "  dj -> start|stop|restart dj"
   exit
@@ -181,6 +183,9 @@ case $1 in
         start_nginx
         start_memcached
         ;;
+      'unicorn')
+        start_unicorn
+        ;;
       'dj')
         start_delayedjob
         ;;
@@ -198,6 +203,9 @@ case $1 in
         stop_unicorn
         stop_nginx
         stop_memcached
+        ;;
+      'unicorn')
+        stop_unicorn
         ;;
       'dj')
         stop_delayedjob
@@ -217,6 +225,9 @@ case $1 in
         status_nginx
         status_memcached
         ;;
+      'unicorn')
+        status_unicorn
+        ;;
       'dj')
         status_delayedjob
         ;;
@@ -234,6 +245,9 @@ case $1 in
         restart_unicorn
         restart_nginx
         restart_memcached
+        ;;
+      'unicorn')
+        restart_unicorn
         ;;
       'dj')
         restart_dj
