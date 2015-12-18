@@ -53,7 +53,8 @@ module Sync
             prompt: 'select_account',
             image_aspect_ratio: 'square',
             image_size: 200,
-            provider_ignores_state: true
+            provider_ignores_state: true,
+            skip_jwt: true
         }
       end
     end
