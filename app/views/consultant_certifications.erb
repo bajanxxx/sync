@@ -47,6 +47,9 @@
           </div>
         </form>
         <p id="CreateCertificationRequestLabel" class="text-center"></p>
+        <% if @user.trainee? %>
+        <p>Note: If you are not seeing a full list of certifications its because of your access privileges. Please contact admin for more details.</p>
+        <% end %>
         <hr />
         <div class="row-fluid">
           <div class="span3"></div>
