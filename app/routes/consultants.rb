@@ -16,7 +16,7 @@ module Sync
         protected!
         erb :consultant_info, locals: {
           consultant: Consultant.find(consultant_id),
-          details: Detail.find_by(consultant_id: consultant_id)
+          details: Detail.find_by(consultant_id: consultant_id) || Detail.find_or_create_by(consultant_id: user_email)
         }
       end
 
