@@ -8,7 +8,7 @@ class Detail
   field :trainings, type: Array, default: []
   field :certifications, type: Array, default: []
   field :training_tracks, type: Array, default: []
-  field :current_company, type: String
+  field :current_company, type: String, default: ''
 
   embeds_many :projects, class_name: 'Project'
   accepts_nested_attributes_for :projects
