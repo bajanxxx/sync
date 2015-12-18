@@ -139,6 +139,11 @@ module Sync
         user_access_to_topic(consultant, track, topic)
       end
 
+      def user_access_to_certification(consultant, track)
+        access = user_track_access_breakdown(consultant, track)
+        access[:certs]
+      end
+
       # Builds out training progress for a given consultant in the following format
       # {:DO=>{:progress=>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], :topics=>[:LX, :SCP, :BD101, :HDOPS, :CDOPS, :AUTO, :AWS, :SCR, :BD501, :VCS, :JIRA, :CI], :LX=>{:progress=>0.0}, :SCP=>{:progress=>0.0}, :BD101=>{:progress=>0.0}, :HDOPS=>{:progress=>0.0}, :CDOPS=>{:progress=>0.0}, :AUTO=>{:progress=>0.0}, :AWS=>{:progress=>0.0}, :SCR=>{:progress=>0.0}, :BD501=>{:progress=>0.0}, :VCS=>{:progress=>0.0}, :JIRA=>{:progress=>0.0}, :CI=>{:progress=>0.0}, :overall=>0.0}}
       def build_training_progess(consultant)

@@ -66,7 +66,13 @@
     <h2>Certification Request Portal
       <div class="btn-group pull-right">
         <div class="btn-group pull-right">
+          <% if access %>
           <a id="NewRequest" class="btn btn-primary btn-md" data-toggle="modal" href="#CreateCertificationRequest" role="button">Create New Request &raquo;</a>
+          <% else %>
+          <button id="noaccess-tooltip" type="button" class="btn btn-primary btn-md" data-toggle="tooltip" data-placement="left" data-original-title="Sorry you are not allowed to make certification requests yet. There could be couple of reasons either you are not yet assigned to a training track, (or) you have not unlocked the certification branch of your training.">
+            Create New Request &raquo;
+          </button>
+          <% end %>
         </div>
       </div>
     </h2>
@@ -131,6 +137,7 @@
 
 <script type="text/javascript">
 $(document).ready(function(){
+  $('#noaccess-tooltip').tooltip();
   $('#Certification').select2();
   $("#Flexible").bootstrapSwitch();
   $('#Date').datepicker({

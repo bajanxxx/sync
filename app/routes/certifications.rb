@@ -184,14 +184,39 @@ module Sync
       get '/certifications/:userid' do |userid|
         self_protected!(userid)
 
-        file = File.read(File.expand_path("../../assets/data/certifications.json", __FILE__))
-        c_hash = JSON.parse(file)
+        # only trainees with overall progress > 70% can request a certification
+        # consultants can raise certifications
+        access = false
+        c_hash = []
+
+        if @user.consultant? || @user.trainer? # can raise any type of certification request
+          access = true
+          file = File.read(File.expand_path("../../assets/data/certifications.json", __FILE__))
+          c_hash = JSON.parse(file)
+        elsif @user.trainee? # limited request's to track assigned to the trainee
+         consultant = Consultant.find(userid)
+         user_track = consultant.details.training_tracks
+         # only if the trainee has track assigned and progress is > x% then he/she could raise a
+         # request only related to that track
+         unless user_track.empty?
+           track = TrainingTrack.find_by(code: user_track.first)
+           if user_access_to_certification(consultant, track)
+             access = true
+             track.certifications.each do |_cert|
+               _short = _cert.split('|').first
+               _name = _cert.split('|').last
+               c_hash << { 'short' => _short, 'name' => _name }
+             end
+           end
+         end
+        end
 
         erb :consultant_certifications, locals: {
             c_hash: c_hash,
             consultant: Consultant.find_by(email: userid),
             pending_requests: CertificationRequest.where(consultant_email: userid, status: 'pending'),
-            previous_requests: CertificationRequest.where(consultant_email: userid, :status.ne => 'pending')
+            previous_requests: CertificationRequest.where(consultant_email: userid, :status.ne => 'pending'),
+            access: access
         }
       end
 
