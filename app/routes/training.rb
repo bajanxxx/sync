@@ -12,9 +12,10 @@ module Sync
         ### ADMIN PORTAL
         if @user.owner? || @user.administrator?
           erb :training_admin_portal, locals: {
-              training_tracks: TrainingTrack.all.entries,
-              users: Consultant.all.entries,
-              trainers: Trainer.all
+              training_tracks: TrainingTrack.all,
+              users: Consultant.all,
+              trainers: Trainer.all,
+              slack_integrations: TrainingSlackIntegration.all
           }
         ### TRAINER PORTAL
         elsif @user.trainer?
@@ -106,6 +107,27 @@ module Sync
             topic: TrainingTopic.find_by(code: topic_code).id,
             domain: tdomain,
             team: tteam
+        )
+
+        { success: success, msg: message }.to_json
+      end
+
+      post '/training/slack_integrations' do
+        team = params[:team]
+        domain = params[:domain]
+
+        success = true
+        message = "Successfully created slack integration for team: #{team} (domain: #{domain})"
+
+        if team.empty? || domain.empty?
+          success = false
+          message = 'Params cannot be empty'
+          return { success: success, msg: message }.to_json
+        end
+
+        TrainingSlackIntegration.create(
+          team: team,
+          domain: domain
         )
 
         { success: success, msg: message }.to_json

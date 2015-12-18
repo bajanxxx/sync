@@ -85,6 +85,43 @@
   </div>
 </div>
 
+<!-- Create slack integration for a team -->
+<div class="modal fade" id="CreateSlackIntegration" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create Slack Integration</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <div class="form-group">
+            <label for="SlackTeamId">Team:</label>
+            <input type="text" class="form-control" id="SlackTeamId" name="SlackTeamId" placeholder="Team for which slack integration needs to be created" value="" required="required" />
+          </div>
+          <div class="form-group">
+            <label for="SlackDomain">Domain:</label>
+            <select class="form-control" id="SlackDomain" name="SlackDomain" required="required">
+              <option selected value='US'>US</option>
+              <option value='EU'>EU</option>
+              <option value='IN'>IN</option>
+            </select>
+          </div>
+        </form>
+        <p id="CreateSlackIntegrationFormLabel" class="text-center"></p>
+        <hr />
+        <div class="row-fluid">
+          <div class="span3"></div>
+          <div class="span6 text-center">
+            <button id="SubmitSlackIntegrationBtn" name="SubmitBtn" class="btn btn-large btn-primary">Create Slack Integration</button>
+          </div>
+          <div class="span3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Actual Container -->
 <div class="container theme-showcase" role="main">
   <div class="page-header">
@@ -102,6 +139,11 @@
           <li>
             <a id="AssociateTrainerBtn" data-toggle="modal" href="#AssociateTrainer">
               Associate Trainer to Topic
+            </a>
+          </li>
+          <li>
+            <a id="CreateSlackIntegrationBtn" data-toggle="modal" href="#CreateSlackIntegration">
+              Create Slack Integration for a Team
             </a>
           </li>
         </ul>
@@ -164,19 +206,18 @@
   <div class="row-fluid">
     <h3>Slack Integration Overview</h3>
     <hr>
-    <% teams = users.reject { |u| u.team.nil? }.map { |u| [u.domain, u.team] }.uniq %>
-    <% if teams.empty? %>
-        No users have yet been associated to teams.
+    <% if slack_integrations.empty? %>
+        No slack integrations have been created for any of the team. You could create some from 'Start Here' > 'Create Slack Integration'.
     <% else %>
         <ul class="list-group">
-          <% teams.each do |domain_team| %>
+          <% slack_integrations.each do |integration| %>
               <li class="list-group-item">
                 <% training_tracks.each do |track| %>
-              <span class="pull-right">
-                <span class="badge progress-bar-info"><a href="/training/track/<%= track.id %>/integrations/slack/<%= domain_team.first %>/<%= domain_team.last %>" style="color:white;">Track <%= track.code %></a></span>
-              </span>
+                  <span class="pull-right">
+                    <span class="badge progress-bar-info"><a href="/training/track/<%= track.id %>/integrations/slack/<%= integration.domain %>/<%= integration.team %>" style="color:white;">Track <%= track.code %></a></span>
+                  </span>
                 <% end %>
-                <strong>Team <%= domain_team.last %></strong>  (Domain: <%= domain_team.first %>)
+                <strong>Team <%= integration.team %></strong>  (Domain: <%= integration.domain %>)
               </li>
           <% end %>
         </ul>
@@ -282,6 +323,41 @@ $('#SubmitAssociateTrainerBtn').click(function() {
       _this.attr('disabled', false); // re-enable submit
       _this.text('Re-submit');
       $('#AssociateTrainerFormLabel').addClass('text-danger').html('Something went wrong associating trainer topic!!!');
+    }
+  });
+});
+
+$('#SubmitSlackIntegrationBtn').click(function() {
+  _this = $(this);
+  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+  _this.attr('disabled', true); // no double submit
+
+  var team = $("#SlackTeamId").val();
+  var domain = $("#SlackDomain").val();
+
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/training/slack_integrations",
+    data: { 'team': team, 'domain': domain },
+    success: function(data) {
+      if(!data.success) {
+        console.log("Error: " + data.msg);
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#CreateSlackIntegrationFormLabel').addClass('text-danger').html(data.msg);
+      } else {
+        console.log("Success: " + data.msg);
+        _this.html("Submitted");
+        $('#CreateSlackIntegrationFormLabel').addClass('text-info').html(data.msg);
+        $('#CreateSlackIntegration').modal('hide');
+        location.reload();
+      }
+    },
+    error: function(data) {
+      _this.attr('disabled', false); // re-enable submit
+      _this.text('Re-submit');
+      $('#CreateSlackIntegrationFormLabel').addClass('text-danger').html('Something went wrong creating new slack integration!!!');
     }
   });
 });
