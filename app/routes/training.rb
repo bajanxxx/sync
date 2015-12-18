@@ -54,10 +54,10 @@ module Sync
           else
             # progress
             # calculate progress of this user
-            self_progress = build_training_progess(consultant)
+            self_progress = build_training_progress(consultant)
             team_progress = Hash.new { |hash, key| hash[key] = {} }
             Consultant.where(team: consultant.team).ne(email: @session_username).each do |member|
-              team_progress[member.email.to_sym] = build_training_progess(member)
+              team_progress[member.email.to_sym] = build_training_progress(member)
             end
 
             erb :trainee_portal, locals: {
@@ -151,7 +151,7 @@ module Sync
         # Build overall team progress
         team_progress = Hash.new { |hash, key| hash[key] = {} }
         Consultant.where(team: teamid).each do |member|
-          team_progress[member.email.to_sym] = build_training_progess(member)
+          team_progress[member.email.to_sym] = build_training_progress(member)
         end
 
         erb :trainer_topic_overview, locals: {

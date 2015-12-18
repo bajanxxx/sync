@@ -146,8 +146,13 @@ module Sync
 
       # Builds out training progress for a given consultant in the following format
       # {:DO=>{:progress=>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], :topics=>[:LX, :SCP, :BD101, :HDOPS, :CDOPS, :AUTO, :AWS, :SCR, :BD501, :VCS, :JIRA, :CI], :LX=>{:progress=>0.0}, :SCP=>{:progress=>0.0}, :BD101=>{:progress=>0.0}, :HDOPS=>{:progress=>0.0}, :CDOPS=>{:progress=>0.0}, :AUTO=>{:progress=>0.0}, :AWS=>{:progress=>0.0}, :SCR=>{:progress=>0.0}, :BD501=>{:progress=>0.0}, :VCS=>{:progress=>0.0}, :JIRA=>{:progress=>0.0}, :CI=>{:progress=>0.0}, :overall=>0.0}}
-      def build_training_progess(consultant)
+      def build_training_progress(consultant)
         progress = Hash.new { |hash, key| hash[key] = {} }
+
+        # To get around not logged in users
+        if consultant.details.nil?
+          Detail.find_or_create_by(consultant_id: consultant.id)
+        end
 
         unless consultant.details.training_tracks.empty?
           consultant.details.training_tracks.each do |_tcode|
