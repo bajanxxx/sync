@@ -182,7 +182,7 @@ module Sync
           attachment_count.times do |index|
             attachment_tmp_file = params["attachment-#{index+1}"][:tempfile]
             attachment_filename = params["attachment-#{index+1}"][:filename]
-            attachment_id = upload_attachment(attachment_tmp_file, attachment_filename)
+            attachment_id = upload_file(attachment_tmp_file, attachment_filename)
             email.attachments.create(
                 _id: attachment_id,
                 filename: attachment_filename,
@@ -230,7 +230,7 @@ module Sync
           attachment_count.times do |index|
             attachment_tmp_file = params["attachment-#{index+1}"][:tempfile]
             attachment_filename = params["attachment-#{index+1}"][:filename]
-            attachment_id = upload_attachment(attachment_tmp_file, attachment_filename)
+            attachment_id = upload_file(attachment_tmp_file, attachment_filename)
             email.attachments.create(
                 _id: attachment_id,
                 filename: attachment_filename,
