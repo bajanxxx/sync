@@ -8,7 +8,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 echo "Working DIR: ${DIR}"
 LOG="/var/log/job_portal.log"
-BIND_IP="0.0.0.0"
+BIND_IP="127.0.0.1"
 BIND_PORT="9292"
 UNICORN_PROCESS="unicorn"
 DELAYEDJOB_PROCESS="delayed_job"
@@ -19,7 +19,8 @@ ENVIRONMENT="production"
 
 
 function start_unicorn () {
-  if ps aux | grep -v grep | grep -v $0 | grep ${UNICORN_PROCESS} > /dev/null; then
+  #if ps aux | grep -v grep | grep -v $0 | grep ${UNICORN_PROCESS} > /dev/null; then
+  if [[ -f tmp/pids/unicorn.pid ]]; then
     echo "Service ${UNICORN_PROCESS} is already running... skipping."
   else
     echo "Starting ${UNICORN_PROCESS} in ${ENVIRONMENT} environment..."
@@ -37,7 +38,8 @@ function status_unicorn () {
 }
 
 function stop_unicorn () {
-  if ps aux | grep -v grep | grep -v $0 | grep ${UNICORN_PROCESS} > /dev/null; then
+#  if ps aux | grep -v grep | grep -v $0 | grep ${UNICORN_PROCESS} > /dev/null; then
+  if [[ -f tmp/pids/unicorn.pid ]]; then
     echo "Stopping ${UNICORN_PROCESS} ..."
     cd $DIR && cat tmp/pids/unicorn.pid | xargs kill -QUIT
     echo "Stopping ${UNICORN_PROCESS} ... [DONE]"
