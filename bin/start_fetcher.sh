@@ -10,7 +10,7 @@ LOG="${DIR}/log/fetcher.log"
 ENVIRONMENT="production"
 PROJECT_NAME="cloudwick-sync"
 VERSION="1.0"
-ASSEMBLY_JAR="${DIR}/target/scala-2.10/${PROJECT_NAME}-assembly-${VERSION}.jar"
+ASSEMBLY_JAR="${DIR}/target/scala-2.11/${PROJECT_NAME}-assembly-${VERSION}.jar"
 
 function usage () {
   echo "Usage: `basename $0` [dice|indeed] [hourly|daily|deep] [hadoop|spark|cassandra]"
