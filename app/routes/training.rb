@@ -46,6 +46,10 @@ module Sync
           else
             erb :trainer_portal_no_access
           end
+        elsif @user.consultant?
+          erb :training_consultant_portal, locals: {
+            training_tracks: TrainingTrack.all.entries
+          }
         else
           ### TRAINEE PORTAL
           consultant = Consultant.find(@session_username)

@@ -1,0 +1,46 @@
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>
+      Training Portal
+    </h2>
+  </div>
+
+  <!-- Tracks -->
+  <div class="row-fluid">
+    <h3>Tracks</h3>
+    <hr>
+
+    <% training_tracks.each do |track| %>
+        <a class="button hvr-float" style="display:block" href="/training/track/<%= track.id %>">
+          <div class="col-xs-3 spacer">
+            <div id="track-<%= track.id %>" class="well" style="height:150px; background-color: black;">
+              <p align="center" class="font-responsive-large"><font color="white"><%= track.name %></font></p>
+              <p align="center" class="font-responsive-small"><font color="white"><%= track.code %></font></p>
+            </div>
+          </div>
+        </a>
+    <% end %>
+  </div>
+</div>
+
+<link href="/css/hover-min.css" rel="stylesheet" media="all">
+<style type="text/css">
+  .spacer {
+    margin-top: 20px;
+  }
+</style>
+
+
+<script src="<%= asset_path 'jquery.fittext.js' %>"></script>
+<script src="<%= asset_path 'randomColor.min.js' %>"></script>
+<script type="text/javascript">
+  $(document).ready(function () {
+    $(".font-responsive-large").fitText(0.7);
+    $(".font-responsive-small").fitText();
+
+    <% training_tracks.each do |track| %>
+    document.querySelector('#track-<%= track.id %>').style.background = randomColor({hue: 'blue', luminosity: 'dark'});
+    <% end %>
+  });
+</script>
