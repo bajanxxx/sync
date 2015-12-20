@@ -40,6 +40,14 @@
     "url": "http://www.cloudera.com/content/cloudera/en/training/certification/ccp-ds.html"
   },
   {
+    "name": "Cloudera Certified Professional: Data Engineer",
+    "short": "CCPDE",
+    "code": "DE575",
+    "price": "400.00",
+    "authority": "Cloudera",
+    "url": "http://www.cloudera.com/content/www/en-us/training/certification/ccp-data-engineer.html"
+  },
+  {
     "name": "HortonWorks HDP Certified Developer",
     "short": "HDPCD",
     "code": "HDPCD",
