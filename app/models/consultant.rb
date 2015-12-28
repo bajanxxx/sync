@@ -8,8 +8,6 @@ class Consultant
   field :location, type: String # current location of the consultant
   field :_id, type: String, default: -> { email }
 
-  validates :first_name, :last_name, presence: true
-
   has_many :applications, class_name: 'Application'
   has_many :resumes, class_name: 'Resume'
   has_one :details, class_name: 'Detail'
