@@ -250,7 +250,7 @@ case $1 in
         restart_unicorn
         ;;
       'dj')
-        restart_dj
+        restart_delayedjob
         ;;
     esac
     ;;
