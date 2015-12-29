@@ -7,7 +7,7 @@ class EmailAirTicketRequest < Struct.new(:settings, :admin, :request)
       <table width="100%" border="0" cellspacing="0" cellpading="0">
         <tr>
           <td align="left" width="20%" valign="top"><strong>Requested booking date:</strong></td>
-          <td align="left" width="20%" valign="top">#{request.booking_date}</td>
+          <td align="left" width="20%" valign="top">#{request.travel_date}</td>
         <tr>
         <tr>
           <td align="left" width="20%" valign="top"><strong>Certification name:</strong></td>
