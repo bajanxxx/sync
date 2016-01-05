@@ -223,6 +223,7 @@
     <script src="<%= asset_path 'bootstrap-switch.min.js' %>"></script>
     <script src="<%= asset_path 'bootstrap.file-input.js' %>"></script>
     <script src="<%= asset_path 'bootstrap-datepicker.js' %>"></script>
+		<script src="<%= asset_path 'moment.min.js' %>"></script>
 	</head>
 	<body>
     <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -276,7 +277,11 @@
                     </ul>
                   </li>
                   <li class="dropdown">
-                    <a class="dropdown-toggle disabled">Time <span class="caret"></span></a>
+										<% if @pending_requests[:timesheet_requests] != 0 %>
+                    <a class="dropdown-toggle disabled">Time <span class="badge"><%= @pending_requests[:timesheet_requests] %></span><span class="caret"></span></a>
+										<% else %>
+										<a class="dropdown-toggle disabled">Time <span class="caret"></span></a>
+										<% end %>
                     <ul class="dropdown-menu" role="menu">
                       <li><a href="/timesheets/pending"><i class="fa fa-pause"></i> Pending</a></li>
                       <li><a href="/timesheets/approved"><i class="fa fa-thumbs-up"></i> Approved</a></li>

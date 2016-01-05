@@ -17,7 +17,7 @@ Central portal featuring:
 
 # Get it
 
-> NOTE: Replace **[username]** in the following command with your github
+> NOTE: Replace **[username]** in the following command with your Github
 > username as this is a private repository you should have access to read it.
 
 ```

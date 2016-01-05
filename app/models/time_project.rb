@@ -2,8 +2,13 @@
 class TimeProject
   include Mongoid::Document
 
+  TYPES = [ :direct_client, :staff_augmentation ]
+  INVOICE_TYPES = [ :task_hourly_rate, :person_hourly_rate, :project_hourly_rate ]
+  BUDGET_TYPES = [ :total_project_hours, :total_project_fees, :hours_per_task, :hours_per_person ]
+
   field :name, type: String
   field :project_code, type: String
+  field :type, type: String
   field :start_date, type: Date
   field :end_date, type: Date
   field :notes, type: String
@@ -15,11 +20,13 @@ class TimeProject
   field :budget_project_minutes, type: Integer
   field :budget_project_fees, type: String, default: '0.00'
   field :team, type: Array, default: []
+  field :vendor_id, type: String
+  field :client_id, type: String
   field :_id, type: String, default: -> { project_code }
 
-  has_one :time_vendor, class_name: 'TimeVendor'
-  has_one :time_client, class_name: 'TimeClient'
   has_many :time_project_tasks, class_name: 'TimeProjectTask'
+  has_many :time_project_team_members, class_name: 'TimeProjectTeamMember'
+  has_many :time_project_attachments, class_name: 'TimeProjectAttachment'
   # has_many :time_project_assignments, class_name: 'TimeProjectAssignment'
   has_many :timesheets, class_name: 'Timesheet'
 end

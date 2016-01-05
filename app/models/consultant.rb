@@ -2,6 +2,8 @@ class Consultant
   include Mongoid::Document
 
   field :email, type: String
+  field :first_name, type: String
+  field :last_name, type: String
   field :domain, type: String # us, eu, in
   field :team, type: Integer
   field :phone, type: String

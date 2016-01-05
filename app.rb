@@ -7,9 +7,6 @@ Bundler.require
 $: << File.expand_path('../', __FILE__)
 $: << File.expand_path('../lib', __FILE__)
 
-require 'dotenv'
-Dotenv.load
-
 # Require base
 require 'sinatra/base'
 
@@ -27,21 +24,20 @@ module Sync
       # Load configuration file
       Settings.load!('config/config.yml')
 
-      enable :logging, :dump_errors
+      enable :logging
+      enable :dump_errors
 
       disable :method_override
       disable :static
 
-      set :protection, except: :session_hijacking
+      set :protection, :except => [ :session_hijacking ]
 
       # set :erb, escape_html: true
 
       set :sessions,
           httponly: true,
           secure: production?,
-          secure: false,
-          expire_after: 5.years,
-          secret: 'super secret'
+          expire_after: 5.years
 
       set :session_secret, 'super secret'
 
@@ -87,6 +83,7 @@ module Sync
 
     use Sync::Routes::Index
     use Sync::Routes::Users
+    use Sync::Routes::Common
     use Sync::Routes::Consultants
     use Sync::Routes::ConsultantProjects
     use Sync::Routes::Jobs
@@ -97,7 +94,11 @@ module Sync
     use Sync::Routes::AirTickets
     use Sync::Routes::Certifications
     use Sync::Routes::CloudServers
-    use Sync::Routes::TimeSheets
+    use Sync::Routes::Timesheets
+    use Sync::Routes::TimesheetProjects
+    use Sync::Routes::TimesheetVendors
+    use Sync::Routes::TimesheetClients
+    use Sync::Routes::TimesheetReports
     use Sync::Routes::Training
     use Sync::Routes::TrainingTracks
     use Sync::Routes::TrainingTopics

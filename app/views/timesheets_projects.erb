@@ -45,6 +45,14 @@
               <input type="text" class="form-control" id="ProjectCode" name="ProjectCode" placeholder="Unique code for the project to identify it" value="" required="required" />
               <span class="help-block"></span>
           </div>
+          <div class="form-group">
+            <label for="ProjectType">Project Type: </label>
+            <select class="form-control" id="ProjectType" name="ProjectType">
+              <% TimeProject::TYPES.each do |project_type| %>
+                <option value="<%= project_type %>"><%= project_type.to_s.upcase %></option>
+              <% end %>
+            </select>
+          </div>
           <div class="form-group date">
             <label for="StartDate">Date range: </label>
             <div class="input-daterange input-group" id="datepicker">
@@ -74,15 +82,26 @@
           </div>
           <div id="BillableOptions" class="hide">
             <div class="form-group">
-              <label for="BudgetType">This project is budget by:</label>
-              <select class="form-control" id="BudgetType" name="BudgetType">
-                <option value="">Total project hours</option>
-                <option value="">Total project fees</option>
-                <option value="">Hours per person</option>
-                <option value="">Hours per task</option>
+              <label for="InvoiceMethod">This project is billable, and we invoice by:</label>
+              <select class="form-control" id="InvoiceMethod" name="InvoiceMethod">
+                <% TimeProject::INVOICE_TYPES.each do |invoice_type| %>
+                  <option value="<%= invoice_type %>"><%= invoice_type.to_s.upcase %></option>
+                <% end %>
               </select>
               <span class="help-block"></span>
             </div>
+          </div>
+          <div id="PersonHourlyRateOptions" class="hide">
+            <!--
+            <% consultants.each do |consultant| %>
+              <div id="<%= consultant.email.split('@').first.gsub('.', '') %>" class="form-group hide">
+                <label for="<%= consultant.email.split('@').first.gsub('.', '')  %>Price"><%= consultant.first_name %> <%= consultant.last_name %> Price:</label>
+                <input type="text" class="form-control" id="<%= consultant.email.split('@').first.gsub('.', '') %>Price" name="<%= consultant.email.split('@').first.gsub('.', '')  %>Price" placeholder="Price for this consultant" value="00.00" required="required" />
+                <span class="help-block"></span>
+              </div>
+            <% end %>
+            -->
+            <p id="PersonHourlyRateOptionsLabel"></p>
           </div>
         </form>
         <p id="CreateProjectFormLabel" class="text-center"></p>
@@ -94,104 +113,6 @@
     </div>
   </div>
 </div>
-<% projects.each do |project| %>
-<div class="modal fade" id="EditProjectModal-<%= project.id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title" id="myModalLabel">Update Project</h4>
-      </div>
-      <div class="modal-body">
-        <form role="form" id="EditProjectForm-<%= project.id %>">
-          <div class="form-group">
-            <label for="ClientName-<%= project.id %>">Client Name:</label>
-            <select name="ClientName-<%= project.id %>" id="ClientName-<%= project.id %>" class="form-control" disabled>
-              <% clients.each do |client| %>
-                <% if client.id == project.time_client.id %>
-                  <option selected="selected" value="<%= client.id %>"><%= client.name %></option>
-                <% else %>
-                <option value="<%= client.id %>"><%= client.name %></option>
-                <% end %>
-              <% end %>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="VendorName-<%= project.id %>">Vendor Name:</label>
-            <select name="VendorName-<%= project.id %>" id="VendorName-<%= project.id %>" class="form-control" disabled>
-              <% vendors.each do |vendor| %>
-                <% if vendor.id == project.time_vendor.id %>
-                <option selected="selected" value="<%= vendor.id %>"><%= vendor.name %></option>
-                <% else %>
-                <option value="<%= vendor.id %>"><%= vendor.name %></option>
-                <% end %>
-              <% end %>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="ProjectName-<%= project.id %>">Name:</label>
-              <input type="text" class="form-control" id="ProjectName-<%= project.id %>" name="ProjectName-<%= project.id %>" placeholder="Name of the project" value="<%= project.name %>" required="required" />
-              <span class="help-block"></span>
-          </div>
-          <div class="form-group">
-            <label for="ProjectCode-<%= project.id %>">Project Code:</label>
-              <input type="text" class="form-control" id="ProjectCode-<%= project.id %>" name="ProjectCode-<%= project.id %>" placeholder="Unique code for the project to identify it" value="<%= project.project_code %>" required="required" disabled/>
-              <span class="help-block"></span>
-          </div>
-          <div class="form-group date">
-            <label for="StartDate-<%= project.id %>">Date range: </label>
-            <div class="input-group" id="datepicker-<%= project.id %>">
-              <input type="text" class="input-sm form-control" name="StartDate-<%= project.id %>" id="StartDate-<%= project.id %>" val="<%= project.start_date %>"/>
-              <span class="input-group-addon">to</span>
-              <input type="text" class="input-sm form-control" name="EndDate-<%= project.id %>" id="EndDate-<%= project.id %>" val="<%= project.end_date %>"/>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="control-label" for="Notes-<%= project.id %>">Notes</label>
-            <textarea rows="5" class="form-control" id="Notes-<%= project.id %>" name="Notes-<%= project.id %>" placeholder="Add an optional note"><%= project.notes %></textarea>
-            <span class="help-block"></span>
-          </div>
-          <div class="form-group">
-            <label for="Team-<%= project.id %>">Team:</label>
-            <select class="form-control" id="Team-<%= project.id %>" name="Team-<%= project.id %>[]" multiple="multiple">
-              <% consultants.each do |consultant| %>
-                <% if project.team.include?(consultant.email) %>
-                <option selected="selected" value="<%= consultant.email %>"><%= consultant.first_name %> <%= consultant.last_name %></option>
-                <% else %>
-                <option value="<%= consultant.email %>"><%= consultant.first_name %> <%= consultant.last_name %></option>
-                <% end %>
-              <% end %>
-            </select>
-            <span class="help-block"></span>
-          </div>
-          <div class="form-group">
-            <label class="control-label" for="Billable-<%= project.id %>">Billable? </label>
-            <input type="checkbox" class="form-control" id="Billable-<%= project.id %>" name="Billable-<%= project.id %>" data-on-text="Yes" data-size="mini" />
-            <span class="help-block"></span>
-          </div>
-          <div id="BillableOptions-<%= project.id %>" class="hide">
-            <div class="form-group">
-              <label for="BudgetType-<%= project.id %>">This project is budget by:</label>
-              <select class="form-control" id="BudgetType-<%= project.id %>" name="BudgetType-<%= project.id %>">
-                <option value="">Total project hours</option>
-                <option value="">Total project fees</option>
-                <option value="">Hours per person</option>
-                <option value="">Hours per task</option>
-              </select>
-              <span class="help-block"></span>
-            </div>
-          </div>
-        </form>
-        <p id="EditProjectFormLabel-<%= project.id %>" class="text-center"></p>
-        <hr />
-        <div class="row-fluid">
-          <button id="ProjectSubmitBtn-<%= project.id %>" name="ProjectSubmitBtn-<%= project.id %>" class="btn btn-large btn-primary center-block">Update Project</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<% end %>
 
 <div class="container theme-showcase" role="main">
   <!-- page header -->
@@ -215,7 +136,7 @@
       <% else %>
         <% projects.each do |project| %>
           <li class="list-group-item">
-            <a href="#EditProjectModal-<%= project.id %>" data-toggle="modal" class="tooltipLink" data-placement="top" data-original-title='Update project details'>
+            <a href="/timesheets/projects/<%= project.id %>">
               <%= project.name %> (<%= project.project_code %>)
             </a>
           </li>
@@ -226,41 +147,70 @@
 </div>
 
 <script type="text/javascript">
-$('.input-daterange').datepicker({});
-<% projects.each do |project| %>
-$('#StartDate-<%= project.id %>').datepicker("update","<%= project.start_date.strftime('%m/%d/%Y') %>");
-$('#EndDate-<%= project.id %>').datepicker("update","<%= project.end_date.strftime('%m/%d/%Y') %>");
-<% end %>
-
-$('#Team').select2({
-  placeholder: "Start typing the name"
-});
-<% projects.each do |project| %>
-$('#Team-<%= project.id %>').select2({});
-<% end %>
-
-$("#Billable").bootstrapSwitch();
-$("#Billable").on('switchChange.bootstrapSwitch', function(event, state) {
-  if (state) {
-    console.log("checked")
-    $('#BillableOptions').removeClass('hide')
-  } else {
-    console.log("not checked")
-    $('#BillableOptions').addClass('hide')
+  function parseEmail(email) {
+    return email.split('@')[0].replace('.', '');
   }
-});
-<% projects.each do |project| %>
-$("#Billable-<%= project.id %>").bootstrapSwitch();
-$("#Billable-<%= project.id %>").on('switchChange.bootstrapSwitch', function(event, state) {
-  if (state) {
-    console.log("checked")
-    $('#BillableOptions-<%= project.id %>').removeClass('hide')
-  } else {
-    console.log("not checked")
-    $('#BillableOptions-<%= project.id %>').addClass('hide')
+
+  function parseEmailToId(email) {
+    return email.split('@')[0].replace('.', '') + "Price";
   }
-});
-<% end %>
+
+  // Adds a div for adding team member's price
+  function addMember(e) {
+    $("#PersonHourlyRateOptions").append(
+      '<div id="' + parseEmail(e.val) + '" class="form-group>' +
+        '<label for="' + parseEmailToId(e.val) + '">' + e.object.text + ' Price: </label>' +
+        '<input type="text" class="form-control" id="' + parseEmailToId(e.val) + '" name="' + parseEmailToId(e.val) + '" placeholder="Price for this consultant" value="00.00" />' +
+      '</div>'
+    )
+  }
+
+  // Removes a div based on team members selection for entering price
+  function removeMember(e) {
+    $("#" + parseEmail(e.val)).remove();
+  }
+
+  function checkTeamMembers() {
+    var teamMembers = $("#Team").find("option:selected").length;
+    console.log(teamMembers);
+    if (teamMembers == 0) {
+      $('#PersonHourlyRateOptionsLabel').addClass('text-danger').html("select at least one member to be part of this project.");
+    } else {
+      $('#PersonHourlyRateOptionsLabel').html('');
+    }
+  }
+
+  $('.input-daterange').datepicker({});
+
+  $('#Team')
+    .select2({ placeholder: "Start typing the name" })
+    .on("select2-selecting", function(e) {
+      console.log("select: " + e.val + " choice=" + e.object.text);
+      addMember(e);
+    })
+    .on("select2-removed", function(e) {
+      console.log("un-select: " + e.val + " choice=" + e.choice.text);
+      removeMember(e);
+    })
+    ;
+
+  $("#Billable")
+    .bootstrapSwitch()
+    .on('switchChange.bootstrapSwitch', function(event, state) {
+      if (state) {
+        $('#BillableOptions').removeClass('hide')
+      } else {
+        $('#BillableOptions').addClass('hide')
+      }
+    });
+  $("#BillableOptions").change(function() {
+    var billableOption = $("#BillableOptions").find("option:selected").text();
+    if (billableOption == "PERSON_HOURLY_RATE") {
+      $("#PersonHourlyRateOptions").removeClass('hide');
+    } else {
+      $("#PersonHourlyRateOptions").addClass('hide');
+    }
+  });
 
 $('#ProjectSubmitBtn').click(function() {
   _this = $(this);
@@ -292,37 +242,4 @@ $('#ProjectSubmitBtn').click(function() {
     }
   });
 });
-
-<% projects.each do |project| %>
-$('#ProjectSubmitBtn-<%= project.id %>').click(function() {
-  _this = $(this);
-  _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
-  _this.attr('disabled', true); // no double submit
-  $.ajax({
-    type: "POST",
-    dataType: "json",
-    url: "/timesheets/project/update/<%= project.id %>",
-    data: $('#EditProjectForm-<%= project.id %>').serialize(),
-    success: function(data) {
-      if(!data.success) {
-        console.log("Error: " + data.msg);
-        _this.attr('disabled', false); // re-enable submit
-        _this.html('Re-submit');
-        $('#EditProjectFormLabel-<%= project.id %>').addClass('text-danger').html(data.msg);
-      } else {
-        console.log("Sucess: " + data.msg)
-        _this.html("Submitted");
-        $('#EditProjectFormLabel-<%= project.id %>').addClass('text-info').html(data.msg);
-        $('#EditProjectModal').modal('hide');
-        location.reload();
-      }
-    },
-    error: function(data) {
-      _this.attr('disabled', false); // re-enable submit
-      _this.html('Re-submit');
-      $('#EditProjectFormLabel-<%= project.id %>').addClass('text-danger').html('Something went wrong processing request!!!');
-    }
-  });
-});
-<% end %>
 </script>

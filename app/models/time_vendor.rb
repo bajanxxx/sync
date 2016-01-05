@@ -7,5 +7,4 @@ class TimeVendor
   field :preferred_currency, type: String, default: 'USD'
 
   has_many :time_contacts, class_name: 'TimeContact'
-  belongs_to :time_project, class_name: 'TimeProject'
 end

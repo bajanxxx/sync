@@ -9,6 +9,8 @@ class Timesheet
   field :status, type: String, default: 'NOT SUBMITTED' # SAVED, SUBMITTED, APPROVED, REJECTED
   field :notes, type: String
   field :created_at, type: DateTime, default: DateTime.now
+  field :submitted_at, type: DateTime
+  field :saved_at, type: DateTime
   field :approved_by, type: String
   field :approved_at, type: DateTime
   field :disapproved_by, type: String

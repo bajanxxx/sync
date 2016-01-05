@@ -12,6 +12,19 @@ module Sync
         erb :consultants, locals: { consultants: Consultant.asc(:first_name) }
       end
 
+      get '/consultants/all' do
+        status_values = []
+        Consultant.each do |c|
+          status_values << { text: "#{c.id}", value: "#{c.first_name} #{c.last_name}" }
+        end
+
+        if request.xhr?
+          halt 200, status_values.to_json
+        else
+          status_values.to_json
+        end
+      end
+
       get '/consultant/:id/info' do |consultant_id|
         protected!
         erb :consultant_info, locals: {

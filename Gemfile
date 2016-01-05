@@ -12,7 +12,6 @@ gem 'erubis'
 gem 'i18n'
 gem 'rake'
 gem 'json'
-gem 'dotenv'
 gem 'builder'
 
 # DB
@@ -55,3 +54,4 @@ gem 'dalli'
 gem 'memcachier'
 gem 'daemons'
 # gem 'celluloid-io' # for slack-real-time client concurrency
+gem 'rerun'

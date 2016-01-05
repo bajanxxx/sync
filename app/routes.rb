@@ -6,6 +6,8 @@ module Sync
 
     autoload :Index, 'app/routes/index'
 
+    autoload :Common, 'app/routes/common'
+
     autoload :Users, 'app/routes/users'
     autoload :Consultants, 'app/routes/consultants'
     autoload :ConsultantProjects, 'app/routes/consultant_projects'
@@ -21,7 +23,11 @@ module Sync
     autoload :Certifications, 'app/routes/certifications'
     autoload :CloudServers, 'app/routes/cloud_servers'
 
-    autoload :TimeSheets, 'app/routes/time_sheets'
+    autoload :Timesheets, 'app/routes/timesheets'
+    autoload :TimesheetVendors, 'app/routes/timesheet_vendors'
+    autoload :TimesheetClients, 'app/routes/timesheet_clients'
+    autoload :TimesheetProjects, 'app/routes/timesheet_projects'
+    autoload :TimesheetReports, 'app/routes/timesheet_reports'
 
     autoload :Training, 'app/routes/training'
     autoload :TrainingTracks, 'app/routes/training_tracks'

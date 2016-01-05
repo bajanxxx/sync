@@ -4,6 +4,7 @@ class TimesheetDetail
 
   field :workday, type: Date
   field :hours, type: Float, default: 0.00
+  field :logged_at, type: DateTime
 
   belongs_to :timesheet, class_name: 'Timesheet'
 end

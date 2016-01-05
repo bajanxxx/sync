@@ -48,7 +48,6 @@ GEM
       mongoid-compatibility
     domain_name (0.5.25)
       unf (>= 0.0.5, < 1.0.0)
-    dotenv (2.0.2)
     eco (1.0.0)
       coffee-script
       eco-source
@@ -66,6 +65,7 @@ GEM
     faye-websocket (0.10.2)
       eventmachine (>= 0.12.0)
       websocket-driver (>= 0.5.1)
+    ffi (1.9.10)
     fission (0.5.0)
       CFPropertyList (~> 2.2)
     fog (1.36.0)
@@ -185,6 +185,9 @@ GEM
     json (1.8.3)
     jwt (1.5.2)
     kgio (2.10.0)
+    listen (3.0.5)
+      rb-fsevent (>= 0.9.3)
+      rb-inotify (>= 0.9)
     macaddr (1.7.1)
       systemu (~> 2.6.2)
     mail (2.6.3)
@@ -248,6 +251,11 @@ GEM
       rack (>= 1.0)
     raindrops (0.15.0)
     rake (10.4.2)
+    rb-fsevent (0.9.7)
+    rb-inotify (0.9.5)
+      ffi (>= 0.5.0)
+    rerun (0.11.0)
+      listen (~> 3.0)
     rest-client (1.8.0)
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
@@ -322,7 +330,6 @@ DEPENDENCIES
   dalli
   delayed_job
   delayed_job_mongoid
-  dotenv
   eco
   erubis
   fog
@@ -343,6 +350,7 @@ DEPENDENCIES
   prawn-table (~> 0.1.0)
   rack-standards
   rake
+  rerun
   rest-client
   rmagick
   sinatra

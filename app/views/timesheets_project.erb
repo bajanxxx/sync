@@ -1,0 +1,285 @@
+<div class="container theme-showcase" role="main">
+  <!-- page header -->
+  <div class="page-header">
+    <h2>
+      Projects > <%= p.name %>
+    </h2>
+  </div>
+  <div class="container-fluid">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <strong>Project Details</strong>
+      </div>
+      <table class="table" style="table-layout: fixed; word-wrap: break-word">
+        <tbody>
+          <tr>
+            <td width="35%"><strong>Project Name</strong></td>
+            <td width="65%"><%= p.name %></td>
+          </tr>
+          <tr>
+            <td width="35%"><strong>Project Type</strong></td>
+            <td width="65%"><%= p.type.gsub('_', ' ').upcase %></td>
+          </tr>
+          <tr>
+            <td width="35%"><strong>Start Date</strong></td>
+            <td width="65%"><a href="#" id="StartDate" data-type="combodate" data-value="<%= p.start_date %>" data-format="YYYY-MM-DD" data-viewformat="DD/MM/YYYY" data-template="D / MMM / YYYY" data-pk="<%= p.id %>"  data-title="Select start date"></a></td>
+          </tr>
+          <tr>
+            <td width="35%"><strong>End Date</strong></td>
+            <td width="65%"><a href="#" id="EndDate" data-type="combodate" data-value="<%= p.end_date %>" data-format="YYYY-MM-DD" data-viewformat="DD/MM/YYYY" data-template="D / MMM / YYYY" data-pk="<%= p.id %>"  data-title="Select end date"></a></td>
+          </tr>
+          <tr>
+            <td width="35%"><strong>Billable?</strong></td>
+            <td width="65%"><a href="#" id="Billable" data-type="checklist" data-pk="<%= p.id %>"  data-title="Is this project billable?"><%= p.billable? %></a></td>
+          </tr>
+          <tr>
+            <td width="35%"><strong>Notes</strong></td>
+            <td width="65%"><a href="#" id="Notes" data-type="textarea" data-pk="<%= p.id %>" data-title="Notes" data-value="<%= p.notes %>"></a></td>
+          </tr>
+          <tr>
+            <td width="35%"><strong>Team</strong></td>
+            <td width="65%"><a href="#" id="Team"></a></td>
+          </tr>
+        </tbody>
+        <tbody id="BillableOptions" class="hide">
+          <!-- Billable options -->
+          <tr>
+            <td width="35%"><strong>Invoice Type</strong></td>
+            <td width="65%"><a href="#" id="InvoiceType" data-type="checklist" data-pk="<%= p.id %>" data-title="Invoice type"><%= p.invoice_method %></a></td>
+          </tr>
+        </tbody>
+        <tbody id="TeamPrices" class="hide">
+          <tr>
+            <td width="35%"><strong>Team Members Price</strong></td>
+            <td width="65%">
+              <div id="TeamPricesContainer">
+                <table class="table" style="table-layout: fixed; word-wrap: break-word; border:none; outline:none;">
+                <% if p.invoice_method == 'person_hourly_rate' %>
+                  <% p.time_project_team_members.asc(:consultant).each do |member| %>
+                    <tr>
+                      <td style="border:none; outline:none;" width="50%"><strong><%= member.consultant %></strong></td>
+                      <td style="border:none; outline:none;" width="50%"><a href="#" id="<%= member.consultant.split('@').first.gsub('.', '') %>Price" data-pk="<%= p.id %>" data-title="Update price"><%= member.price %></a></td>
+                    </tr>
+                  <% end %>
+                <% end %>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="row-fluid">
+        <div class="col-md-6">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <a><strong>Existing Attachment's</strong></a>
+            </div>
+            <div class="panel-body">
+              <ul class="list-group">
+                <% if p.time_project_attachments.empty? %>
+                    <li class="list-group-item">
+                      <span>No attachment's added yet</span>
+                    </li>
+                <% else %>
+                    <% p.time_project_attachments.each do |attachment| %>
+                        <li class="list-group-item">
+                          <a href="/download/<%= attachment.id %>"><%= attachment.filename.split('_', 5).last %></a>
+                        </li>
+                    <% end %>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div> <!-- col-md-6 -->
+        <div class="col-md-6">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <a><strong>Upload Attachment</strong></a>
+            </div>
+            <div class="panel-body">
+              <form role="form" id="upload-<%= p.id %>" method="post" action="/upload/timesheets/project/<%= p.id %>" enctype="multipart/form-data">
+                <input type="file" class="form-control" title="Select timesheet approvals to upload" name="files[]" data-filename-placement="inside" multiple />
+                <ul id="fileList"></ul>
+                <button type="submit" class="btn btn-primary center-block" id="UploadBtn-<%= p.id %>"><i class="fa fa-cloud-upload fa-lg"></i> Upload Timesheet</button>
+              </form>
+            </div>
+          </div>
+        </div> <!-- col-md-6 -->
+      </div> <!-- row-fluid for attachments -->
+      <div id="Footer" class = "panel-footer"></div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  $('input[type=file]').bootstrapFileInput();
+  $('.file-inputs').bootstrapFileInput();
+
+  // inline editing
+  $.fn.editable.defaults.mode = 'inline';
+  $.fn.editable.defaults.ajaxOptions = {type: "POST"};
+
+  var billable = $("#Billable");
+
+  $("#StartDate").editable({
+    url: '/timesheets/projects/update',
+    name: 'start_date',
+    combodate: {
+      minYear: 2000,
+      maxYear: 2020,
+      minuteStep: 1
+    },
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  });
+
+  $("#EndDate").editable({
+    url: '/timesheets/projects/update',
+    name: 'end_date',
+    combodate: {
+      minYear: 2000,
+      maxYear: 2020,
+      minuteStep: 1
+    },
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  });
+
+  billable.editable({
+    url: '/timesheets/projects/update',
+    source: [
+      { 'true': true },
+      { 'false': false }
+    ],
+    emptytext: 'false',
+    name: 'billable?',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  }).on('save', function(e, params) {
+    console.log("Saved value: " + params.newValue);
+    toggle_billable(params.newValue)
+  })
+  ;
+
+  $("#Notes").editable({
+    url: '/timesheets/projects/update',
+    name: 'notes',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  });
+
+  $("#Team").editable({
+    tpl: "<input type='text' style='width: 300px'>",
+    inputclass: 'input-large',
+    type: 'select2',
+    select2: {
+      multiple: true
+    },
+    source: [
+        <% consultants.each do |c| %>
+          { text: '<%= c.id %>', value: '<%= c.id %>' },
+        <% end %>
+    ],
+    value: '<%= p.team.join(',') %>',
+    title: 'Update team members',
+    url: '/timesheets/projects/update',
+    pk: '<%= p.id %>',
+    name: 'team',
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
+    }
+  }).on('save', function(e, params) {
+    console.log("Change detected, refresh required");
+    $("#Footer").html("<p class=\"text-danger\">Team has been changed, refresh this page to load new members</p>")
+  })
+  ;
+
+  // validate timesheet upload
+  $('#upload-<%= p.id %>').bootstrapValidator({
+    feedbackIcons: {
+      valid: 'glyphicon glyphicon-ok',
+      invalid: 'glyphicon glyphicon-remove',
+      validating: 'glyphicon glyphicon-refresh'
+    },
+    fields: {
+      'files[]': {
+        validators: {
+          notEmpty: {
+            message: 'File is required'
+          },
+          file: {
+            extension: 'pdf,doc,docx,jpeg,png',
+            type: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg',
+            maxSize: 2048 * 1024,   // 2 MB
+            message: 'Currently we only accept pdf, doc, docx, jpeg, png files with size limit of 2MB'
+          }
+        }
+      }
+    }
+  });
+
+  /*
+   *  Handle billable options
+   */
+
+  function toggle_billable(billable) {
+    console.log("[ToggleBillable] Init");
+
+    var invoice_type = $("#InvoiceType");
+
+    if (billable == 'true') {
+      console.log("[ToggleBillable] Showing billable options");
+      $("#BillableOptions").removeClass('hide');
+
+      invoice_type.editable({
+        url: '/timesheets/projects/update',
+        source: [
+          <% TimeProject::INVOICE_TYPES.each do |i| %>
+          { '<%= i %>': '<%= i %>' },
+          <% end %>
+        ],
+        name: 'invoice_method',
+        success: function(response, newValue) {
+          if(!response.status) return response.msg;
+        }
+      }).on('save', function(e, params) {
+        console.log("[ToggleBillable] Saved value: " + params.newValue);
+        toggle_team_prices(billable, params.newValue)
+      })
+      ;
+    } else {
+      console.log("[ToggleBillable] Hiding billable options");
+      $("#BillableOptions").addClass('hide');
+    }
+    toggle_team_prices(billable, invoice_type.text());
+  }
+
+  function toggle_team_prices(billable, invoice_type) {
+    console.log("[ToggleTeamPrices] Init");
+
+    if (billable == 'true' && invoice_type == 'person_hourly_rate') {
+      console.log("[ToggleTeamPrices] Showing person hourly rates");
+      $("#TeamPrices").removeClass('hide');
+
+      <% p.time_project_team_members.each do |member| %>
+        $("#<%= member.consultant.split('@').first.gsub('.', '') %>Price").editable({
+          url: '/timesheets/projects/update',
+          name: '<%= member.consultant %>',
+          success: function(response, newValue) {
+            if(!response.status) return response.msg;
+          }
+        });
+      <% end %>
+    } else {
+      console.log("[ToggleTeamPrices] Hiding person hourly rates");
+      $("#TeamPrices").addClass('hide');
+    }
+  }
+
+  toggle_billable(billable.text());
+
+</script>

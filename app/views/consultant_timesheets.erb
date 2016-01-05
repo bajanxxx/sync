@@ -86,16 +86,16 @@
                           <td class="col-8 text-center">
                             <% if @user.owner? || @user.administrator? %>
                               <% if (project.start_date <= weekdates[index] && project.end_date >= weekdates[index]) %>
-                                <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
+                                <input class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
                               <% else %>
-                                <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
+                                <input class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
                               <% end %>
                             <% else %>
                               <!-- normal user -->
                               <% if (project.start_date <= weekdates[index] && project.end_date >= weekdates[index]) && (current_timesheet.status == 'NOT SUBMITTED' || current_timesheet.status == 'SAVED') %>
-                                <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
+                                <input class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>">
                               <% else %>
-                                <input type="number" step="any" min="0" max="24" class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
+                                <input class="form-control count hours-<%= project.id %>" id="<%= Date::ABBR_DAYNAMES[weekdates[index].wday] %><%= project.id %>" name="<%= weekdates[index] %>" placeholder="00.00" onchange="sum<%= project.id %>();" value="<%= detail.hours %>" disabled>
                               <% end %>
                             <% end %>
                           </td>
@@ -117,6 +117,13 @@
                     <% end %>
                   </div>
                 </div>
+                <div class="pull-right">
+                <% if current_timesheet.status == 'SAVED' %>
+                    <p>Last saved <small><%= time_ago_in_words(Time.now, current_timesheet.saved_at) %> ago</small></p>
+                <% elsif current_timesheet.status == 'SUBMITTED' %>
+                    <p>Submitted <small><%= time_ago_in_words(Time.now, current_timesheet.submitted_at) %> ago</small></p>
+                <% end %>
+                </div>
               </div>
               <br>
               <!-- Upload attachment's related to timesheet -->
@@ -124,7 +131,7 @@
                 <div class="col-md-6">
                   <div class="panel panel-info">
                     <div class="panel-heading">
-                      <a><strong>Exiting Attachment's</strong></a>
+                      <a><strong>Existing Attachment's</strong></a>
                     </div>
                     <div class="panel-body">
                       <ul class="list-group">
@@ -159,6 +166,7 @@
                   </div>
                 </div> <!-- col-md-6 -->
               </div> <!-- row-fluid for attachments -->
+              <strong><p id="ErrorsLabel" class="text-center"></p></strong>
             </div>
             <% else %>
             <!-- project is not in range of this date range -->
@@ -196,7 +204,7 @@ $('.hours-<%= project.id %>').change(function() {
   if ($(this).val()) {
     $('#SaveBtn-<%= project.id %>').removeAttr('disabled')
   }
-})
+});
 // validate timesheet upload
 $('#upload-<%= project.id %>').bootstrapValidator({
   feedbackIcons: {
@@ -217,7 +225,7 @@ $('#upload-<%= project.id %>').bootstrapValidator({
           message: 'Currently we only accept pdf, doc, docx, jpeg, png files with size limit of 2MB'
         }
       }
-    },
+    }
   }
 });
 <% end %>
@@ -320,6 +328,7 @@ $('#SaveBtn-<%= project.id %>').click(function() {
         console.log("Error: " + data.msg);
         _this.attr('disabled', false); // re-enable submit
         _this.html('Re-submit');
+        $('#ErrorsLabel').addClass('text-danger').html(data.msg);
       } else {
         console.log("Success: " + data.msg);
         _this.html("Submitted");
@@ -346,6 +355,7 @@ $('#SubmitBtn-<%= project.id %>').click(function() {
         console.log("Error: " + data.msg);
         _this.attr('disabled', false); // re-enable submit
         _this.html('Re-submit');
+        $('#ErrorsLabel').addClass('text-danger').html(data.msg);
       } else {
         console.log("Success: " + data.msg);
         _this.html("Submitted");

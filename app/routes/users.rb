@@ -11,12 +11,12 @@ module Sync
 
       get '/auth/failure' do
         content_type 'text/plain'
-        request.env['omniauth.auth'].to_hash.inspect rescue "No Data"
+        request.env['omniauth.auth'].to_hash.inspect rescue 'No Data'
       end
 
       get '/auth/:provider/callback' do
         auth = env['omniauth.auth']
-        if auth.info['email'].split("@")[1] == "cloudwick.com"
+        if auth.info['email'].split('@')[1] == 'cloudwick.com'
           # signed in as cloudwick user, create a session for the user
           user_email = auth.info['email']
           session_uid = auth['uid']

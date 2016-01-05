@@ -38,7 +38,8 @@ module Sync
         @pending_requests = {
           document_requests: DocumentRequest.where(status: 'pending').count,
           airticket_requests: AirTicketRequest.where(status: 'pending').count,
-          certification_requests: CertificationRequest.where(status: 'pending').count
+          certification_requests: CertificationRequest.where(status: 'pending').count,
+          timesheet_requests: Timesheet.where(status: 'SUBMITTED').count
         }
       end
 
