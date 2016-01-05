@@ -67,6 +67,18 @@
             </td>
           </tr>
         </tbody>
+        <tbody id="ProjectFlatRateOptions" class="hide">
+          <tr>
+            <td width="35%"><strong>Project Flat Rate</strong></td>
+            <td width="65%"><a href="#" id="ProjectFlatRate" data-pk="<%= p.id %>" data-title="Project Flat Rate"><%= p.project_flat_rate %></a></td>
+          </tr>
+        </tbody>
+        <tbody id="MonthlyFlatRateOptions" class="hide">
+        <tr>
+          <td width="35%"><strong>Project Monthly Flat Rate</strong></td>
+          <td width="65%"><a href="#" id="MonthlyFlatRate" data-pk="<%= p.id %>" data-title="Project Monthly Flat Rate"><%= p.project_monthly_flat_rate %></a></td>
+        </tr>
+        </tbody>
       </table>
       <div class="row-fluid">
         <div class="col-md-6">
@@ -128,9 +140,6 @@
       minYear: 2000,
       maxYear: 2020,
       minuteStep: 1
-    },
-    success: function(response, newValue) {
-      if(!response.status) return response.msg;
     }
   });
 
@@ -141,9 +150,6 @@
       minYear: 2000,
       maxYear: 2020,
       minuteStep: 1
-    },
-    success: function(response, newValue) {
-      if(!response.status) return response.msg;
     }
   });
 
@@ -154,10 +160,7 @@
       { 'false': false }
     ],
     emptytext: 'false',
-    name: 'billable?',
-    success: function(response, newValue) {
-      if(!response.status) return response.msg;
-    }
+    name: 'billable?'
   }).on('save', function(e, params) {
     console.log("Saved value: " + params.newValue);
     toggle_billable(params.newValue)
@@ -166,10 +169,7 @@
 
   $("#Notes").editable({
     url: '/timesheets/projects/update',
-    name: 'notes',
-    success: function(response, newValue) {
-      if(!response.status) return response.msg;
-    }
+    name: 'notes'
   });
 
   $("#Team").editable({
@@ -188,15 +188,22 @@
     title: 'Update team members',
     url: '/timesheets/projects/update',
     pk: '<%= p.id %>',
-    name: 'team',
-    success: function(response, newValue) {
-      if(!response.status) return response.msg;
-    }
+    name: 'team'
   }).on('save', function(e, params) {
     console.log("Change detected, refresh required");
     $("#Footer").html("<p class=\"text-danger\">Team has been changed, refresh this page to load new members</p>")
   })
   ;
+
+  $("#ProjectFlatRate").editable({
+    url: '/timesheets/projects/update',
+    name: 'project_flat_rate'
+  });
+
+  $("#MonthlyFlatRate").editable({
+    url: '/timesheets/projects/update',
+    name: 'project_monthly_flat_rate'
+  });
 
   // validate timesheet upload
   $('#upload-<%= p.id %>').bootstrapValidator({
@@ -256,6 +263,8 @@
       $("#BillableOptions").addClass('hide');
     }
     toggle_team_prices(billable, invoice_type.text());
+    toggle_project_flat_rate(billable, invoice_type.text());
+    toggle_monthly_flat_rate(billable, invoice_type.text());
   }
 
   function toggle_team_prices(billable, invoice_type) {
@@ -277,6 +286,30 @@
     } else {
       console.log("[ToggleTeamPrices] Hiding person hourly rates");
       $("#TeamPrices").addClass('hide');
+    }
+  }
+
+  function toggle_project_flat_rate(billable, invoice_type) {
+    console.log("[ToggleProjectFlatRate] Init");
+
+    if (billable == 'true' && invoice_type == 'project_flat_rate') {
+      console.log("[ToggleProjectFlatRate] Showing project flat rate options");
+      $("#ProjectFlatRateOptions").removeClass('hide');
+    } else {
+      console.log("[ToggleProjectFlatRate] Hiding project flat rate options");
+      $("#ProjectFlatRateOptions").addClass('hide');
+    }
+  }
+
+  function toggle_monthly_flat_rate(billable, invoice_type) {
+    console.log("[ToggleMonthlyFlatRate] Init");
+
+    if (billable == 'true' && invoice_type == 'monthly_flat_rate') {
+      console.log("[ToggleMonthlyFlatRate] Showing project flat rate options");
+      $("#MonthlyFlatRateOptions").removeClass('hide');
+    } else {
+      console.log("[ToggleMonthlyFlatRate] Hiding project flat rate options");
+      $("#MonthlyFlatRateOptions").addClass('hide');
     }
   }
 

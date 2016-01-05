@@ -37,9 +37,12 @@ module Sync
         start_date = params[:StartDate]
         end_date = params[:EndDate]
         notes = params[:Notes]
+        sales = params[:Sales]
         team = params[:Team]
         billable = params[:Billable]
         invoice_method = params[:InvoiceMethod]
+        project_flat_rate = params[:ProjectFlatRate]
+        monthly_flat_rate = params[:MonthlyFlatRate]
 
         success    = true
         message    = 'Successfully added project'
@@ -72,6 +75,29 @@ module Sync
           message = "Project with code #{project_code} already exists and is not unique"
         end
 
+        if sales
+          unless sales =~ /^\S+@cloudwick.com$/
+            success = false
+            message = 'Sales associate email address is not properly formatted'
+          end
+        else
+          sales = ''
+        end
+
+        if billable == 'on'
+          if invoice_method == 'project_flat_rate'
+            unless project_flat_rate =~ /^\d+\.\d[0-2]$/
+              success = false
+              message = 'Price is not properly formatted, should be of format 00.00'
+            end
+          elsif invoice_method == 'monthly_flat_rate'
+            unless monthly_flat_rate =~ /^\d+\.\d[0-2]$/
+              success = false
+              message = 'Price is not properly formatted, should be of format 00.00'
+            end
+          end
+        end
+
         if success
           begin
             if billable == 'on'
@@ -83,6 +109,7 @@ module Sync
                   start_date: Date.strptime(start_date, '%m/%d/%Y'),
                   end_date: Date.strptime(end_date, '%m/%d/%Y'),
                   notes: notes,
+                  sales: sales,
                   team: team,
                   billable?: true,
                   invoice_method: :person_hourly_rate,
@@ -95,6 +122,38 @@ module Sync
                     price: params["#{tm.split('@').first.gsub('.', '')}Price".to_sym]
                   )
                 end
+              elsif invoice_method == 'project_flat_rate'
+                project = TimeProject.create(
+                  project_code: project_code,
+                  name: project_name,
+                  type: project_type,
+                  start_date: Date.strptime(start_date, '%m/%d/%Y'),
+                  end_date: Date.strptime(end_date, '%m/%d/%Y'),
+                  notes: notes,
+                  sales: sales,
+                  team: team,
+                  billable?: true,
+                  invoice_method: :project_flat_rate,
+                  vendor_id: vendor_id,
+                  client_id: client_id,
+                  project_flat_rate: params[:ProjectFlatRate]
+                )
+              elsif invoice_method == 'monthly_flat_rate'
+                project = TimeProject.create(
+                  project_code: project_code,
+                  name: project_name,
+                  type: project_type,
+                  start_date: Date.strptime(start_date, '%m/%d/%Y'),
+                  end_date: Date.strptime(end_date, '%m/%d/%Y'),
+                  notes: notes,
+                  sales: sales,
+                  team: team,
+                  billable?: true,
+                  invoice_method: :project_flat_rate,
+                  vendor_id: vendor_id,
+                  client_id: client_id,
+                  project_monthly_flat_rate: params[:MonthlyFlatRate]
+                )
               end
             else
               project = TimeProject.create(
@@ -104,6 +163,7 @@ module Sync
                 start_date: Date.strptime(start_date, '%m/%d/%Y'),
                 end_date: Date.strptime(end_date, '%m/%d/%Y'),
                 notes: notes,
+                sales: sales,
                 team: team,
                 vendor_id: vendor_id,
                 client_id: client_id
@@ -125,7 +185,7 @@ module Sync
         project_id = params[:pk]
         update_key    = params[:name]
         update_value  = params[:value]
-        success       = true
+        status_code = 200
         message       = "Successfully updated #{update_key} to #{update_value}"
 
         project = TimeProject.find(project_id)
@@ -156,15 +216,22 @@ module Sync
               end
               # also update the team array
               project.update_attribute(update_key.to_sym, update_value)
+            when 'project_flat_rate', 'project_monthly_flat_rate'
+              unless update_value =~ /^\d+\.\d[0-2]$/
+                status_code = 500
+                message = 'Price not properly formatted'
+                return [status_code, message]
+              end
+              project.update_attribute(update_key.to_sym, update_value)
             else
               project.update_attribute(update_key.to_sym, update_value)
           end
         rescue
-          success = false
+          status_code = 500
           message = "Failed to update(#{update_key})"
         end
-        # Return json response to be validated on the client side
-        { success: success, msg: message }.to_json
+        # Return status and response text
+        [status_code, message]
       end
 
       post '/timesheets/project/update/:id' do |id|

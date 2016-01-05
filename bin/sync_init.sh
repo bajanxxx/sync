@@ -59,7 +59,7 @@ function start_delayedjob () {
     echo "Service ${DELAYEDJOB_PROCESS} is already running... skipping."
   else
     echo "Starting ${DELAYEDJOB_PROCESS} in ${ENVIRONMENT} environment..."
-    cd $DIR && RAKE_ENV=${ENVIRONMENT} bin/delayed_job.rb -n ${DELAYEDJOB_PROCESS_COUNT} start >> $LOG 2>&1
+    cd $DIR && RAILS_ENV=${ENVIRONMENT} bin/delayed_job.rb -n ${DELAYEDJOB_PROCESS_COUNT} start >> $LOG 2>&1
     echo "Starting ${DELAYEDJOB_PROCESS} ... [DONE]"
   fi
 }
@@ -67,7 +67,7 @@ function start_delayedjob () {
 function stop_delayedjob () {
   if ps aux | grep -v grep | grep -v $0 | grep ${DELAYEDJOB_PROCESS} > /dev/null; then
     echo "Stopping ${DELAYEDJOB_PROCESS} ..."
-    cd $DIR && RAKE_ENV=${ENVIRONMENT} bin/delayed_job.rb stop >> $LOG 2>&1
+    cd $DIR && RAILS_ENV=${ENVIRONMENT} bin/delayed_job.rb stop >> $LOG 2>&1
     echo "Stopping ${DELAYEDJOB_PROCESS} ... [DONE]"
   else
     echo "Service ${DELAYEDJOB_PROCESS} is not running"

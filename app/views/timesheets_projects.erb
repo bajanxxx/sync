@@ -76,6 +76,10 @@
             <span class="help-block"></span>
           </div>
           <div class="form-group">
+            <label for="Sales">Sales Associate:</label>
+            <input type="text" class="form-control" id="Sales" name="Sales" placeholder="Email of the sales associate" value="" required="required" />
+          </div>
+          <div class="form-group">
             <label class="control-label" for="Billable">Billable? </label>
             <input type="checkbox" class="form-control" id="Billable" name="Billable" data-on-text="Yes" data-size="mini" />
             <span class="help-block"></span>
@@ -89,6 +93,18 @@
                 <% end %>
               </select>
               <span class="help-block"></span>
+            </div>
+          </div>
+          <div id="ProjectFlatRateOptions" class="hide">
+            <div class="form-group">
+              <label for="ProjectFlatRate">Project Flat Rate:</label>
+              <input type="text" class="form-control" id="ProjectFlatRate" name="ProjectFlatRate" placeholder="Enter project flat rate" value="0.00" required="required" />
+            </div>
+          </div>
+          <div id="MonthlyFlatRateOptions" class="hide">
+            <div class="form-group">
+              <label for="MonthlyFlatRate">Monthly Flat Rate:</label>
+              <input type="text" class="form-control" id="MonthlyFlatRate" name="MonthlyFlatRate" placeholder="Enter project monthly flat rate" value="0.00" required="required" />
             </div>
           </div>
           <div id="PersonHourlyRateOptions" class="hide">
@@ -209,6 +225,16 @@
       $("#PersonHourlyRateOptions").removeClass('hide');
     } else {
       $("#PersonHourlyRateOptions").addClass('hide');
+    }
+    if (billableOption == 'PROJECT_FLAT_RATE') {
+      $("#ProjectFlatRateOptions").removeClass('hide');
+    } else {
+      $("#ProjectFlatRateOptions").addClass('hide');
+    }
+    if (billableOption == 'MONTHLY_FLAT_RATE') {
+      $("#MonthlyFlatRateOptions").removeClass('hide');
+    } else {
+      $("#MonthlyFlatRateOptions").addClass('hide');
     }
   });
 
