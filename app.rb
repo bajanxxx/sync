@@ -34,11 +34,12 @@ module Sync
 
       # set :erb, escape_html: true
 
+      enable :sessions
       set :sessions,
-          httponly: true,
-          secure: production?,
+          httponly: true, # tells browser that cookies can only change from the server and not from the browser - this does not eliminate cross site tracking
+          # secure: production?, # protects from MITM attacks, sends cookies over https. TODO: requires SSL/TLS enabled web server
           expire_after: 5.years
-
+      
       set :session_secret, 'super secret'
 
       # Load OmniAuth - for google single sign on
