@@ -18,6 +18,27 @@ require 'app/models'
 require 'app/helpers'
 require 'app/routes'
 
+# Global app logger
+Log = Logger.new(File.expand_path('../log/app.log', __FILE__))
+
+# DelayedJob wants us to be on rails, so it looks for stuff
+# in the rails namespace -- so we emulate it a bit
+module Rails
+  class << self
+    attr_accessor :logger
+  end
+end
+Rails.logger = Log
+
+# this is used by DJ to guess where tmp/pids is located (default)
+RAILS_ROOT = File.expand_path('..', __FILE__)
+
+# Configure DelayedJob
+Delayed::Worker.destroy_failed_jobs = true
+Delayed::Worker.sleep_delay = 5
+Delayed::Worker.max_attempts = 5
+Delayed::Worker.max_run_time = 15.minutes
+
 module Sync
   class App < Sinatra::Base
     configure do
