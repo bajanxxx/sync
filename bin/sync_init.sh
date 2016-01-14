@@ -67,7 +67,7 @@ function start_delayedjob () {
 function stop_delayedjob () {
   if ps aux | grep -v grep | grep -v $0 | grep ${DELAYEDJOB_PROCESS} > /dev/null; then
     echo "Stopping ${DELAYEDJOB_PROCESS} ..."
-    cd $DIR && RAILS_ENV=${ENVIRONMENT} bin/delayed_job.rb stop >> $LOG 2>&1
+    cd $DIR && RAILS_ENV=${ENVIRONMENT} bin/delayed_job.rb -n ${DELAYEDJOB_PROCESS_COUNT} stop >> $LOG 2>&1
     echo "Stopping ${DELAYEDJOB_PROCESS} ... [DONE]"
   else
     echo "Service ${DELAYEDJOB_PROCESS} is not running"
