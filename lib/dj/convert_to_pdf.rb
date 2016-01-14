@@ -48,24 +48,25 @@ class ConvertPdfToImages < Struct.new(:sub_topic, :file_id, :settings)
           filetype: 'image/png',
           file_id: _t_file_id
         )
-        log "Successfully complted writing file to #{img_tmp_file.path}"
+        log "Successfully completed writing file to #{img_tmp_file.path}"
         img_tmp_file.unlink # delete the img temp file
-        log "Successfully complted writing thumbnail file to #{thumb_tmp_file.path}"
+        log "Successfully completed writing thumbnail file to #{thumb_tmp_file.path}"
         thumb_tmp_file.unlink # delete the img thumbnail file
       end
     ensure
       # close the temp file and delete it
       FileUtils.rm(local_file)
     end
-    sub_topic.update_attributes!(lock?: false, state: 'SUCCESS')
   end
 
   def success
-    log "sucessfully completed task"
+    log 'Successfully completed task'
+    sub_topic.update_attributes!(lock?: false, state: 'SUCCESS')
   end
 
   def failure
-    log "something went wrong"
+    log 'Something went wrong'
+    sub_topic.update_attributes!(lock?: false, state: 'FAILED')
   end
 
   # overrides the Delayed::Worker.max_attempts only for this job

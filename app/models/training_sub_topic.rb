@@ -9,7 +9,7 @@ class TrainingSubTopic
   # NIL -> no content has yet been added to this topic
   # PROCESSING -> background dj is converting the pdf to images
   # SUCCESS -> dj process completed
-  # FAILURE -> dj process failed converting pdf to images
+  # FAILED -> dj process failed converting pdf to images
   field :state, type: String, default: 'NIL'
   # estimated time to teach this sub-topic in minutes
   field :et, type: Integer, default: 0
