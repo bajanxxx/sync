@@ -75,7 +75,7 @@ function stop_delayedjob () {
 }
 
 function status_delayedjob () {
-  if ps aux | grep -v grep | grep -v $0 | grep ${DELAYEDJOB_PROCESS} > /dev/null; then
+  if ps aux | grep -v grep | grep -v $0 | grep -v log | grep ${DELAYEDJOB_PROCESS} > /dev/null; then
     echo "Service ${DELAYEDJOB_PROCESS} is running..."
   else
     echo "Service ${DELAYEDJOB_PROCESS} is not running!!!"
