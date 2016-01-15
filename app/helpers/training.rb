@@ -20,14 +20,18 @@ module Sync
         projects_progress_weighted = projects_progress * 0.30
 
         sub_topics_progress = []
+        sub_topics_with_no_assignments = 0
         topic.training_sub_topics.each do |subtopic|
+          sub_topics_with_no_assignments += 1 if subtopic.training_assignments.count == 0
           sub_topics_progress << sub_topic_progress(consultant, subtopic)
         end
 
         aggregate_sub_topics_progress = if sub_topics_progress.empty?
-                                          1.0 # No sub topics are present, hence cannot conclude progress
+                                          0.0 # No sub topics are present, hence cannot conclude progress
+                                        elsif sub_topics_progress.count - sub_topics_with_no_assignments == 0
+                                          0.0
                                         else
-                                          ( sub_topics_progress.inject(:+) / sub_topics_progress.count ).to_f
+                                          ( sub_topics_progress.inject(:+) / ( sub_topics_progress.count - sub_topics_with_no_assignments ) ).to_f
                                         end
         sub_topics_progress_weighted = aggregate_sub_topics_progress * 0.70
 
@@ -52,7 +56,7 @@ module Sync
         end
 
         if topic_projects_progress.empty?
-          1.0 # no projects are associated with this topic
+          0.0 # no projects are associated with this topic
         else
           ( topic_projects_progress.inject(:+) / topic_projects_progress.count )
         end
@@ -77,7 +81,7 @@ module Sync
         end
 
         if subtopic_assignments_progress.empty?
-          1.0 # no assignments are associated with this sub_topic hence 100% progress
+          0.0 # no assignments are associated with this sub_topic hence 0% progress
         else
           ( subtopic_assignments_progress.inject(:+) / subtopic_assignments_progress.count )
         end
