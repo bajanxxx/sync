@@ -92,9 +92,9 @@ module Sync
           return { success: success, msg: message }.to_json
         end
 
-        unless submission_link.start_with?('http://git.cloudwick.com/')
+        unless submission_link.start_with?("http://git.cloudwick.com/team#{user.team}_#{user.domain.downcase}/#{user.id.split('@').first}")
           success = false
-          message = "submission link should start with 'http://git.cloudwick.com/'"
+          message = "submission link should start with 'http://git.cloudwick.com/team#{user.team}_#{user.domain.downcase}/#{user.id.split('@').first}'"
         end
 
         if success

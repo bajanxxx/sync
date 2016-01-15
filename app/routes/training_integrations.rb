@@ -12,6 +12,7 @@ module Sync
             team: team,
             default_users: @settings[:default_slack_users],
             team_users: Consultant.where(team: team, domain: domain),
+            trainers: Trainer.all,
             preqs: track.training_topics.where(category: 'P').asc(:order),
             core: track.training_topics.where(category: 'C').asc(:order),
             adv: track.training_topics.where(category: 'A').asc(:order),
