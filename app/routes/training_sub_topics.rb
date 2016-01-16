@@ -305,7 +305,7 @@ module Sync
 
         sub_topic = TrainingSubTopic.find(subtopicid)
         sp = sub_topic.training_scratch_pads.find_by(consultant_id: consultant)
-        sp.update_attributes(contents: data)
+        sp.update_attributes(contents: data, last_saved_at: DateTime.now)
 
         { success: success, msg: message }.to_json
       end

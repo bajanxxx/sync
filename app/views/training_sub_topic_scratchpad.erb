@@ -8,7 +8,7 @@
   <br>
   <div style="height: 25px;">
     <a id="savebtn" type="button" class="btn btn-primary">Save</a>
-    <p id="statuslabel" class="pull-right" style="line-height: 25px;">Last Saved: <%= time_ago_in_words(Time.now, sp.created_at) %> ago.</p>
+    <p id="statuslabel" class="pull-right" style="line-height: 25px;">Last Saved: <%= time_ago_in_words(Time.now, sp.last_saved_at) %> ago.</p>
   </div>
 </div>
 
@@ -76,8 +76,7 @@
           } else {
             console.log("Success: " + data.msg);
             _this.attr('disabled', false);
-            _this.html('Save');
-            $("#statuslabel").html("Last Saved: <%= time_ago_in_words(Time.now, sp.created_at) %> ago.");
+            location.reload();
           }
         },
         error: function(data) {
