@@ -1,7 +1,8 @@
 require_relative 'dj/campaign_mail'
 
 class VendorCampaign
-  def initialize(template_name, all_vendors, replied_vendors)
+  def initialize(settings, template_name, all_vendors, replied_vendors)
+    @settings = settings
     @template_name = template_name
     @all_vendors = all_vendors
     @replied_vendors = replied_vendors
@@ -20,7 +21,7 @@ class VendorCampaign
                end
     @vendors.each do |vendor|
       Delayed::Job.enqueue(
-        CampaignEmail.new(vendor, @template_name, 'vendor'),
+        CampaignEmail.new(@settings, vendor, @template_name, 'vendor'),
         queue: 'vendor_emails',
         priority: 5,
         run_at: 5.seconds.from_now

@@ -124,7 +124,7 @@ module Sync
         success    = true
         message    = "Starting Campaign..."
 
-        message = VendorCampaign.new(template_name, all_vendors, replied_vendors_only).start
+        message = VendorCampaign.new(@settings, template_name, all_vendors, replied_vendors_only).start
 
         flash[:info] = "Starting campaign '#{params[:name]}'. #{message}"
         { success: success, msg: message }.to_json
@@ -139,7 +139,7 @@ module Sync
         success = true
         message = 'Starting Campaign...'
 
-        message = CustomerCampaign.new(template_name, customer_vertical, replied_customers_only, nodups).start
+        message = CustomerCampaign.new(@settings, template_name, customer_vertical, replied_customers_only, nodups).start
 
         flash[:info] = "Starting campaign '#{params[:name]}'. #{message}"
         { success: success, msg: message }.to_json

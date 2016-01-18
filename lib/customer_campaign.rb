@@ -1,7 +1,8 @@
 require_relative 'dj/campaign_mail'
 
 class CustomerCampaign
-  def initialize(template_name, customer_vertical, replied_customers, nodups)
+  def initialize(settings, template_name, customer_vertical, replied_customers, nodups)
+    @settings = settings
     @template_name = template_name
     @customer_vertical = customer_vertical
     @replied_customers_only = replied_customers || false
@@ -54,7 +55,7 @@ class CustomerCampaign
                  end
     @customers.each do |customer|
       Delayed::Job.enqueue(
-        CampaignEmail.new(customer, @template_name, 'customer'),
+        CampaignEmail.new(@settings, customer, @template_name, 'customer'),
         queue: 'customer_emails',
         priority: 10,
         run_at: 5.seconds.from_now

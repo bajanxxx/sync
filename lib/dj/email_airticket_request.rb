@@ -1,7 +1,7 @@
 class EmailAirTicketRequest < Struct.new(:settings, :admin, :request)
   def perform
     email_body = <<EOBODY
-      <p>This is a nofication from Sync portal:</p>
+      <p>This is a notification from Sync portal:</p>
       <p><strong>#{request.consultant_name}</strong> requested <strong>air ticket booking</strong></p>
       <p>Request Details:</p>
       <table width="100%" border="0" cellspacing="0" cellpading="0">
@@ -11,7 +11,7 @@ class EmailAirTicketRequest < Struct.new(:settings, :admin, :request)
         <tr>
         <tr>
           <td align="left" width="20%" valign="top"><strong>Certification name:</strong></td>
-          <td align="left" width="20%" valign="top">#{request.name}</td>
+          <td align="left" width="20%" valign="top">#{request.consultant_name}</td>
         <tr>
       </table>
       <br/>

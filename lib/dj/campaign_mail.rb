@@ -1,4 +1,4 @@
-class CampaignEmail < Struct.new(:user, :template_name, :type)
+class CampaignEmail < Struct.new(:settings, :user, :template_name, :type)
 
   def get_template
     Template.find_by(name: template_name)
@@ -6,8 +6,7 @@ class CampaignEmail < Struct.new(:user, :template_name, :type)
 
   # Send email out using mailgun
   def send_mail
-    Settings.load!(File.expand_path("../../../config/config.yml", __FILE__))
-    to_mail = type == 'customer' ? Settings.mailgun_customer_email : Settings.mailgun_vendor_email
+    to_mail = type == 'customer' ? settings[:mailgun_customer_email] : settings[:mailgun_vendor_email]
     full_name = to_mail.split('@').first.split('.')
     firstname = full_name.first.capitalize
     lastname  = if full_name.length > 1
@@ -27,17 +26,17 @@ class CampaignEmail < Struct.new(:user, :template_name, :type)
     message = if body
                  body.sub(/USERNAME/, user.first_name)
               else
-                raise "Got nil email body"
+                raise 'Got nil email body'
               end
     RestClient.post(
-      "https://api:#{Settings.mailgun_api_key}@api.mailgun.net/v2/#{Settings.mailgun_domain}/messages",
+      "https://api:#{settings[:mailgun_api_key]}@api.mailgun.net/v2/#{settings[:mailgun_domain]}/messages",
       from: display_name + "<" + to_mail + ">",
       to: user.email,
       subject: subject,
       html: message,
       'o:campaign' => campaign_id,
       'o:tag' => 'Cloudwick Email Campaigning',
-      'h:Message-Id' => "#{campaign_id}@#{Settings.mailgun_domain}"
+      'h:Message-Id' => "#{campaign_id}@#{settings[:mailgun_domain]}"
     )
   end
 
@@ -71,7 +70,7 @@ class CampaignEmail < Struct.new(:user, :template_name, :type)
   end
 
   def failure
-    log "something went wrong sending email out"
+    log 'Something went wrong sending email out'
   end
 
   # overrides the Delayed::Worker.max_attempts only for this job
