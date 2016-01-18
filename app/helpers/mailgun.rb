@@ -1,6 +1,6 @@
 module Sync
   module Helpers
-    module Campaign
+    module Mailgun
       # campaign_type could be vendors or customers
       def create_campaign(campaign_name, campaign_id)
         if campaign_exists?(campaign_id)

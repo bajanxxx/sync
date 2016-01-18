@@ -24,7 +24,7 @@ module Sync
 
       helpers Sinatra::ContentFor
       helpers Sync::Helpers::GridFs
-      helpers Sync::Helpers::Campaign
+      helpers Sync::Helpers::Mailgun
       helpers Sync::Helpers::Training
       helpers Sync::Helpers::Openstack
       helpers Sync::Helpers::DateTime
