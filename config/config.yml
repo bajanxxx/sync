@@ -1,0 +1,140 @@
+---
+###
+### DEVELOPMENT configuration parameters
+###
+development:
+  #
+  # Google API
+  #
+  google_key:
+  google_secret:
+  #
+  # Slack API
+  #
+  slack_domain:
+  slack_sync_bot_api_token:
+  slack_admin_user_api_token:
+  default_slack_users:
+  default_slack_bots:
+  #
+  # Mongo Configuration
+  #
+  mongo_db:
+  mongo_host:
+  mongo_port:
+  #
+  # GMail Configuration
+  #
+  email:
+  cc:
+  admin_group:
+  project_notification_group:
+  admin_phone:
+  password:
+  smtp_address:
+  smtp_port:
+  #
+  # Pusher API
+  #
+  pusher_api_id:
+  pusher_key:
+  pusher.secret:
+  #
+  # Mail Gun API
+  #
+  mailgun_api_key:
+  mailgun_domain:
+  mailgun_vendor_email:
+  mailgun_vendor_routes_forward:
+  mailgun_vendor_routes_name:
+  mailgun_customer_email:
+  mailgun_customer_routes_forward:
+  mailgun_customer_routes_name:
+  #
+  # Twilio API
+  #
+  twilio_account_sid:
+  twilio_auth_token:
+  twilio_phone:
+  #
+  # OpenStack Credentials
+  #
+  openstack_tenant:
+  openstack_api_key:
+  openstack_username:
+  openstack_auth_url:
+  #
+  # Portal configuration
+  #
+  bind_ip:
+  bind_port:
+
+###
+### PRODUCTION configuration parameters
+###
+production:
+  #
+  # Google API
+  #
+  google_key:
+  google_secret:
+  #
+  # Slack API
+  #
+  slack_domain:
+  slack_sync_bot_api_token:
+  slack_admin_user_api_token:
+  default_slack_users:
+  default_slack_bots:
+  #
+  # Mongo Configuration
+  #
+  mongo_db:
+  mongo_host:
+  mongo_port:
+  #
+  # GMail Configuration
+  #
+  email:
+  cc:
+  admin_group:
+  project_notification_group:
+  admin_phone:
+  password:
+  smtp_address:
+  smtp_port:
+  #
+  # Pusher API
+  #
+  pusher_api_id:
+  pusher_key:
+  pusher.secret:
+  #
+  # Mail Gun API
+  #
+  mailgun_api_key:
+  mailgun_domain:
+  mailgun_vendor_email:
+  mailgun_vendor_routes_forward:
+  mailgun_vendor_routes_name:
+  mailgun_customer_email:
+  mailgun_customer_routes_forward:
+  mailgun_customer_routes_name:
+  #
+  # Twilio API
+  #
+  twilio_account_sid:
+  twilio_auth_token:
+  twilio_phone:
+  #
+  # OpenStack Credentials
+  #
+  openstack_tenant:
+  openstack_api_key:
+  openstack_username:
+  openstack_auth_url:
+  #
+  # Portal configuration
+  #
+  bind_ip:
+  bind_port:
