@@ -4,9 +4,9 @@ Central portal featuring:
 
 * Job Portal
   * Fetches jobs from several popular job portals like **DICE** and **INDEED**
-  * Manages job applications for all the consultants
+  * Manages job applications
 * Email Campaigning Portal
-  * Central location for managing Cloudwick's Email Campaigning
+  * Create/Send/Track/Monitor Cloudwick's Email Campaigning's
 * Consultant Requests Portal
   * Document Request Management
   * Certification Request Management
@@ -14,6 +14,7 @@ Central portal featuring:
   * Cloud servers request management
 * Training Portal
   * Trainer/Trainee Portal for accessing and tracking trainee progress
+* Timesheet Tracking & Management
 
 # License and Authors
 
