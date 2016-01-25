@@ -5,6 +5,7 @@ random.js
 tmp/*
 data/*
 public/assets/*
+config/config.yml
 
 # sbt specific
 dist/*
