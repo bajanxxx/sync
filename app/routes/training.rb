@@ -97,8 +97,11 @@ module Sync
           return { success: success, msg: message }.to_json
         end
 
-        # make this user a trainer
-        User.find(trainer_email).role.update_attribute(:name, 'trainer')
+        # only make this user a trainer or admin if the user is not an admin or owner
+        user = User.find(trainer_email)
+        unless user.administrator? or user.owner?
+          User.find(trainer_email).role.update_attribute(:name, 'trainer')
+        end
         if Trainer.find(trainer_email).nil?
           Trainer.create(email: trainer_email)
         end
