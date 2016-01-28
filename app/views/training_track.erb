@@ -170,13 +170,15 @@
         <% else %>
           <% core.each do |topic| %>
             <div class="col-xs-3 spacer">
-              <% if @user.owner? || @user.administrator? %>
+              <% if @user.owner? || @user.administrator? || @user.trainer? %>
                 <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                   <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#006788">
                     <div class="font-responsive">
                       <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
                     </div>
+                    <% if @user.owner? || @user.administrator? %>
                     <button type="button" id="DeleteTopic-<%= topic.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
+                    <% end %>
                   </div>
                 </a>
               <% else %>
@@ -209,13 +211,15 @@
         <td class="col-xs-10">
           <% adv.each do |topic| %>
             <div class="col-xs-3 spacer">
-              <% if @user.owner? || @user.administrator? %>
+              <% if @user.owner? || @user.administrator? || @user.trainer? %>
                 <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                   <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#005573">
                     <div class="font-responsive">
                       <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
                     </div>
+                    <% if @user.owner? || @user.administrator? %>
                     <button type="button" id="DeleteTopic-<%= topic.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
+                    <% end %>
                   </div>
                 </a>
               <% else %>
@@ -248,13 +252,15 @@
         <td class="col-xs-10">
           <% opt.each do |topic| %>
             <div class="col-xs-3 spacer">
-              <% if @user.owner? || @user.administrator? %>
+              <% if @user.owner? || @user.administrator? || @user.trainer? %>
                 <a class="button hvr-float" href="/training/track/<%= track.id %>/topic/<%= topic.id %>">
                   <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#071174">
                     <div class="font-responsive">
                       <font color="white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</font>
                     </div>
+                    <% if @user.owner? || @user.administrator? %>
                     <button type="button" id="DeleteTopic-<%= topic.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Delete this sub topic"></span></button>
+                    <% end %>
                   </div>
                 </a>
               <% else %>
