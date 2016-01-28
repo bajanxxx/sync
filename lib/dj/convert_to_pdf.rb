@@ -7,6 +7,7 @@ class ConvertPdfToImages < Struct.new(:sub_topic, :file_id, :settings)
     local_file = "/tmp/#{file_id}.pdf"
     begin
       sub_topic.update_attributes!(lock?: true, state: 'PROCESSING')
+      sub_topic_density = sub_topic.density
       log 'Fetching the file from Mongo to convert'
       # fetch the pdf from mongo and write it to local fs
       file_contents = download_file(file_id).read
@@ -16,8 +17,8 @@ class ConvertPdfToImages < Struct.new(:sub_topic, :file_id, :settings)
         log "Writing pdf file to temp location #{local_file}"
         File.open(local_file, 'w') { |_f| _f.write(file_contents) }
         # convert pdf to images
-        log 'Converting PDF file to images with a density setting of 600.'
-        pdf_images = Magick::ImageList.new(local_file) { self.density = 600 }
+        log "Converting PDF file to images with a density setting of #{sub_topic_density}."
+        pdf_images = Magick::ImageList.new(local_file) { self.density = sub_topic_density }
 
         # iterate over each image in the pdf and write that out to mongo
         pdf_images.each_with_index do |page_img, _i|

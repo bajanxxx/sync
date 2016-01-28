@@ -21,6 +21,8 @@ class TrainingSubTopic
   field :order, type: Integer, default: 0
   # references content
   field :references, type: String, default: ''
+  # presentation resolution (dpi: dots per inch, default 72)
+  field :density, type: Integer, default: 150
 
   belongs_to :training_topic
   has_one :pdf_file

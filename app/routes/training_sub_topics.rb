@@ -128,6 +128,24 @@ module Sync
         }
       end
 
+      post '/training/subtopic/admin/update' do
+        sub_topic_id = params[:pk]
+        update_key    = params[:name]
+        update_value  = params[:value]
+        success       = true
+        message       = "Successfully updated #{update_key} to #{update_value}"
+        # Find the consultant by id
+        sub_topic = TrainingSubTopic.find(sub_topic_id)
+
+        begin
+          sub_topic.update_attribute(update_key.to_sym, update_value.to_i)
+        rescue
+          success = false
+          message = "Failed to update(#{update_key})"
+        end
+        { success: success, msg: message }.to_json
+      end
+
       post '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/unlink' do |trackid, topicid, subtopicid|
         success    = true
         message    = "Successfully unlinked and deleted file"

@@ -31,6 +31,9 @@
               <span class="badge alert-info"><%= sub_topic.et %></span>
               <span>Duration (in minutes)</span>
             </li>
+            <li class="list-group-item">
+              <span>DPI</span> <a class="pull-right" href="#" id="density"><%= sub_topic.density %></a>
+            </li>
           </ul>
           <% if sub_topic.state == 'SUCCESS' %>
           <a class="btn btn-primary center-block" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/ss">Start Presentation</a>
@@ -77,6 +80,9 @@ $(document).ready(function() {
   $('input[type=file]').bootstrapFileInput();
   $('.file-inputs').bootstrapFileInput();
 
+  $.fn.editable.defaults.mode = 'popup';
+  $.fn.editable.defaults.ajaxOptions = {type: "POST"};
+
   // validate resume upload
   $('#upload').bootstrapValidator({
     feedbackIcons: {
@@ -98,6 +104,22 @@ $(document).ready(function() {
           }
         }
       },
+    }
+  });
+
+  $('#density').editable({
+    type: 'text',
+    title: 'Update density',
+    placement: 'right',
+    value: '<%= sub_topic.density %>', // initial value, will be updated and send to server side upon change
+    url: '/training/subtopic/admin/update',
+    pk: '<%= sub_topic.id %>', // primary key (mongo _id)
+    name: 'density', // mongo doc_key being update
+    validate: function(value) {
+      if($.trim(value) == '') return 'This field is required';
+    },
+    success: function(response, newValue) {
+      if(!response.status) return response.msg;
     }
   });
 
