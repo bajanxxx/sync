@@ -110,8 +110,8 @@ class SlackAssociateUsersToTopic < Struct.new(:api_token, :track, :topic, :users
 EOBODY
     Pony.mail(
       from: 'Cloudwick Sync' + "<" + settings[:email] + ">",
-      to: settings[:admin_group],
-      subject: "Requires Slack Group #{group_name} to be created",
+      to: user_email,
+      subject: "Requires logging into Slack",
       headers: { 'Content-Type' => 'text/html' },
       body: email_body,
       via: :smtp,
