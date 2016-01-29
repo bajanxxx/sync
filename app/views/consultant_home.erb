@@ -46,7 +46,7 @@
     </a>
   </div>
   <div class="col-xs-3 spacer">
-    <% if @user.trainee? %>
+    <% if @user && @user.trainee? %>
       <a class="button hvr-float" style="display:block" target="_blank" href="http://git.cloudwick.com">
         <div class="well" style="height:250px; background-color: #f0ad4e;">
           <p align="center" class="font-responsive-large"><font color="white">Cloudwick Git</font></p>
