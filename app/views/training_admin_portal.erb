@@ -142,6 +142,11 @@
             </a>
           </li>
           <li>
+            <a id="ManageTrainers">
+              Manage Trainers
+            </a>
+          </li>
+          <li>
             <a id="CreateSlackIntegrationBtn" data-toggle="modal" href="#CreateSlackIntegration">
               Create Slack Integration for a Team
             </a>
@@ -188,6 +193,9 @@
           <li class="list-group-item">
             <span class="pull-right">
               <span class="badge progress-bar-info"><a href="/training/trainer/track/<%= details.track %>/topic/<%= details.topic %>/team/<%= details.team %>" style="color:white;">Goto Class</a></span>
+            </span>
+            <span class="pull-right">
+              <button type="button" id="DisassociateTrainer-<%= details.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Disassociate this trainer"></span></button>
             </span>
             <strong><%= get_user_fullname(trainer.email) %></strong>
             <div>
@@ -244,6 +252,24 @@
 <script src="<%= asset_path 'randomColor.min.js' %>"></script>
 <script type="text/javascript">
 $('.editbutton').tooltip();
+$('.deletebutton').tooltip();
+
+$('.deleteicon').hide();
+
+var show = false;
+$('#ManageTrainers').click(function() {
+  _this = $(this);
+
+  if(show) {
+    $('.deleteicon').hide();
+    show = false;
+    _this.html('Manage Trainers');
+  } else {
+    $('.deleteicon').show();
+    show = true;
+    _this.html('Hide Delete');
+  }
+});
 
 $(".font-responsive-large").fitText(0.7);
 $(".font-responsive-small").fitText();
@@ -326,6 +352,28 @@ $('#SubmitAssociateTrainerBtn').click(function() {
     }
   });
 });
+
+<% trainers.each do |trainer| %>
+  <% trainer.trainer_topics.each do |details| %>
+    $('#DisassociateTrainer-<%= details.id %>').click(function() {
+      console.log("Initializing call");
+      _this = $(this);
+      _this.html('<i class="fa fa-spinner fa-spin"></i>');
+      _this.attr('disabled', true); // no double submit
+
+      $.ajax({
+        type: "POST",
+        url: "/training/trainer/disassociate/<%= trainer.id %>/<%= details.track %>/<%= details.topic %>",
+        success: function(data){
+          location.reload();
+        },
+        error: function(e){
+          alert("Error occurred!");
+        }
+      });
+    });
+  <% end %>
+<% end %>
 
 $('#SubmitSlackIntegrationBtn').click(function() {
   _this = $(this);

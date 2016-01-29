@@ -119,6 +119,18 @@ module Sync
         { success: success, msg: message }.to_json
       end
 
+      post '/training/trainer/disassociate/:temail/:track_id/:topic_id' do |temail, track_id, topic_id|
+        success = true
+        message = "Successfully removed trainer from track: #{track_id} (topic: #{topic_id})"
+
+        trainer = Trainer.find(temail)
+        trainer.trainer_topics.find_by({track: track_id, topic: topic_id}).delete
+
+        flash[:info] = message
+
+        { success: success, msg: message }.to_json
+      end
+
       post '/training/slack_integrations' do
         team = params[:team]
         domain = params[:domain]
