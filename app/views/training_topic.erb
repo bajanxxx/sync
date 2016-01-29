@@ -216,7 +216,7 @@
   <!-- Projects -->
   <div class="row-fluid">
     <div class="col-xs-12 spacer">
-      <h3>Projects
+      <h3>Projects (<%= topic.training_projects.count %>)
         <% if @user.owner? || @user.administrator? %>
           <span class="pull-right">
             <a class="addproject" role="left" href="#AddProject" data-toggle="modal" data-placement="left" data-original-title='Add a new project'>
@@ -282,7 +282,7 @@
                       <% end %>
                     </span>
                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#projectsaccordion" href="#collapse-<%= project.id %>">
-                      <%= project.name %> <%= "(#{project.training_project_submissions.find_by(consultant_id: @session_username).status.downcase})" if project.training_project_submissions.find_by(consultant_id: @session_username) %>
+                      <%= project.heading %> <%= "(#{project.training_project_submissions.find_by(consultant_id: @session_username).status.downcase})" if project.training_project_submissions.find_by(consultant_id: @session_username) %>
                     </a>
                   </h4>
                 </div>
@@ -303,9 +303,7 @@
                         <% end %>
                       </small>
                     </div>
-                    <h4>
-                      <%= project.heading %>
-                    </h4>
+                    <p></p>
                     <div id="projectcontent-<%= project.id %>">
                     </div>
                     <% if !project.description_link.empty? %>

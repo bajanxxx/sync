@@ -211,7 +211,7 @@
       </td>
       <!--Assignments-->
       <td rowspan="2" class="col-xs-6">
-        <h4>Assignments
+        <h4>Assignments (<%= sub_topic.training_assignments.count %>)
           <% if @user.owner? || @user.administrator? || @user.trainer? %>
             <span class="pull-right">
               <a id="AddAssignmentBtn" class="addassignment" href="#AddAssignment" data-toggle="modal" data-placement="left" data-original-title='Add assignment'>
@@ -278,7 +278,7 @@
                       <% else %>
                       <a role="button" class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse-<%= assignment.id %>" aria-expanded="false" aria-controls="collapse-<%= assignment.id %>">
                       <% end %>
-                        <%= assignment.name %> <%= "(#{assignment.training_assignment_submissions.find_by(consultant_id: @session_username).status.downcase})" if assignment.training_assignment_submissions.find_by(consultant_id: @session_username) %>
+                        <%= assignment.heading %> <%= "(#{assignment.training_assignment_submissions.find_by(consultant_id: @session_username).status.downcase})" if assignment.training_assignment_submissions.find_by(consultant_id: @session_username) %>
                       </a>
                     </h4>
                   </div>
@@ -295,7 +295,7 @@
                           <% end %>
                         </small>
                       </div>
-                      <h4><%= assignment.heading %></h4>
+                      <p></p>
                       <div id="assignmentcontent-<%= assignment.id %>">
                       </div>
                       <% if !assignment.description_link.empty? %>
