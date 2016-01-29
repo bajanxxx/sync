@@ -96,6 +96,7 @@ module Sync
 
         if success
           assignment = sub_topic.training_assignments.find(assignmentid)
+          trainer_email = TrainerTopic.find_by(track: trackid, topic: topicid, team: user.team).trainer_id
 
           assignment_submission = assignment.training_assignment_submissions.find_by(
               consultant_id: @session_username
@@ -195,7 +196,6 @@ module Sync
                 run_at: 1.seconds.from_now
             )
             # create a notification for trainer
-            trainer_email = TrainerTopic.find_by(track: trackid, topic: topicid, team: user.team).trainer_id
             TrainingNotification.create(
                 originator: user.email,
                 name: "#{user.first_name} #{user.last_name}",
