@@ -91,7 +91,8 @@ module Sync
                 topic,
                 users,
                 bots,
-                group_name
+                group_name,
+                @settings
             ),
             queue: 'slack_associate_users',
             priority: 10,
