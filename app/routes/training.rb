@@ -111,7 +111,7 @@ module Sync
         # associate a trainer to a topic
         trainer.trainer_topics.create(
             track: TrainingTrack.find_by(code: track_code).id,
-            topic: TrainingTopic.find_by(code: topic_code).id,
+            topic: TrainingTrack.find_by(code: track_code).training_topics.find_by(code: topic_code).id,
             domain: tdomain,
             team: tteam
         )
