@@ -14,7 +14,8 @@ module Sync
               adv: track.training_topics.where(category: 'A').asc(:order),
               opt: track.training_topics.where(category: 'O').asc(:order),
               c_hash: c_hash,
-              access: { preq: true, core: true, adv: true, opt: true, certs: true } # just a place holder
+              access: { preq: true, core: true, adv: true, opt: true, certs: true }, # just a place holder
+              cprogress: { preq: 0.0, core: 0.0, adv: 0.0, opt: 0.0, certs: 0.0}
           }
         else
           consultant = Consultant.find(@session_username)
@@ -25,7 +26,8 @@ module Sync
                 core: track.training_topics.where(category: 'C').asc(:order),
                 adv: track.training_topics.where(category: 'A').asc(:order),
                 opt: track.training_topics.where(category: 'O').asc(:order),
-                access: user_track_access_breakdown(consultant, track)
+                access: user_track_access_breakdown(consultant, track),
+                cprogress: user_category_progress(consultant, track)
             }
           else
             erb :training_track_noaccess, locals: {
