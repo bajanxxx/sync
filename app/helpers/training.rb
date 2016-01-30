@@ -16,74 +16,74 @@ module Sync
       # Calculate topic progress which is aggregate from all subtopics and project's for this topic.
       # 70% of weightage is for subtopics and 30% is for projects
       def topic_progress(consultant, topic)
-        projects_progress = topic_projects_progress(consultant, topic)
-        projects_progress_weighted = projects_progress * 0.30
+        projects_weightage = 0.30
+        sub_topics_weightage = 0.70
 
-        sub_topics_progress = []
-        sub_topics_with_no_assignments = 0
-        topic.training_sub_topics.each do |subtopic|
-          sub_topics_with_no_assignments += 1 if subtopic.training_assignments.count == 0
-          sub_topics_progress << sub_topic_progress(consultant, subtopic)
+        total_projects = topic.training_projects.count
+        total_assignments = if topic.training_sub_topics.count == 0
+                              0
+                            else
+                              topic.training_sub_topics.map { |st| st.training_assignments.count }.instance_eval { reduce(:+) }
+                            end
+
+        if total_projects == 0 # if there are no projects then the total weightage is calculated towards sub_topics and their assignments
+          sub_topics_weightage = 1.0
+        elsif total_assignments == 0 # similarly if there are no assignments if any of the subtopics, then the total weightage is calculated towards projects
+          projects_weightage = 1.0
         end
 
-        aggregate_sub_topics_progress = if sub_topics_progress.empty?
-                                          0.0 # No sub topics are present, hence cannot conclude progress
-                                        elsif sub_topics_progress.count - sub_topics_with_no_assignments == 0
-                                          0.0
-                                        else
-                                          ( sub_topics_progress.inject(:+) / ( sub_topics_progress.count - sub_topics_with_no_assignments ) ).to_f
-                                        end
-        sub_topics_progress_weighted = aggregate_sub_topics_progress * 0.70
+        projects_progress = topic_projects_progress(consultant, topic)
+        projects_progress_weighted = projects_progress * projects_weightage
 
-        projects_progress_weighted + sub_topics_progress_weighted
+        sub_topics_progress = sub_topics_progress(consultant, topic)
+        sub_topics_progress_weighted = sub_topics_progress * sub_topics_weightage
+
+        if total_projects == 0.0 && total_assignments == 0.0
+          -1
+        else
+          projects_progress_weighted + sub_topics_progress_weighted
+        end
       end
 
       # Calculate projects progress for a specified topic
       def topic_projects_progress(consultant, topic)
         total_projects = topic.training_projects.count
-        topic_projects_progress = []
-        if total_projects != 0 # only consider progress if there are projects associated with a topic
-          project_submissions = 0
-          project_approvals = 0
 
-          topic.training_projects.each do |_p|
-            # TODO handle other status values
-            project_submissions += _p.training_project_submissions.where(consultant_id: consultant.email, status: 'SUBMITTED').count
-            project_approvals += _p.training_project_submissions.where(consultant_id: consultant.email, status: 'APPROVED').count
-          end
+        if total_projects != 0
+          project_submissions = topic.training_projects.map { |p| p.training_project_submissions.where(consultant_id: consultant.id, status: "SUBMITTED").count }.instance_eval { reduce(:+) }
+          project_approvals = topic.training_projects.map { |p| p.training_project_submissions.where(consultant_id: consultant.id, status: "APPROVED").count }.instance_eval { reduce(:+) }
 
-          topic_projects_progress << (((project_submissions * 1.0) + project_approvals * 2.0) / (total_projects * 2.0)).to_f
-        end
-
-        if topic_projects_progress.empty?
-          0.0 # no projects are associated with this topic
+          (((project_submissions * 1.0) + project_approvals * 2.0) / (total_projects * 2.0)).to_f
         else
-          ( topic_projects_progress.inject(:+) / topic_projects_progress.count )
+          0.0
         end
       end
 
       # Calculate subtopic progress this is calculated from assignments progress, 50% of weightage
       # is for assignments submissions and 50% is for approvals
-      def sub_topic_progress(consultant, subtopic)
+      def sub_topics_progress(consultant, topic)
         # total assignments in this subtopic
-        total_assignments = subtopic.training_assignments.count
-        subtopic_assignments_progress = []
-        if total_assignments != 0 # only consider progress if there are assignments associated with this sub-topic
-          assignment_submissions = 0
-          assignment_approvals = 0
-          subtopic.training_assignments.each do |_a|
-            # TODO: handle other status values
-            assignment_submissions += _a.training_assignment_submissions.where(consultant_id: consultant.email, status: 'SUBMITTED').count
-            assignment_approvals += _a.training_assignment_submissions.where(consultant_id: consultant.email, status: 'APPROVED').count
-          end
 
-          subtopic_assignments_progress << (((assignment_submissions * 1.0) + assignment_approvals * 2.0) / (total_assignments * 2.0)).to_f
-        end
+        total_assignments = if topic.training_sub_topics.count == 0
+                              0
+                            else
+                              topic.training_sub_topics.map { |st| st.training_assignments.count }.instance_eval { reduce(:+) }
+                            end
+        if total_assignments != 0
+          assignment_submissions = topic.training_sub_topics.map { |st|
+            st.training_assignments.map { |a|
+              a.training_assignment_submissions.where(consultant_id: consultant.id, status: "SUBMITTED").count
+            }.instance_eval { reduce(:+) }
+          }.compact.instance_eval { reduce(:+) }
+          assignment_approvals = topic.training_sub_topics.map { |st|
+            st.training_assignments.map { |a|
+              a.training_assignment_submissions.where(consultant_id: consultant.id, status: "APPROVED").count
+            }.instance_eval { reduce(:+) }
+          }.compact.instance_eval { reduce(:+) }
 
-        if subtopic_assignments_progress.empty?
-          0.0 # no assignments are associated with this sub_topic hence 0% progress
+          (((assignment_submissions * 1.0) + assignment_approvals * 2.0) / (total_assignments * 2.0)).to_f
         else
-          ( subtopic_assignments_progress.inject(:+) / subtopic_assignments_progress.count )
+          0.0
         end
       end
 
@@ -93,33 +93,65 @@ module Sync
         topics = track.training_topics
         topics_by_category = topics.group_by { |t| t[:category] }
 
-        preqs_progress = topics_by_category['P'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f }
+        preqs_progress = category_progress(topics_by_category['P'], consultant)
         if preqs_progress > 0.8
           access[:core] = true
         end
 
         if access[:core]
-          cores_progress = topics_by_category['C'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f }
+          cores_progress = category_progress(topics_by_category['C'], consultant)
           if ((preqs_progress + cores_progress) / 2.to_f) > 0.8
             access[:adv] = true
           end
         end
 
         if access[:adv]
-          advs_progress = topics_by_category['A'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f }
+          advs_progress = category_progress(topics_by_category['A'], consultant)
           if ((preqs_progress + cores_progress + advs_progress) / 3.to_f) > 0.8
             access[:opt] = true
           end
         end
 
         if access[:opt]
-          opts_progress = topics_by_category['O'].map { |t| topic_progress(consultant, t) }.instance_eval { reduce(:+) / size.to_f }
+          opts_progress = category_progress(topics_by_category['O'], consultant)
           if (( preqs_progress + cores_progress + advs_progress + opts_progress ) / 4.to_f) > 0.7
             access[:certs] = true
           end
         end
 
         access
+      end
+
+      def user_category_progress(consultant, track)
+        progress = { preq: 0.0, core: 0.0, adv: 0.0, opt: 0.0, certs: 0.0}
+        topics = track.training_topics
+        topics_by_category = topics.group_by { |t| t[:category] }
+
+        preqs_progress = category_progress(topics_by_category['P'], consultant)
+        progress[:core] = preqs_progress
+
+
+        cores_progress = category_progress(topics_by_category['C'], consultant)
+        progress[:adv] = (preqs_progress + cores_progress) / 2.to_f
+
+
+        advs_progress = category_progress(topics_by_category['A'], consultant)
+        progress[:opt] = (preqs_progress + cores_progress + advs_progress) / 3.to_f
+
+
+        opts_progress = category_progress(topics_by_category['O'], consultant)
+        progress[:certs] = ( preqs_progress + cores_progress + advs_progress + opts_progress ) / 4.to_f
+
+        progress
+      end
+
+      def category_progress(topics_by_category, consultant)
+        progress = topics_by_category.map { |t| topic_progress(consultant, t) }.reject { |e| e == -1 }
+        if progress.empty? # if there are topics with no projects and assignments in them
+          0.0
+        else
+          progress.instance_eval { reduce(:+) / size.to_f }
+        end
       end
 
       # does the user has access to this topic or not
@@ -169,7 +201,12 @@ module Sync
 
             _track.training_topics.each do |_topic|
               progress[_track.code.to_sym][:topics] << _topic.code.to_sym
-              progress[_track.code.to_sym][_topic.code.to_sym][:progress] = topic_progress(consultant, _topic)
+              topic_progress = topic_progress(consultant, _topic)
+              progress[_track.code.to_sym][_topic.code.to_sym][:progress] = if topic_progress == -1
+                                                                              0.0
+                                                                            else
+                                                                              topic_progress
+                                                                            end
 
               progress[_track.code.to_sym][:progress] << progress[_track.code.to_sym][_topic.code.to_sym][:progress]
             end # topics
