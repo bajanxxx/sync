@@ -139,7 +139,7 @@
               <div class="panel-heading">
                 <h4 class="panel-title">
                   <a class="accordion-toggle" data-toggle="collapse" data-parent="#projectsaccordion" href="#collapse-<%= _pid %>">
-                    <%= project_submissions[_pid][:name] %> <small><%= project_submissions[_pid][:heading] %></small>
+                    <%= project_submissions[_pid][:heading] %>
                   </a>
                   <span class="pull-right">
                     <span class="badge progress-bar-info">
@@ -215,7 +215,7 @@
                       <div class="panel-heading">
                         <h4 class="panel-title">
                           <a class="accordion-toggle" data-toggle="collapse" data-parent="#subtopics-assignments-<%= _subtopicid %>-accordion" href="#collapse-<%= _assignmentid %>">
-                            <%= assignment_submissions[_subtopicid][:assignments][_assignmentid][:name] %> <small><%= assignment_submissions[_subtopicid][:assignments][_assignmentid][:heading] %></small>
+                            <%= assignment_submissions[_subtopicid][:assignments][_assignmentid][:heading] %>
                           </a>
                           <span class="pull-right">
                             <span class="badge progress-bar-info">
