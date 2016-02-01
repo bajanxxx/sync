@@ -37,24 +37,6 @@
   </div>
 
   <br>
-  
-  <!-- Tracks -->
-  <div class="row-fluid">
-    <h4>Training Tracks</h4>
-    <hr>
-    <div class="row-fluid">
-      <% training_tracks.each do |track| %>
-        <a class="button hvr-float" style="display:block" href="/training/track/<%= track.id %>">
-          <div class="col-xs-3 spacer">
-            <div id="track-<%= track.id %>" class="well" style="height:150px; background-color: black;">
-              <p align="center" class="font-responsive-large"><font color="white"><%= track.name %></font></p>
-              <p align="center" class="font-responsive-small"><font color="white"><%= track.code %></font></p>
-            </div>
-          </div>
-        </a>
-      <% end %>
-    </div>
-  </div>
 
   <!-- Notifications -->
   <div class="row-fluid">
@@ -66,7 +48,7 @@
     <hr>
     <div class="notifications">
       <% if notifications.empty? %>
-        There are currently 0 notifications.
+        There are currently no notifications generated.
       <% else %>
         <ul class="list-group">
           <% notifications.each do |notification| %>

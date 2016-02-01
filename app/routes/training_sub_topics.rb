@@ -8,13 +8,7 @@ module Sync
         consultant = Consultant.find(@session_username)
         sub_topic = topic.training_sub_topics.find(subtopicid)
 
-        if !(@user.administrator? || @user.owner? || @user.trainer?) && !user_access_to_subtopic(consultant, track, topic, sub_topic)
-          erb :training_sub_topic_noaccess, locals: {
-              track: track,
-              topic: topic,
-              sub_topic: sub_topic
-          }
-        else
+        if @user.administrator? || @user.owner?
           slides_count =  if sub_topic.content_thumbnails
                             sub_topic.content_thumbnails.count
                           else
@@ -41,6 +35,47 @@ module Sync
           end
 
           erb :training_sub_topic, locals: {
+            track: track,
+            topic: topic,
+            sub_topic: sub_topic,
+            slides_count: slides_count,
+            slide: slide,
+            uploaded: uploaded,
+            views: sub_topic.views,
+            presentation_status: sub_topic.state,
+            total_assignments: total_assignments,
+            assignment_submissions: assignment_submissions,
+            assignments_approved: assignments_approved
+          }
+        elsif @user.trainer?
+          trainer = Trainer.find(@session_username)
+          if trainer.trainer_topics.find_by(track: trackid, topic: topicid)
+            slides_count =  if sub_topic.content_thumbnails
+                              sub_topic.content_thumbnails.count
+                            else
+                              0
+                            end
+            slide =   if sub_topic.content_slides.find_by(name: "first")
+                        Base64.encode64(download_file(sub_topic.content_slides.find_by(name: "first").file_id).read)
+                      else
+                        nil
+                      end
+            uploaded =  if sub_topic.pdf_file
+                          "#{time_ago_in_words(Time.now, sub_topic.pdf_file.uploaded_date)} ago"
+                        else
+                          'N/A'
+                        end
+            total_assignments = sub_topic.training_assignments.count
+            assignment_submissions = 0
+            assignments_approved = 0
+            sub_topic.training_assignments.each do |assignment|
+              assignment_submissions += assignment.training_assignment_submissions.where(consultant_id: @session_username, status: 'SUBMITTED').count
+            end
+            sub_topic.training_assignments.each do |assignment|
+              assignments_approved += assignment.training_assignment_submissions.where(consultant_id: @session_username, status: 'APPROVED').count
+            end
+
+            erb :training_sub_topic, locals: {
               track: track,
               topic: topic,
               sub_topic: sub_topic,
@@ -52,7 +87,61 @@ module Sync
               total_assignments: total_assignments,
               assignment_submissions: assignment_submissions,
               assignments_approved: assignments_approved
-          }
+            }
+          else
+            erb :training_sub_topic_trainer_noaccess, locals: {
+              track: track,
+              topic: topic,
+              sub_topic: sub_topic
+            }
+          end
+        else
+          if user_access_to_subtopic(consultant, track, topic, sub_topic)
+            slides_count =  if sub_topic.content_thumbnails
+                              sub_topic.content_thumbnails.count
+                            else
+                              0
+                            end
+            slide =   if sub_topic.content_slides.find_by(name: "first")
+                        Base64.encode64(download_file(sub_topic.content_slides.find_by(name: "first").file_id).read)
+                      else
+                        nil
+                      end
+            uploaded =  if sub_topic.pdf_file
+                          "#{time_ago_in_words(Time.now, sub_topic.pdf_file.uploaded_date)} ago"
+                        else
+                          'N/A'
+                        end
+            total_assignments = sub_topic.training_assignments.count
+            assignment_submissions = 0
+            assignments_approved = 0
+            sub_topic.training_assignments.each do |assignment|
+              assignment_submissions += assignment.training_assignment_submissions.where(consultant_id: @session_username, status: 'SUBMITTED').count
+            end
+            sub_topic.training_assignments.each do |assignment|
+              assignments_approved += assignment.training_assignment_submissions.where(consultant_id: @session_username, status: 'APPROVED').count
+            end
+
+            erb :training_sub_topic, locals: {
+              track: track,
+              topic: topic,
+              sub_topic: sub_topic,
+              slides_count: slides_count,
+              slide: slide,
+              uploaded: uploaded,
+              views: sub_topic.views,
+              presentation_status: sub_topic.state,
+              total_assignments: total_assignments,
+              assignment_submissions: assignment_submissions,
+              assignments_approved: assignments_approved
+            }
+          else
+            erb :training_sub_topic_noaccess, locals: {
+              track: track,
+              topic: topic,
+              sub_topic: sub_topic
+            }
+          end
         end
       end
 

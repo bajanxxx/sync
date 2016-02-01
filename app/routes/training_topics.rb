@@ -7,7 +7,7 @@ module Sync
         topic = TrainingTopic.find(topicid)
         consultant = Consultant.find(@session_username)
 
-        if @user.owner? || @user.administrator? || @user.trainer?
+        if @user.owner? || @user.administrator?
           order = if topic.training_sub_topics.count == 0
                     1
                   else
@@ -19,6 +19,20 @@ module Sync
               topic: topic,
               assignable_sub_topic_order: order
           }
+        elsif @user.trainer?
+          trainer = Trainer.find(@session_username)
+          if trainer.trainer_topics.find_by(track: trackid, topic: topicid)
+            erb :training_topic, locals: {
+              track: track,
+              topic: topic,
+              assignable_sub_topic_order: 0 # just a place holder
+            }
+          else
+            erb :training_topic_trainer_noaccess, locals: {
+              track: track,
+              topic: topic
+            }
+          end
         else
           if user_access_to_topic(consultant, track, topic)
             erb :training_topic, locals: {
