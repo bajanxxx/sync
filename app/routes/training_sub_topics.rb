@@ -217,6 +217,21 @@ module Sync
         }
       end
 
+      get '/training/track/:trackid/topic/:topicid/subtopic/:subtopicid/trainer' do |trackid, topicid, subtopicid|
+        if @user.trainer?
+          track = TrainingTrack.find(trackid)
+          topic = TrainingTopic.find(topicid)
+          sub_topic = topic.training_sub_topics.find(subtopicid)
+          erb :training_sub_topic_trainer, locals: {
+            track: track,
+            topic: topic,
+            sub_topic: sub_topic
+          }
+        else
+          'You are not authorized to view this page. This action will be reported to the Administrator group.'
+        end
+      end
+
       post '/training/subtopic/admin/update' do
         sub_topic_id = params[:pk]
         update_key    = params[:name]

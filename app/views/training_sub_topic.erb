@@ -199,6 +199,8 @@
           <p align="left">
             <% if @user.owner? || @user.administrator? %>
               <a class="truncate" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/admin"><font size="+1"><%= sub_topic.name %></font></a>
+            <% elsif @user.trainer? %>
+              <a class="truncate" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/trainer"><font size="+1"><%= sub_topic.name %></font></a>
             <% else %>
               <div class="truncate"><font size="+1"><%= sub_topic.name %></font></div>
             <% end %>

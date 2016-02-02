@@ -1,0 +1,106 @@
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2><a href="/training">Training Portal</a> > <a href="/training/track/<%= track.id %>"><%= track.code %></a> > <a href="/training/track/<%= track.id %>/topic/<%= topic.id %>"><%= topic.name %></a> > Sub Topic
+    </h2>
+  </div>
+
+  <h3><%= sub_topic.name %></h3>
+
+  <br>
+
+  <div class="row-fluid">
+    <div class="col-md-6">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <strong>Presentation</strong>
+        </div>
+        <div class="panel-body">
+          <ul class="list-group">
+            <li class="list-group-item">
+              <span class="badge alert-info">Slides count: <%= sub_topic.content_slides.count %></span>
+              <span class="badge alert-info">Status: <%= sub_topic.state %></span>
+              <% if sub_topic.state == 'PROCESSING' %>
+                  <i class="fa fa-circle-o-notch fa-spin fa-lg"></i>
+              <% elsif sub_topic.state == 'SUCCESS' %>
+                  <i class="fa fa-check-square fa-lg"></i>
+              <% end %>
+              <span>Presentation conversion status</span>
+            </li>
+            <li class="list-group-item">
+              <span class="badge alert-info"><%= sub_topic.et %></span>
+              <span>Duration (in minutes)</span>
+            </li>
+            <li class="list-group-item">
+              <span>DPI</span> <a class="pull-right" href="#" id="density"><%= sub_topic.density %></a>
+            </li>
+          </ul>
+          <% if sub_topic.state == 'SUCCESS' %>
+              <a class="btn btn-primary center-block" href="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/ss">Start Presentation</a>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <% if sub_topic.file == 'NIL' %>
+          <div class="panel panel-warning">
+            <div class="panel-heading">
+              <strong>Link a presentation to this sub topic</strong>
+            </div>
+            <div class="panel-body">
+              <form role="form" id="upload" method="post" action="/training/track/<%= track.id %>/topic/<%= topic.id %>/subtopic/<%= sub_topic.id %>/upload" enctype="multipart/form-data">
+                <input type="file" class="form-control" title="Select pdf to upload" name="pdf" data-filename-placement="inside"/>
+                <ul id="fileList"></ul>
+                <button type="submit" class="btn btn-primary center-block" id="SubmitBtn"><i class="fa fa-cloud-upload fa-lg"></i> Upload Presentation</button>
+              </form>
+            </div>
+          </div>
+      <% else %>
+          <div class="panel panel-success">
+            <div class="panel-heading">
+              <a><strong>Presentation already linked to this topic</strong></a>
+            </div>
+            <div class="panel-body">
+              <ul class="list-group">
+                <li class="list-group-item">Linked file: <%= sub_topic.pdf_file.filename %></li>
+              </ul>
+            </div>
+          </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('input[type=file]').bootstrapFileInput();
+    $('.file-inputs').bootstrapFileInput();
+
+    $.fn.editable.defaults.mode = 'popup';
+    $.fn.editable.defaults.ajaxOptions = {type: "POST"};
+
+    // validate resume upload
+    $('#upload').bootstrapValidator({
+      feedbackIcons: {
+        valid: 'glyphicon glyphicon-ok',
+        invalid: 'glyphicon glyphicon-remove',
+        validating: 'glyphicon glyphicon-refresh'
+      },
+      fields: {
+        'pdf': {
+          validators: {
+            notEmpty: {
+              message: 'The presentation file is required'
+            },
+            file: {
+              extension: 'pdf',
+              type: 'application/pdf',
+              maxSize: 30 * 1024 * 1024,   // 30 MB
+              message: 'Currently we only accept pdf format with size limit of 30MB'
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
