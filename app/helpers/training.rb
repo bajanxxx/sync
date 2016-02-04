@@ -94,13 +94,13 @@ module Sync
         topics_by_category = topics.group_by { |t| t[:category] }
 
         preqs_progress = category_progress(topics_by_category['P'], consultant)
-        if preqs_progress > 0.8
+        if preqs_progress > 0.6
           access[:core] = true
         end
 
         if access[:core]
           cores_progress = category_progress(topics_by_category['C'], consultant)
-          if ((preqs_progress + cores_progress) / 2.to_f) > 0.8
+          if ((preqs_progress + cores_progress) / 2.to_f) > 0.7
             access[:adv] = true
           end
         end

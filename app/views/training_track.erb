@@ -193,7 +193,7 @@
                 <% else %>
                   <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#666666">
                     <div class="font-responsive">
-                      <a class="popoverData" class="btn" href="#" data-content="You have to complete 80% of Prerequisite topics to gain access to core topics. Your current progress: <%= (cprogress[:core] * 100).to_i %>%." rel="popover" data-placement="bottom" data-original-title="No Access" data-trigger="hover" style="color:white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</a>
+                      <a class="popoverData" class="btn" href="#" data-content="You have to complete 60% of Prerequisite topics to gain access to core topics. Your current progress: <%= (cprogress[:core] * 100).to_i %>%." rel="popover" data-placement="bottom" data-original-title="No Access" data-trigger="hover" style="color:white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</a>
                     </div>
                   </div>
                 <% end %>
@@ -234,7 +234,7 @@
                 <% else %>
                   <div id="topic-<%= topic.id %>" class="circle-multiline" style="background:#666666">
                     <div class="font-responsive">
-                      <a class="popoverData" class="btn" href="#" data-content="You have to complete 80% of Core topics to gain access to Advanced topics. Your current progress: <%= (cprogress[:adv] * 100).to_i %>%." rel="popover" data-placement="bottom" data-original-title="No Access" data-trigger="hover" style="color:white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</a>
+                      <a class="popoverData" class="btn" href="#" data-content="You have to complete 70% of Core topics to gain access to Advanced topics. Your current progress: <%= (cprogress[:adv] * 100).to_i %>%." rel="popover" data-placement="bottom" data-original-title="No Access" data-trigger="hover" style="color:white"><%= topic.name %> (<%= topic.training_sub_topics.count %>)</a>
                     </div>
                   </div>
                 <% end %>
