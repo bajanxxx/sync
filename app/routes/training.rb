@@ -166,6 +166,16 @@ module Sync
               assignments: assignment_submissions_for_sub_topic(sub_topic, teamid)
           }
         end
+        # get rid of the sub_topics which don't have any assignment submissions
+        assignment_submissions.keys.each do |_stopic|
+          assignment_submissions[_stopic][:assignments].keys.each do |_assignmentid|
+            assignment_submissions[_stopic][:assignments].delete(_assignmentid) if ( assignment_submissions[_stopic][:assignments][_assignmentid].keys - [:name, :heading] ).empty?
+          end
+        end
+        # get rid of the sub_topics which don't have any assignments
+        assignment_submissions.keys.each do |_stopic|
+          assignment_submissions.delete(_stopic) if assignment_submissions[_stopic][:assignments].empty?
+        end
 
         # Build overall team progress
         team_progress = Hash.new { |hash, key| hash[key] = {} }
