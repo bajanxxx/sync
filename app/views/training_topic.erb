@@ -217,7 +217,7 @@
   <div class="row-fluid">
     <div class="col-xs-12 spacer">
       <h3>Projects (<%= topic.training_projects.count %>)
-        <% if @user.owner? || @user.administrator? %>
+        <% if @user.owner? || @user.administrator? || @user.trainer? %>
           <span class="pull-right">
             <a class="addproject" role="left" href="#AddProject" data-toggle="modal" data-placement="left" data-original-title='Add a new project'>
               <i class="fa fa-plus-square-o fa-lg"></i>
