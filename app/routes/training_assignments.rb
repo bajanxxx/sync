@@ -299,6 +299,7 @@ module Sync
 
         reason = params[:reason]
 
+        topic = TrainingTopic.find(topicid)
         sub_topic = TrainingSubTopic.find(subtopicid)
         assignment = sub_topic.training_assignments.find(assignmentid)
 
