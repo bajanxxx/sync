@@ -40,6 +40,13 @@ module Sync
         { success: success, msg: message }.to_json
       end
 
+      get '/expenses/attachment/:id' do |id|
+        attachment = download_file(id)
+        response.headers['content_type'] = 'application/octet-stream'
+        attachment(attachment.filename)
+        response.write(attachment.read)
+      end
+
       #
       # Consultant Routes
       #
