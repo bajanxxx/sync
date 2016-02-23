@@ -24,7 +24,12 @@ module Sync
 
         er = ExpenseRequest.find(eid)
         er.update_attributes(status: 'approved', approved_by: @user.name, approved_at: DateTime.now)
-        # TODO DJ for notifying user
+        Delayed::Job.enqueue(
+          EmailRequestStatus.new(@settings, @user.name, er, "Expense (of: #{er.amount.format}, for: #{er.category})"),
+          queue: 'consultant_expense_requests',
+          priority: 10,
+          run_at: 5.seconds.from_now
+        )
 
         { success: success, msg: message }.to_json
       end
@@ -35,7 +40,12 @@ module Sync
 
         er = ExpenseRequest.find(eid)
         er.update_attributes(status: 'disapproved', disapproved_by: @user.name, disapproved_at: DateTime.now)
-        # TODO DJ for notifying user
+        Delayed::Job.enqueue(
+          EmailRequestStatus.new(@settings, @user.name, er, "Expense (of: #{er.amount.format}, for: #{er.category})"),
+          queue: 'consultant_expense_requests',
+          priority: 10,
+          run_at: 5.seconds.from_now
+        )
 
         { success: success, msg: message }.to_json
       end
@@ -123,6 +133,23 @@ module Sync
                 att.uploaded_date = DateTime.now
               end
             end
+          end
+
+          # Send email to the admin group
+          consultant = Consultant.find(user_id)
+          Delayed::Job.enqueue(
+            EmailExpenseRequest.new(@settings, @user.name, expense, consultant),
+            queue: 'consultant_expense_requests',
+            priority: 10,
+            run_at: 1.seconds.from_now
+          )
+          # Send an sms to the admin
+          @settings[:admin_phone].each do |to_phone|
+            twilio.account.messages.create(
+              from: @settings[:twilio_phone],
+              to: to_phone,
+              body: "SYNC: #{consultant.first_name} #{consultant.last_name} expense request"
+            )
           end
         end
 
