@@ -29,6 +29,8 @@ module Sync
     autoload :TimesheetProjects, 'app/routes/timesheet_projects'
     autoload :TimesheetReports, 'app/routes/timesheet_reports'
 
+    autoload :Expenses, 'app/routes/expenses'
+
     autoload :Training, 'app/routes/training'
     autoload :TrainingTracks, 'app/routes/training_tracks'
     autoload :TrainingTopics, 'app/routes/training_topics'

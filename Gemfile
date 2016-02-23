@@ -19,6 +19,7 @@ gem 'mongo'
 gem 'mongoid', '3.1.6'
 gem 'mongoid_search'
 gem 'bson_ext'
+gem 'money'
 
 # Authentication
 gem 'omniauth-google-oauth2'

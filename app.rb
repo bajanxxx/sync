@@ -100,6 +100,7 @@ module Sync
     use Sync::Routes::TimesheetVendors
     use Sync::Routes::TimesheetClients
     use Sync::Routes::TimesheetReports
+    use Sync::Routes::Expenses
     use Sync::Routes::Training
     use Sync::Routes::TrainingTracks
     use Sync::Routes::TrainingTopics

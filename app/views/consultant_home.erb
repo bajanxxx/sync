@@ -4,10 +4,13 @@
   <h3><strong>Sync</strong> is a centralized portal for:</h3> 
   <ul>
     <li>
-      <h4>Accessing self-service <a href="/training">training portal</a></h4>
+      <h4>Self-service <a href="/training">training portal</a></h4>
     </li>
     <li>
       <h4>Tracking Time using <a href="/timesheets/<%= @session_username %>/<%= Time.now.strftime('%Y') %>/<%= Time.now.strftime('%U') %>">timesheets</a> module</h4>
+    </li>
+    <li>
+      <h4>Tracking Expenses using <a href="/expenses/<%= @session_username %>">expenses portal</a></h4>
     </li>
     <li>
       <h4>Requesting <a href="/documents/<%= @session_username %>">documents</a>, <a href="/certifications/<%= @session_username %>">certifications</a>, <a href="/airtickets/<%= @session_username %>">air-tickets</a>, <a href="/cloudservers/requests/<%= @session_username %>">cloud servers</a></h4>
@@ -16,7 +19,7 @@
 
   <br>
 
-  <h3>Tools we use @ Cloudwick:</h3>
+  <h3>Tools used @ Cloudwick:</h3>
 
   <div class="col-xs-3 spacer">
     <a class="button hvr-float" style="display:block" target="_blank" href="https://cloudwick.atlassian.net/wiki">

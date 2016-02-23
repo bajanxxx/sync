@@ -1,0 +1,281 @@
+<!-- Modal definitions -->
+<div class="modal fade" id="MakeRequest" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Create a New Expense Request</h4>
+      </div>
+      <div id="requestModal" class="modal-body">
+        <form class="form-horizontal" enctype="multipart/form-data" role="form" id="RequestForm">
+          <!-- document type -->
+          <div class="form-group">
+            <label class="col-sm-offset-1 col-sm-2 control-label" for="ExpenseCategory">Category</label>
+            <div class="col-sm-8">
+              <select class="form-control" id="ExpenseCategory" name="ExpenseCategory">
+                <option selected value=''>Start typing category</option>
+                <% categories.each_with_index do |c, i| %>
+                  <option value="<%= i %>"><%= c %></option>
+                <% end %>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-offset-1 col-sm-2 control-label" for="Amount">Amount:</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" id="Amount" name="Amount" value="" required="required" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-offset-1 col-sm-2 control-label" for="Currency">Currency</label>
+            <div class="col-sm-8">
+              <select class="form-control" id="Currency" name="Currency">
+                <option selected value='USD'>USD</option>
+                <option value='GBP'>GBP</option>
+                <option value='INR'>INR</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-offset-1 col-sm-2 control-label" for="Notes">Notes: </label>
+            <div class="col-sm-8">
+              <textarea class="form-control" id="Notes" name="Notes" placeholder="purpose of the expense" required="required"></textarea>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-offset-1 col-sm-2 control-label">Receipts: </label>
+            <div class="col-sm-8">
+              <input type="file" id="Receipts" class="form-control" title="Select receipts to upload" name="receipts[]" data-filename-placement="inside" multiple/>
+              <ul id="fileList"></ul>
+            </div>
+          </div>
+
+        </form>
+        <p id="MakeRequestFormLabel" class="text-center"></p>
+        <hr />
+        <button id="SubmitRequestBtn" name="SubmitBtn" class="btn btn-large btn-primary center-block">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Actual Container -->
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>Expense Request(s)
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+          Start Here <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li>
+            <a id="CreateExpenseRequestBtn" data-toggle="modal" href="#MakeRequest">
+              Create New Expense Request
+            </a>
+          </li>
+        </ul>
+      </div>
+    </h2>
+  </div>
+  <!-- Notifications -->
+  <h3>Pending Notifications</h3>
+
+  <div class="panel-group" id="requests-accordion">
+    <% if pending_requests.empty? %>
+      No requests have been made yet.
+    <% else %>
+      <% pending_requests.each_with_index do |request, index| %>
+        <% consultant = Consultant.find(request.consultant_id) %>
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a class="accordion-toggle" data-toggle="collapse" data-parent="#requests-accordion" href="#collapse-<%= request.id %>">
+                <strong><%= request.amount.format %></strong> from <%= consultant.first_name %> <%= consultant.last_name %> for <%= request.category %>
+              </a>
+            </h4>
+          </div> <!-- panel-heading -->
+          <div id="collapse-<%= request.id %>" class="panel-collapse collapse">
+            <div class="panel-body">
+              <p><strong>Notes:</strong> <%= request.notes %></p>
+              <p><strong>Files: </strong></p>
+              <ul>
+                <% request.expense_attachments.each do |attachment| %>
+                  <li><%= attachment.filename %></li>
+                <% end %>
+              </ul>
+              <div class="pull-right">
+                <a id="ApproveRequest-<%= request.id %>" class="btn btn-success btn-md" role="button">Approve</a>
+                <a id="DisapproveRequest-<%= request.id %>" class="btn btn-danger btn-md" role="button">Reject</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <h3>Previous Requests</h3>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <strong>Previously Approved Requests</strong>
+    </div>
+    <% if approved_requests.empty? %>
+      <ul class="list-group">
+        <li class="list-group-item">
+          There are no approved requests to show.
+        </li>
+      </ul>
+    <% else %>
+      <ul class="list-group">
+        <% approved_requests.each do |request| %>
+          <li class="list-group-item">
+            <span class="badge alert-info">Approved At: <%= request.approved_at %></a></span>
+            <span class="badge alert-success">Approved By: <%= request.approved_by %></a></span>
+            <% consultant = Consultant.find(request.consultant_id) %>
+            <span><%= consultant.first_name %> <%= consultant.last_name %> has a expense request of <%= request.amount.format %> for <%= request.category %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <strong>Previously DisApproved Requests</strong>
+    </div>
+    <% if disapproved_requests.empty? %>
+      <ul class="list-group">
+        <li class="list-group-item">
+          There are no denied requests to show.
+        </li>
+      </ul>
+    <% else %>
+      <ul class="list-group">
+        <% disapproved_requests.each do |request| %>
+          <li class="list-group-item">
+            <span class="badge alert-info">DisApproved At: <%= request.disapproved_at %></a></span>
+            <span class="badge alert-success">DisApproved By: <%= request.disapproved_by %></a></span>
+            <% consultant = Consultant.find(request.consultant_id) %>
+            <span><%= consultant.first_name %> <%= consultant.last_name %> has a expense request of <%= request.amount.format %> for <%= request.category %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('input[type=file]').bootstrapFileInput();
+    $('.file-inputs').bootstrapFileInput();
+    $('#ExpenseCategory').select2();
+
+    $('.approvebutton').tooltip();
+    $('.disapprovebutton').tooltip();
+  });
+
+  // validate resume upload
+  $('#RequestForm').bootstrapValidator({
+    feedbackIcons: {
+      valid: 'glyphicon glyphicon-ok',
+      invalid: 'glyphicon glyphicon-remove',
+      validating: 'glyphicon glyphicon-refresh'
+    },
+    fields: {
+      'receipts[]': {
+        validators: {
+          file: {
+            extension: 'pdf,doc,docx,png,jpeg',
+            type: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png',
+            maxSize: 5120 * 1024,   // 5 MB
+            message: 'Currently we only accept pdf, doc, docx, png, jpeg files with size limit of 5MB'
+          }
+        }
+      }
+    }
+  });
+
+  $('#SubmitRequestBtn').click(function() {
+    // Build form data as we cannot automatically send files and fields using ajax
+    var formData = new FormData();
+    var receipts = document.getElementById('Receipts');
+    for (var f = 0; f < receipts.files.length; f++) {
+      formData.append('receipts['+f+']', receipts.files[f]);
+    }
+    formData.append('expense_category', $("#ExpenseCategory").val());
+    formData.append('amount', $("#Amount").val());
+    formData.append('currency', $("#Currency").val());
+    formData.append('notes', $("#Notes").val());
+
+    _this = $(this);
+    _this.html('<em>Submitting</em> <i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/expenses/<%= @session_username %>/request",
+      data: formData,
+      async: false,
+      cache: false,
+      contentType: false,
+      processData: false,
+      success: function(data) {
+        if(!data.success) {
+          console.log("Error: " + data.msg);
+          _this.attr('disabled', false); // re-enable submit
+          _this.html('Re-submit');
+          $('#MakeRequestFormLabel').addClass('text-danger').html(data.msg);
+        } else {
+          console.log("Sucess: " + data.msg)
+          _this.html("Submitted");
+          $('#MakeRequestFormLabel').addClass('text-info').html(data.msg);
+          $('#MakeRequest').modal('hide');
+          location.reload();
+        }
+      },
+      error: function(data) {
+        _this.attr('disabled', false); // re-enable submit
+        _this.html('Re-submit');
+        $('#MakeRequestFormLabel').addClass('text-danger').html('Something went wrong creating a new request!!!');
+      }
+    });
+  });
+
+  <% pending_requests.each_with_index do |request, index| %>
+  $('#ApproveRequest-<%= request.id %>').click(function () {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/expenses/<%= request.id %>/approve",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  $('#DisapproveRequest-<%= request.id %>').click(function () {
+    console.log("Initializing call");
+    _this = $(this);
+    _this.html('<i class="fa fa-spinner fa-spin"></i>');
+    _this.attr('disabled', true); // no double submit
+
+    $.ajax({
+      type: "POST",
+      url: "/expenses/<%= request.id %>/disapprove",
+      success: function(data){
+        location.reload();
+      },
+      error: function(e){
+        alert("Error occurred!");
+      }
+    });
+  });
+  <% end %>
+</script>
