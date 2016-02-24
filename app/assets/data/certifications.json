@@ -166,5 +166,13 @@
     "price": "250.00",
     "authority": "MapR",
     "url": "https://www.mapr.com/services/mapr-academy/MapR-Certified-HBase-Developer"
+  },
+  {
+    "name": "Puppet - System Administration Using Puppet",
+    "short": "PPTPCP",
+    "code": "PPT-203",
+    "price": "200.00",
+    "authority": "PuppetLabs",
+    "url": "https://puppetlabs.com/services/certification/puppet-professional"
   }
 ]
