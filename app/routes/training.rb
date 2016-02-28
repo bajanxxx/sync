@@ -152,6 +152,19 @@ module Sync
         { success: success, msg: message }.to_json
       end
 
+      # Trainer's progress page
+      get '/training/trainer/team/:team_id/progress' do |team_id|
+        team_progress = Hash.new { |hash, key| hash[key] = {} }
+        Consultant.where(team: team_id).each do |member|
+          team_progress[member.email.to_sym] = build_training_progress(member)
+        end
+
+        erb :trainer_team_progress, locals: {
+          team_id: team_id,
+          team_progress: team_progress
+        }
+      end
+
       # Trainer's page to track class notifications and progress
       get '/training/trainer/track/:trackid/topic/:topicid/team/:teamid' do |trackid, topicid, teamid|
         track = TrainingTrack.find(trackid)

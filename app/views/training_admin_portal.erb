@@ -155,6 +155,7 @@
       </div>
     </h2>
   </div> <!-- page-header -->
+
   <!-- Training Topics -->
   <div class="row-fluid">
     <% if training_tracks.empty? %>
@@ -179,6 +180,29 @@
       <% end %>
     <% end %>
   </div>
+
+  <!--Team's overview-->
+  <div class="row-fluid">
+    <h3>Teams Overview</h3>
+    <hr>
+
+    <% if trainers.empty? %>
+      No trainers have been associated to any of the teams.
+    <% else %>
+      <% trainer_teams = trainers.all.map { |t| t.trainer_topics.map { |tt| tt.team } }.flatten %>
+      <ul class="list-group">
+        <% trainer_teams.each do |team| %>
+          <li class="list-group-item">
+            <span class="pull-right">
+              <span class="badge progress-bar-info"><a href="/training/trainer/team/<%= team %>/progress" style="color:white;">Team Progress</a></span>
+            </span>
+            <strong>Team <%= team %> Progress</strong>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+
   <!-- Classes overview -->
   <div class="row-fluid">
     <h3>Classes Overview</h3>
@@ -217,18 +241,18 @@
     <% if slack_integrations.empty? %>
         No slack integrations have been created for any of the team. You could create some from 'Start Here' > 'Create Slack Integration'.
     <% else %>
-        <ul class="list-group">
-          <% slack_integrations.each do |integration| %>
-              <li class="list-group-item">
-                <% training_tracks.each do |track| %>
-                  <span class="pull-right">
-                    <span class="badge progress-bar-info"><a href="/training/track/<%= track.id %>/integrations/slack/<%= integration.domain %>/<%= integration.team %>" style="color:white;">Track <%= track.code %></a></span>
-                  </span>
-                <% end %>
-                <strong>Team <%= integration.team %></strong>  (Domain: <%= integration.domain %>)
-              </li>
-          <% end %>
-        </ul>
+      <ul class="list-group">
+        <% slack_integrations.each do |integration| %>
+          <li class="list-group-item">
+            <% training_tracks.each do |track| %>
+              <span class="pull-right">
+                <span class="badge progress-bar-info"><a href="/training/track/<%= track.id %>/integrations/slack/<%= integration.domain %>/<%= integration.team %>" style="color:white;">Track <%= track.code %></a></span>
+              </span>
+            <% end %>
+            <strong>Team <%= integration.team %></strong>  (Domain: <%= integration.domain %>)
+          </li>
+        <% end %>
+      </ul>
     <% end %>
   </div>
 </div>

@@ -1,0 +1,115 @@
+<div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <h2>
+      Team <%= team_id %> Progress
+    </h2>
+  </div>
+
+  <div class="row-fluid">
+
+    <% team_progress.keys.each_with_index do |member, i| %>
+      <%
+        # calculate each user progress
+        overall_progress = []
+        team_progress[member].keys.map { |tt|
+          overall_progress << team_progress[member][tt][:overall]
+        }
+        overall_progress_percent =  if overall_progress.empty?
+                                      0.0
+                                    else
+                                      (overall_progress.inject(:+) / overall_progress.count) * 100
+                                    end
+      %>
+      <% user_initials = member.to_s.split('@').first.split('.').map{ |a| a[0]}.join().upcase %>
+      <% self_progress = team_progress[member] %>
+
+      <div class="media">
+        <div class="pull-left">
+          <div id="traineedp-<%= i %>" class="dpcircle"><%= user_initials %></div>
+        </div>
+
+        <div class="media-body">
+          <h4 class="media-heading">
+            <%= member.to_s.split('@').first.split('.').first.capitalize %>'s Overall Progress
+            <span id="progress-heading-<%= i %>" class="pull-right progress-heading">expand detailed progress</span>
+          </h4>
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="<%= overall_progress_percent.to_i %>" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: <%= overall_progress_percent.to_i %>%;">
+              <%= overall_progress_percent.to_i %>%
+            </div>
+          </div>
+
+          <div id="nested-progress-<%= i %>" class="nested-progress">
+            <% self_progress.keys.each do |track| %>
+              <% overall_track_progress_percent = (self_progress[track][:overall] * 100).to_i %>
+              <h5 class = "media-heading">Track <%= track.to_s %> Progress</h5>
+              <div class="progress">
+                <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="<%= overall_track_progress_percent %>" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: <%= overall_track_progress_percent %>%;">
+                  <%= overall_track_progress_percent %>%
+                </div>
+              </div>
+              <div class="pull-right" style="width: 90%;">
+                <% self_progress[track][:topics].each do |topic| %>
+                  <% overall_topic_progress_percent = (self_progress[track][topic][:progress] * 100).to_i %>
+                  <h5 class = "media-heading">Topic <%= topic.to_s %> Progress</h5>
+                  <div class="progress">
+                    <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="<%= overall_topic_progress_percent %>" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: <%= overall_topic_progress_percent %>%;">
+                      <%= overall_topic_progress_percent %>%
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+    <% end %>
+
+  </div>
+</div>
+
+<style type="text/css">
+  .dpcircle{
+    width:50px;
+    height:50px;
+    border-radius:50px;
+    font-size:20px;
+    color:#fff;
+    line-height:50px;
+    text-align:center;
+    background:#000
+  }
+
+  .nested-progress {
+    display: none;
+    padding: 5px;
+  }
+
+  .progress-heading {
+    cursor: pointer;
+    font-size: small;
+    color: deepskyblue;
+  }
+</style>
+
+<script src="<%= asset_path 'randomColor.min.js' %>"></script>
+<script type="text/javascript">
+  $(document).ready(function () {
+    <% team_progress.keys.each_with_index do |_, i| %>
+      document.querySelector('#traineedp-<%= i %>').style.background = randomColor({hue: 'random',luminosity: 'random'});
+    <% end %>
+
+    <% team_progress.keys.each_with_index do |_, i| %>
+      $("#progress-heading-<%= i %>").click(function() {
+        var $header = $(this);
+        var $content = $("#nested-progress-<%= i %>");
+        $content.slideToggle(500, function() {
+          $header.text(function () {
+            return $content.is(":visible") ? "collapse detailed progress" : "expand detailed progress";
+          });
+        });
+      });
+    <% end %>
+  });
+</script>
