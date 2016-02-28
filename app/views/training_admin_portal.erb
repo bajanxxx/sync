@@ -189,7 +189,7 @@
     <% if trainers.empty? %>
       No trainers have been associated to any of the teams.
     <% else %>
-      <% trainer_teams = trainers.all.map { |t| t.trainer_topics.map { |tt| tt.team } }.flatten %>
+      <% trainer_teams = trainers.all.map { |t| t.trainer_topics.map { |tt| tt.team } }.flatten.uniq %>
       <ul class="list-group">
         <% trainer_teams.each do |team| %>
           <li class="list-group-item">
