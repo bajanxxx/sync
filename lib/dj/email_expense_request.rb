@@ -25,7 +25,7 @@ EOBODY
     Pony.mail(
       from: 'Cloudwick Sync' + "<" + settings[:email] + ">",
       to: settings[:admin_group],
-      subject: "Sync: Document Request Notification from #{consultant.first_name} #{consultant.last_name}",
+      subject: "Sync: Expense Request Notification from #{consultant.first_name} #{consultant.last_name}",
       headers: { 'Content-Type' => 'text/html' },
       body: email_body,
       via: :smtp,
