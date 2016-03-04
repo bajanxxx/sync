@@ -189,14 +189,14 @@
     <% if trainers.empty? %>
       No trainers have been associated to any of the teams.
     <% else %>
-      <% trainer_teams = trainers.all.map { |t| t.trainer_topics.map { |tt| tt.team } }.flatten.uniq %>
+      <% trainer_teams = trainers.all.map { |t| t.trainer_topics.map { |tt| { tt.team => tt.domain } } }.flatten.uniq %>
       <ul class="list-group">
-        <% trainer_teams.each do |team| %>
+        <% trainer_teams.each do |team_domain_hash| %>
           <li class="list-group-item">
             <span class="pull-right">
-              <span class="badge progress-bar-info"><a href="/training/trainer/team/<%= team %>/progress" style="color:white;">Team Progress</a></span>
+              <span class="badge progress-bar-info"><a href="/training/trainer/team/<%= team_domain_hash.keys[0] %>/<%= team_domain_hash.values[0] %>/progress" style="color:white;">Team Progress</a></span>
             </span>
-            <strong>Team <%= team %> Progress</strong>
+            <strong>Team <%= team_domain_hash.keys[0] %> Progress</strong> (Domain: <%= team_domain_hash.values[0] %>)
           </li>
         <% end %>
       </ul>

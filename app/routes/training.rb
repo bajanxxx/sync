@@ -153,9 +153,9 @@ module Sync
       end
 
       # Trainer's progress page
-      get '/training/trainer/team/:team_id/progress' do |team_id|
+      get '/training/trainer/team/:team_id/:domain/progress' do |team_id, domain|
         team_progress = Hash.new { |hash, key| hash[key] = {} }
-        Consultant.where(team: team_id).each do |member|
+        Consultant.where(team: team_id, domain: domain).each do |member|
           team_progress[member.email.to_sym] = build_training_progress(member)
         end
 
