@@ -65,6 +65,12 @@ object Start extends App {
         config.getString("sync.api.dice.grep")),
       name=s"${sTerm}jobs")
 
+    /** called when you have shut down the ActorSystem, and the callbacks will be executed after
+      * all actors have been stopped. */
+    system.registerOnTermination {
+      conn.close()
+    }
+
     val future = actor ? Messages.Start
 
     val fetcherCollection = conn(config.getString("sync.mongo.db"))("fetchers")
