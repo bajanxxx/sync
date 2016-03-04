@@ -189,7 +189,7 @@
     <% if trainers.empty? %>
       No trainers have been associated to any of the teams.
     <% else %>
-      <% trainer_teams = trainers.all.map { |t| t.trainer_topics.map { |tt| { tt.team => tt.domain } } }.flatten.uniq %>
+      <% trainer_teams = trainers.map { |t| t.trainer_topics.map { |tt| { tt.team => tt.domain } } }.flatten.uniq %>
       <ul class="list-group">
         <% trainer_teams.each do |team_domain_hash| %>
           <li class="list-group-item">
@@ -217,6 +217,9 @@
           <li class="list-group-item">
             <span class="pull-right">
               <span class="badge progress-bar-info"><a href="/training/trainer/track/<%= details.track %>/topic/<%= details.topic %>/team/<%= details.team %>" style="color:white;">Goto Class</a></span>
+            </span>
+            <span class="pull-right">
+              <span class="badge progress-bar-success"><%= details.team %></span>
             </span>
             <span class="pull-right">
               <button type="button" id="DisassociateTrainer-<%= details.id %>" class="btn btn-default btn-xs deleteicon"><span class="glyphicon glyphicon-remove deletebutton" data-original-title="Disassociate this trainer"></span></button>
