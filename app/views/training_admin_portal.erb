@@ -189,7 +189,7 @@
     <% if trainers.empty? %>
       No trainers have been associated to any of the teams.
     <% else %>
-      <% trainer_teams = trainers.map { |t| t.trainer_topics.map { |tt| { tt.team => tt.domain } } }.flatten.uniq %>
+      <% trainer_teams = trainers.map { |t| t.trainer_topics.map { |tt| { tt.team => tt.domain.upcase } } }.flatten.uniq %>
       <ul class="list-group">
         <% trainer_teams.each do |team_domain_hash| %>
           <li class="list-group-item">
